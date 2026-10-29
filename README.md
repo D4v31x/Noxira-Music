@@ -1,6 +1,6 @@
-# Aurora Music
+# Noxira Music
 
-A modern, beautiful local music player for Android (and iOS), built with Flutter. Aurora Music focuses on a polished Material You experience, buttery-smooth performance across low-to-high end devices, synced lyrics, and a rich set of "smart" listening features — all while playing music straight from your device's local library.
+A modern, beautiful local music player for Android (and iOS), built with Flutter. Noxira Music focuses on a polished Material You experience, buttery-smooth performance across low-to-high end devices, synced lyrics, and a rich set of "smart" listening features — all while playing music straight from your device's local library.
 
 **Current version:** 1.4.5+27
 
@@ -8,7 +8,7 @@ A modern, beautiful local music player for Android (and iOS), built with Flutter
 
 ## What it does
 
-Aurora Music scans and indexes the audio files already on your phone (via `on_audio_query`) and gives you a fast, gesture-friendly way to browse, organize, and play them — with a fully custom now-playing experience, background playback, lock-screen/notification controls, synced lyrics, an equalizer, playlists, and detailed listening statistics.
+Noxira Music scans and indexes the audio files already on your phone (via `on_audio_query`) and gives you a fast, gesture-friendly way to browse, organize, and play them — with a fully custom now-playing experience, background playback, lock-screen/notification controls, synced lyrics, an equalizer, playlists, and detailed listening statistics.
 
 ---
 
