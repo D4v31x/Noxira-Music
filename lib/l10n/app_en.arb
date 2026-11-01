@@ -20,7 +20,7 @@
   "album": "Album",
   "albums": "Albums",
   "allSongs": "All Songs",
-  "appName": "Aurora Music",
+  "appName": "Noxira Music",
   "artist": "Artist",
   "artistName": "Artist name",
   "artists": "Artists",
@@ -28,7 +28,7 @@
   "artistSeparationDesc": "Configure how multiple artists are split",
   "audioQuality": "Audio Quality",
   "audioQualityDesc": "Technical specifications of the audio file",
-  "auroraMusic": "Aurora Music",
+  "auroraMusic": "Noxira Music",
   "autoPlaylists": "Auto Playlists",
   "autoTag": "Auto Tag",
   "smartPlaylists": "Smart Playlists",
@@ -107,8 +107,8 @@
   "duration": "Duration",
   "enableArtistSeparation": "Enable Artist Separation",
   "enableArtistSeparationDesc": "Automatically split combined artist names",
-  "enjoyingAurora": "Enjoying Aurora?",
-  "enjoyingAuroraDesc": "If you love using Aurora Music, consider supporting its development. Your support helps keep it free!",
+  "enjoyingAurora": "Enjoying Noxira?",
+  "enjoyingAuroraDesc": "If you love using Noxira Music, consider supporting its development. Your support helps keep it free!",
   "error": "Error",
   "exclusionHint": "e.g. AC/DC",
   "exclusions": "Exclusions",
@@ -173,7 +173,7 @@
   "noLyrics": "Lyrics not available",
   "noLyricsDesc": "We couldn't find lyrics for this song",
   "noLyricsFound": "No lyrics found",
-  "noPermissionExplanation": "Without permissions, Aurora Music won't be able to access your music library.",
+  "noPermissionExplanation": "Without permissions, Noxira Music won't be able to access your music library.",
   "noPlaylists": "No playlists available",
   "noResults": "No results found",
   "noSeparators": "No separators configured",
@@ -187,7 +187,7 @@
   "onboardingAnalytics": "Anonymous analytics & crash reports",
   "onboardingAnalyticsDesc": "Helps us fix bugs and improve performance. Never includes your listening history or personal data.",
   "onboardingAppInfoSubtitle": "Your personal music companion",
-  "onboardingAppInfoTitle": "Welcome to Aurora Music",
+  "onboardingAppInfoTitle": "Welcome to Noxira Music",
   "onboardingAudioAccess": "Audio Access",
   "onboardingAudioAccessDesc": "Required to play and manage your music library",
   "onboardingBack": "Back",
@@ -203,12 +203,12 @@
   "onboardingDynamicColors": "Dynamic Colors",
   "onboardingDynamicColorsDesc": "Match system wallpaper colors",
   "onboardingGrantPermissions": "Grant Permissions",
-  "onboardingInternetSubtitle": "How Aurora Music uses the internet",
+  "onboardingInternetSubtitle": "How Noxira Music uses the internet",
   "onboardingInternetTitle": "Internet Usage",
   "onboardingLocalMusic": "Music on your device",
   "onboardingLocalMusicDesc": "Have your music files in the palm of your hand",
   "onboardingLyrics": "Lyrics",
-  "onboardingLyricsDesc": "Downloads synchronized lyrics for your songs",
+  "onboardingLyricsDesc": "Downloads synchronized lyrics for your songs from LRCLIB, Better Lyrics, YouLyPlus and KuGou. These services receive the song title, artist, album and length. You can turn individual sources off in Settings.",
   "onboardingLyricsSupport": "Lyrics Support",
   "onboardingLyricsSupportDesc": "View synchronized lyrics while listening",
   "onboardingMaterialDesign": "Material You Design",
@@ -218,7 +218,7 @@
   "onboardingNotifications": "Notifications",
   "onboardingNotificationsDesc": "Show playback controls and updates",
   "onboardingOptional": "Optional",
-  "onboardingPermissionsSubtitle": "Aurora Music needs these permissions to work properly",
+  "onboardingPermissionsSubtitle": "Noxira Music needs these permissions to work properly",
   "onboardingPermissionsTitle": "Grant Permissions",
   "onboardingPrivacyNote": "Your privacy is important. All music files stay on your device.",
   "onboardingRequesting": "Requesting...",
@@ -235,7 +235,7 @@
   "onboardingThemeSubtitle": "Choose a theme that suits your style",
   "onboardingThemeTitle": "Customize Your Look",
   "beta_welcome_title": "Beta Testing Program",
-  "beta_welcome_thanks": "Thank you for joining our beta testing program and helping us improve Aurora Music.",
+  "beta_welcome_thanks": "Thank you for joining our beta testing program and helping us improve Noxira Music.",
   "beta_expect_bugs_title": "Expect Bugs",
   "beta_expect_bugs_desc": "You may encounter crashes or unexpected behavior. This is a testing version.",
   "beta_feedback_title": "Feedback Matters",
@@ -247,7 +247,7 @@
   "openFolderInfo": "Use your file manager to navigate to this location",
   "ownTimer": "Own timer",
   "permDeny": "Permissions denied",
-  "permissionExplanation": "Aurora Music needs these permissions to function properly. Please grant the permissions in the app settings.",
+  "permissionExplanation": "Noxira Music needs these permissions to function properly. Please grant the permissions in the app settings.",
   "permissionLater": "You can grant permissions later in app settings",
   "permissionRequired": "Permission Required",
   "playAll": "Play All",
@@ -295,6 +295,45 @@
   "searchAlbums": "Search albums",
   "searchArtists": "Search artists",
   "searchFailed": "Search failed",
+  "lyricsSource": "Lyrics source",
+  "alreadyInPlaylist": "Already in this playlist",
+  "inPlaylistHint": "In a playlist",
+  "removeDuplicates": "Remove duplicates",
+  "noDuplicatesFound": "No duplicate songs found",
+  "duplicatesRemoved": "{count} duplicate songs removed",
+  "@duplicatesRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "supportNoxiraTitle": "Support Noxira!",
+  "supportButton": "Support",
+  "supportGoalProgress": "{raised} of {goal} this month",
+  "@supportGoalProgress": {
+    "placeholders": {
+      "raised": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingSupportGoal": "Support goal",
+  "onboardingSupportGoalDesc": "Occasionally downloads a tiny public file with this month's support goal and amount raised. It is a plain download: nothing about you or your music is sent.",
+  "songAddedChip": "Added",
+  "tapToRemove": "Tap to remove",
+  "onboardingGetStarted": "Get started",
+  "onboardingYourLanguage": "Your language?",
+  "onboardingAllow": "Allow",
+  "onboardingSummaryLanguage": "Language",
+  "onboardingSummaryTheme": "Look",
+  "onboardingSummaryLibrary": "Music library access",
+  "onboardingAllowed": "Allowed",
+  "onboardingNotAllowed": "Not allowed yet",
+  "onboardingBackgroundStyle": "Background",
   "searchLyrics": "Search Lyrics",
   "searchMetadata": "Search metadata",
   "searchTracks": "Search tracks",
@@ -309,7 +348,7 @@
   "setMinutes": "Set minutes",
   "settings": "Settings",
   "settingsAbout": "About",
-  "settingsAboutApp": "About Aurora Music",
+  "settingsAboutApp": "About Noxira Music",
   "settingsAboutSubtitle": "Version, feedback & updates",
   "settingsAccentColor": "Accent Color",
   "settingsAppearance": "Appearance",
@@ -342,7 +381,16 @@
   "playlistAutomixTransitionDuration": "Transition duration",
   "playlistAutomixAutomatic": "Automatic",
   "playlistAutomixAnalyzing": "Analyzing playlist… {current} / {total} tracks",
-  "@playlistAutomixAnalyzing": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@playlistAutomixAnalyzing": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "settingsCrossfade": "Crossfade",
   "settingsCrossfadeDesc": "Smoothly blend the end of one track into the next",
   "crossfadeDuration": "Crossfade Duration",
@@ -386,8 +434,8 @@
   "settingsStorageSubtitle": "Cache & media files",
   "settingsTheme": "Theme",
   "settingsTools": "Tools",
-  "settingsResetSetup": "Reset Setup",
-  "settingsResetSetupDesc": "Restart the onboarding flow",
+  "settingsResetSetup": "Run Setup Again",
+  "settingsResetSetupDesc": "Go through the welcome setup again",
   "settingsUpdateAvailable": "Update available!",
   "settingsUpToDate": "You're up to date",
   "settingsWeeklyRecap": "Weekly Recap",
@@ -404,15 +452,15 @@
   "songsLoaded": "Songs loaded",
   "standardQuality": "Standard Quality",
   "startType": "Start typing to search",
-  "storagePermissionNeeded": "To edit metadata, Aurora Music needs permission to manage files. Please grant 'All files access' in settings.",
+  "storagePermissionNeeded": "To edit metadata, Noxira Music needs permission to manage files. Please grant 'All files access' in settings.",
   "suggestedArtists": "Artists For You",
   "suggestedTracks": "Suggested Tracks",
-  "supportAurora": "Support Aurora",
-  "supportAuroraBtn": "Support Aurora",
+  "supportAurora": "Support Noxira",
+  "supportAuroraBtn": "Support Noxira",
   "supportAuroraDescShort": "Help keep the app free",
-  "supportAuroraMessage": "Help keep Aurora Music free and support future development. Every contribution means a lot!",
-  "supportAuroraTitle": "Support Aurora Music",
-  "updatedTitle": "Aurora Music was updated",
+  "supportAuroraMessage": "Help keep Noxira Music free and support future development. Every contribution means a lot!",
+  "supportAuroraTitle": "Support Noxira Music",
+  "updatedTitle": "Noxira Music was updated",
   "updatedHighlights": "Highlights",
   "showUpdatePopup": "Update popup",
   "showUpdatePopupDesc": "Preview the screen shown after an update",
@@ -437,7 +485,7 @@
   "viewArtist": "View artist",
   "viewDetails": "View details",
   "welcomeBack": "Welcome Back",
-  "whatsNew": "What's New",
+  "whatsNew": "What's new",
   "view_changelog": "View changelog and new features",
   "year": "Year",
   "yes": "Yes",
@@ -456,11 +504,11 @@
   "back": "Back",
   "continueButton": "Continue",
   "skip": "Skip",
-  "feedback_title": "Enjoying Aurora Music?",
+  "feedback_title": "Enjoying Noxira Music?",
   "maybe_later": "Maybe Later",
   "send_feedback": "Send Feedback",
   "send_feedback_desc": "Report bugs or suggest features",
-  "rateApp": "Rate Aurora Music",
+  "rateApp": "Rate Noxira Music",
   "rateAppDesc": "Enjoying the app? Leave a review on Google Play",
   "feedbackTypeBug": "Bug",
   "feedbackTypeSuggestion": "Suggestion",
@@ -469,9 +517,9 @@
   "feedbackSentThanks": "Thanks for your feedback!",
   "feedbackSentError": "Couldn't send feedback. Please try again later.",
   "contributeTranslations": "Contribute Translations",
-  "contributeTranslationsDesc": "Help translate Aurora Music on Crowdin",
+  "contributeTranslationsDesc": "Help translate Noxira Music on Crowdin",
   "contributeTranslationsTitle": "Help Us Translate",
-  "contributeTranslationsSubtitle": "Aurora Music is available in multiple languages thanks to our amazing community. Help us reach even more users by translating the app into your language — it only takes a few minutes to get started.",
+  "contributeTranslationsSubtitle": "Noxira Music is available in multiple languages thanks to our amazing community. Help us reach even more users by translating the app into your language — it only takes a few minutes to get started.",
   "contributeTranslationsOpenCrowdin": "Open Crowdin",
   "close": "Close",
   "settingsHighendUi": "High-end UI",
@@ -604,7 +652,7 @@
   "backgroundDarkness": "Background Darkness",
   "backgroundDarknessDesc": "Overlay opacity on artwork",
   "microphoneAccessNeeded": "Microphone access needed",
-  "microphoneAccessDesc": "Aurora needs microphone access to tap your device's audio session for the live visualizer. No audio is ever recorded or stored.",
+  "microphoneAccessDesc": "Noxira needs microphone access to tap your device's audio session for the live visualizer. No audio is ever recorded or stored.",
   "recapWeek": "week",
   "recapMonth": "month",
   "recapPeriodWeek": "Week",
@@ -718,7 +766,13 @@
   "lyricsSelectLrcFile": "Please select a .lrc file",
   "lyricsNoLyricsInFile": "No lyrics found in that file",
   "importFailed": "Import failed: {error}",
-  "@importFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@importFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "lyricsImportTooltip": "Import .lrc file",
   "importPlaylistM3u": "Import playlist (.m3u)",
   "setSyncFolder": "Set sync folder…",
@@ -727,18 +781,51 @@
   "pleaseSelectM3uFile": "Please select an .m3u or .m3u8 file",
   "noMatchingSongsForPlaylist": "No matching songs found for that playlist",
   "importedPlaylist": "Imported \"{name}\" ({count} songs)",
-  "@importedPlaylist": {"placeholders": {"name": {"type": "String"}, "count": {"type": "int"}}},
+  "@importedPlaylist": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "playlistsSyncWith": "Playlists will sync with: {folder}",
-  "@playlistsSyncWith": {"placeholders": {"folder": {"type": "String"}}},
+  "@playlistsSyncWith": {
+    "placeholders": {
+      "folder": {
+        "type": "String"
+      }
+    }
+  },
   "couldNotSetSyncFolder": "Could not set sync folder: {error}",
-  "@couldNotSetSyncFolder": {"placeholders": {"error": {"type": "String"}}},
+  "@couldNotSetSyncFolder": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "setSyncFolderFirst": "Set a sync folder first",
   "playlistsSynced": "Playlists synced",
   "alreadyUpToDate": "Already up to date",
   "syncFailed": "Sync failed: {error}",
-  "@syncFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@syncFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "exportFailed": "Export failed: {error}",
-  "@exportFailed": {"placeholders": {"error": {"type": "String"}}},
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "searchFolders": "Search folders…",
   "songInfoPath": "Path",
   "closeVisualiser": "Close visualiser",
@@ -751,9 +838,14 @@
   "insightsEstListening": "Est.\nListening",
   "dismiss": "Dismiss",
   "updateVersionAvailable": "Version {version} is now available.",
-  "@updateVersionAvailable": {"placeholders": {"version": {"type": "String"}}},
+  "@updateVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
   "updateNewVersionAvailable": "A new version is now available.",
-  "whatsNew": "What's new",
   "lyricsPasteLyricsTitle": "Paste Lyrics",
   "lyricsUseLyrics": "Use Lyrics",
   "lyricsPaste": "Paste",
@@ -764,12 +856,39 @@
   "lyricsAllStamped": "✓  All lines stamped",
   "lyricsPasteFirst": "Paste lyrics first",
   "lyricsTapToStamp": "⏱  TAP TO STAMP LINE {current} / {total}",
-  "@lyricsTapToStamp": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@lyricsTapToStamp": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "lyricsNextLabel": "Next",
-
   "translationDisclaimerNote": "Some translations are AI-generated or community-contributed and may contain errors. Help us improve them on Crowdin.",
   "newLanguagesAvailableTitle": "New Languages Available",
-  "newLanguagesAvailableBody": "Aurora Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.",
+  "newLanguagesAvailableBody": "Noxira Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.",
   "newLanguagesGoToSettings": "Change Language",
-  "newLanguagesDismiss": "Got it"
+  "newLanguagesDismiss": "Got it",
+  "settingsLyricsSources": "Lyrics sources",
+  "lyricsProviderDesc": "Used when LRCLIB has no lyrics. Receives the song title, artist, album and length.",
+  "onlineAboutArtist": "About",
+  "onlineFansAlsoLike": "Fans also like",
+  "onlinePopularTracks": "Popular right now",
+  "onlineReadMore": "Read more",
+  "onlineBioDisclaimer": "Gathered automatically from public sources. Not guaranteed to be accurate.",
+  "onlineShowLess": "Show less",
+  "onlineWikipedia": "Wikipedia",
+  "onlineFansCount": "{count} fans",
+  "@onlineFansCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsOnlineSuggestions": "Online suggestions",
+  "settingsOnlineSuggestionsDesc": "Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent."
 }

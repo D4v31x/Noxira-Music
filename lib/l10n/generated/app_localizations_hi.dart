@@ -50,7 +50,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get allSongs => 'सभी गीत';
 
   @override
-  String get appName => 'ऑरोरा संगीत';
+  String get appName => 'Noxira Music';
 
   @override
   String get artist => 'कलाकार';
@@ -75,7 +75,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get audioQualityDesc => 'ऑडियो फ़ाइल के तकनीकी विनिर्देश';
 
   @override
-  String get auroraMusic => 'ऑरोरा संगीत';
+  String get auroraMusic => 'Noxira Music';
 
   @override
   String get autoPlaylists => 'स्वचालित प्लेलिस्ट';
@@ -282,11 +282,11 @@ class AppLocalizationsHi extends AppLocalizations {
       'संयुक्त कलाकार नामों को स्वचालित रूप से विभाजित करें';
 
   @override
-  String get enjoyingAurora => 'क्या आप ऑरोरा का आनंद ले रहे हैं?';
+  String get enjoyingAurora => 'क्या आप Noxira का आनंद ले रहे हैं?';
 
   @override
   String get enjoyingAuroraDesc =>
-      'यदि आप ऑरोरा म्यूजिक का उपयोग करना पसंद करते हैं, तो इसके विकास का समर्थन करने पर विचार करें। आपका समर्थन इसे मुफ्त बनाए रखने में मदद करता है!';
+      'यदि आप Noxira Music का उपयोग करना पसंद करते हैं, तो इसके विकास का समर्थन करने पर विचार करें। आपका समर्थन इसे मुफ्त बनाए रखने में मदद करता है!';
 
   @override
   String get error => 'त्रुटि';
@@ -486,7 +486,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noPermissionExplanation =>
-      'अनुमति के बिना, ऑरोरा म्यूजिक आपकी संगीत लाइब्रेरी तक पहुँच नहीं पाएगा।';
+      'अनुमति के बिना, Noxira Music आपकी संगीत लाइब्रेरी तक पहुँच नहीं पाएगा।';
 
   @override
   String get noPlaylists => 'कोई प्लेलिस्ट उपलब्ध नहीं हैं';
@@ -530,7 +530,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get onboardingAppInfoSubtitle => 'आपका व्यक्तिगत संगीत साथी';
 
   @override
-  String get onboardingAppInfoTitle => 'अरोरा म्यूजिक में आपका स्वागत है';
+  String get onboardingAppInfoTitle => 'Noxira म्यूजिक में आपका स्वागत है';
 
   @override
   String get onboardingAudioAccess => 'ऑडियो पहुँच';
@@ -584,7 +584,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingInternetSubtitle =>
-      'ऑरोरा म्यूजिक इंटरनेट का उपयोग कैसे करता है';
+      'Noxira Music इंटरनेट का उपयोग कैसे करता है';
 
   @override
   String get onboardingInternetTitle => 'इंटरनेट का उपयोग';
@@ -601,7 +601,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingLyricsDesc =>
-      'आपके गीतों के लिए सिंक्रोनाइज़्ड बोल डाउनलोड करें';
+      'आपके गीतों के लिए सिंक्रोनाइज़्ड बोल LRCLIB, Better Lyrics, YouLyPlus और KuGou से डाउनलोड करता है। इन सेवाओं को गीत का शीर्षक, कलाकार, एल्बम और अवधि मिलती है। आप सेटिंग्स में अलग-अलग स्रोत बंद कर सकते हैं।';
 
   @override
   String get onboardingLyricsSupport => 'गीत-लेखन सहायता';
@@ -635,7 +635,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingPermissionsSubtitle =>
-      'Aurora Music को ठीक से काम करने के लिए इन अनुमतियों की आवश्यकता है।';
+      'Noxira Music को ठीक से काम करने के लिए इन अनुमतियों की आवश्यकता है।';
 
   @override
   String get onboardingPermissionsTitle => 'अनुमति दें';
@@ -692,7 +692,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get beta_welcome_thanks =>
-      'Thank you for joining our beta testing program and helping us improve Aurora Music.';
+      'Thank you for joining our beta testing program and helping us improve Noxira Music.';
 
   @override
   String get beta_expect_bugs_title => 'Expect Bugs';
@@ -733,7 +733,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get permissionExplanation =>
-      'Aurora Music को ठीक से काम करने के लिए इन अनुमतियों की आवश्यकता है। कृपया ऐप सेटिंग्स में ये अनुमतियाँ प्रदान करें।';
+      'Noxira Music को ठीक से काम करने के लिए इन अनुमतियों की आवश्यकता है। कृपया ऐप सेटिंग्स में ये अनुमतियाँ प्रदान करें।';
 
   @override
   String get permissionLater =>
@@ -882,6 +882,77 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchFailed => 'खोज असफल हुई';
 
   @override
+  String get lyricsSource => 'Lyrics source';
+
+  @override
+  String get alreadyInPlaylist => 'Already in this playlist';
+
+  @override
+  String get inPlaylistHint => 'In a playlist';
+
+  @override
+  String get removeDuplicates => 'Remove duplicates';
+
+  @override
+  String get noDuplicatesFound => 'No duplicate songs found';
+
+  @override
+  String duplicatesRemoved(int count) {
+    return '$count duplicate songs removed';
+  }
+
+  @override
+  String get supportNoxiraTitle => 'Support Noxira!';
+
+  @override
+  String get supportButton => 'Support';
+
+  @override
+  String supportGoalProgress(String raised, String goal) {
+    return '$raised of $goal this month';
+  }
+
+  @override
+  String get onboardingSupportGoal => 'Support goal';
+
+  @override
+  String get onboardingSupportGoalDesc =>
+      'Occasionally downloads a tiny public file with this month\'s support goal and amount raised. It is a plain download: nothing about you or your music is sent.';
+
+  @override
+  String get songAddedChip => 'Added';
+
+  @override
+  String get tapToRemove => 'Tap to remove';
+
+  @override
+  String get onboardingGetStarted => 'Get started';
+
+  @override
+  String get onboardingYourLanguage => 'Your language?';
+
+  @override
+  String get onboardingAllow => 'Allow';
+
+  @override
+  String get onboardingSummaryLanguage => 'Language';
+
+  @override
+  String get onboardingSummaryTheme => 'Look';
+
+  @override
+  String get onboardingSummaryLibrary => 'Music library access';
+
+  @override
+  String get onboardingAllowed => 'Allowed';
+
+  @override
+  String get onboardingNotAllowed => 'Not allowed yet';
+
+  @override
+  String get onboardingBackgroundStyle => 'Background';
+
+  @override
   String get searchLyrics => 'गीत के बोल खोजें';
 
   @override
@@ -924,7 +995,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get settingsAbout => 'बारे में';
 
   @override
-  String get settingsAboutApp => 'अरोरा म्यूजिक के बारे में';
+  String get settingsAboutApp => 'Noxira म्यूजिक के बारे में';
 
   @override
   String get settingsAboutSubtitle => 'संस्करण, प्रतिक्रिया और अपडेट';
@@ -1204,7 +1275,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get storagePermissionNeeded =>
-      'मेटाडेटा संपादित करने के लिए, ऑरोरा म्यूजिक को फ़ाइलों का प्रबंधन करने की अनुमति चाहिए। कृपया सेटिंग्स में \'सभी फ़ाइलों तक पहुँच\' प्रदान करें।';
+      'मेटाडेटा संपादित करने के लिए, Noxira Music को फ़ाइलों का प्रबंधन करने की अनुमति चाहिए। कृपया सेटिंग्स में \'सभी फ़ाइलों तक पहुँच\' प्रदान करें।';
 
   @override
   String get suggestedArtists => 'कलाकार आपके लिए';
@@ -1213,23 +1284,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get suggestedTracks => 'सुझाए गए ट्रैक';
 
   @override
-  String get supportAurora => 'अरोरा का समर्थन करें';
+  String get supportAurora => 'Noxira का समर्थन करें';
 
   @override
-  String get supportAuroraBtn => 'अरोरा का समर्थन करें';
+  String get supportAuroraBtn => 'Noxira का समर्थन करें';
 
   @override
   String get supportAuroraDescShort => 'ऐप को मुफ्त बनाए रखने में मदद करें';
 
   @override
   String get supportAuroraMessage =>
-      'Aurora Music को मुफ्त बनाए रखने और भविष्य के विकास का समर्थन करने में मदद करें। हर योगदान बहुत मायने रखता है!';
+      'Noxira Music को मुफ्त बनाए रखने और भविष्य के विकास का समर्थन करने में मदद करें। हर योगदान बहुत मायने रखता है!';
 
   @override
-  String get supportAuroraTitle => 'अरोरा म्यूजिक का समर्थन करें';
+  String get supportAuroraTitle => 'Noxira म्यूजिक का समर्थन करें';
 
   @override
-  String get updatedTitle => 'Aurora Music was updated';
+  String get updatedTitle => 'Noxira Music was updated';
 
   @override
   String get updatedHighlights => 'Highlights';
@@ -1364,7 +1435,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get skip => 'छोड़ें';
 
   @override
-  String get feedback_title => 'क्या आप ऑरोरा म्यूजिक का आनंद ले रहे हैं?';
+  String get feedback_title => 'क्या आप Noxira Music का आनंद ले रहे हैं?';
 
   @override
   String get maybe_later => 'शायद बाद में';
@@ -1376,7 +1447,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get send_feedback_desc => 'बग रिपोर्ट करें या फीचर सुझाएँ';
 
   @override
-  String get rateApp => 'Rate Aurora Music';
+  String get rateApp => 'Rate Noxira Music';
 
   @override
   String get rateAppDesc => 'Enjoying the app? Leave a review on Google Play';
@@ -1405,14 +1476,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get contributeTranslationsDesc =>
-      'Crowdin पर Aurora Music का अनुवाद करने में मदद करें';
+      'Crowdin पर Noxira Music का अनुवाद करने में मदद करें';
 
   @override
   String get contributeTranslationsTitle => 'हमारा अनुवाद करने में मदद करें';
 
   @override
   String get contributeTranslationsSubtitle =>
-      'हमारे अद्भुत समुदाय की बदौलत ऑरोरा म्यूजिक कई भाषाओं में उपलब्ध है। ऐप को अपनी भाषा में अनुवाद करके हमें और अधिक उपयोगकर्ताओं तक पहुँचने में मदद करें — शुरू करने में केवल कुछ ही मिनट लगते हैं।';
+      'हमारे अद्भुत समुदाय की बदौलत Noxira Music कई भाषाओं में उपलब्ध है। ऐप को अपनी भाषा में अनुवाद करके हमें और अधिक उपयोगकर्ताओं तक पहुँचने में मदद करें — शुरू करने में केवल कुछ ही मिनट लगते हैं।';
 
   @override
   String get contributeTranslationsOpenCrowdin => 'क्राउडइन खोलें';
@@ -1608,7 +1679,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get microphoneAccessDesc =>
-      'Aurora को लाइव विज़ुअलाइज़र के लिए आपके डिवाइस के ऑडियो सत्र तक पहुँचने हेतु माइक्रोफ़ोन की अनुमति चाहिए। कोई भी ऑडियो कभी रिकॉर्ड या संग्रहीत नहीं किया जाता।';
+      'Noxira को लाइव विज़ुअलाइज़र के लिए आपके डिवाइस के ऑडियो सत्र तक पहुँचने हेतु माइक्रोफ़ोन की अनुमति चाहिए। कोई भी ऑडियो कभी रिकॉर्ड या संग्रहीत नहीं किया जाता।';
 
   @override
   String get recapWeek => 'सप्ताह';
@@ -1629,7 +1700,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recapMonthly => 'मासिक';
 
   @override
-  String get recapIntroAppName => 'ऑरोरा संगीत';
+  String get recapIntroAppName => 'Noxira Music';
 
   @override
   String recapIntroTitle(String period) {
@@ -1965,11 +2036,52 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get newLanguagesAvailableBody =>
-      'Aurora Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.';
+      'Noxira Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.';
 
   @override
   String get newLanguagesGoToSettings => 'Change Language';
 
   @override
   String get newLanguagesDismiss => 'Got it';
+
+  @override
+  String get settingsLyricsSources => 'बोल के स्रोत';
+
+  @override
+  String get lyricsProviderDesc =>
+      'जब LRCLIB में बोल न हों तब उपयोग होता है। गीत का शीर्षक, कलाकार, एल्बम और अवधि प्राप्त करता है।';
+
+  @override
+  String get onlineAboutArtist => 'About';
+
+  @override
+  String get onlineFansAlsoLike => 'Fans also like';
+
+  @override
+  String get onlinePopularTracks => 'Popular right now';
+
+  @override
+  String get onlineReadMore => 'Read more';
+
+  @override
+  String get onlineBioDisclaimer =>
+      'Gathered automatically from public sources. Not guaranteed to be accurate.';
+
+  @override
+  String get onlineShowLess => 'Show less';
+
+  @override
+  String get onlineWikipedia => 'Wikipedia';
+
+  @override
+  String onlineFansCount(String count) {
+    return '$count fans';
+  }
+
+  @override
+  String get settingsOnlineSuggestions => 'Online suggestions';
+
+  @override
+  String get settingsOnlineSuggestionsDesc =>
+      'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.';
 }

@@ -13,7 +13,7 @@
   "album": "Album",
   "albums": "Alba",
   "allSongs": "Všechny skladby",
-  "appName": "Aurora Music",
+  "appName": "Noxira Music",
   "artist": "Umělec",
   "artistName": "Jméno umělce",
   "artists": "Umělci",
@@ -21,7 +21,7 @@
   "artistSeparationDesc": "Nastavení rozdělování více umělců",
   "audioQuality": "Kvalita zvuku",
   "audioQualityDesc": "Technické specifikace zvukového souboru",
-  "auroraMusic": "Aurora Music",
+  "auroraMusic": "Noxira Music",
   "autoPlaylists": "Automatické playlisty",
   "autoTag": "Auto tag",
   "smartPlaylists": "Chytré playlisty",
@@ -74,8 +74,8 @@
   "duration": "Délka",
   "enableArtistSeparation": "Povolit oddělování umělců",
   "enableArtistSeparationDesc": "Automaticky rozdělit kombinovaná jména umělců",
-  "enjoyingAurora": "Líbí se vám Aurora?",
-  "enjoyingAuroraDesc": "Pokud rádi používáte Aurora Music, zvažte podporu jejího vývoje. Vaše podpora pomáhá udržet aplikaci zdarma!",
+  "enjoyingAurora": "Líbí se vám Noxira?",
+  "enjoyingAuroraDesc": "Pokud rádi používáte Noxira Music, zvažte podporu jejího vývoje. Vaše podpora pomáhá udržet aplikaci zdarma!",
   "error": "Chyba",
   "exclusionHint": "např. AC/DC",
   "exclusions": "Výjimky",
@@ -139,7 +139,7 @@
   "noLyrics": "Žádné texty k zobrazení",
   "noLyricsDesc": "Pro tuto skladbu jsme nenašli text",
   "noLyricsFound": "Text písně nenalezen",
-  "noPermissionExplanation": "Bez oprávnění Aurora Music nemůže přistupovat k vaší hudební knihovně.",
+  "noPermissionExplanation": "Bez oprávnění Noxira Music nemůže přistupovat k vaší hudební knihovně.",
   "noPlaylists": "Žádné playlisty",
   "noResults": "Žádné výsledky",
   "noSeparators": "Žádné oddělovače nakonfigurovány",
@@ -153,7 +153,7 @@
   "onboardingAnalytics": "Anonymní analytika a hlášení o pádech",
   "onboardingAnalyticsDesc": "Pomáhá nám opravovat chyby a zlepšovat výkon. Nikdy neobsahuje historii poslechu ani osobní údaje.",
   "onboardingAppInfoSubtitle": "Váš osobní hudební společník",
-  "onboardingAppInfoTitle": "Vítejte v Aurora Music",
+  "onboardingAppInfoTitle": "Vítejte v Noxira Music",
   "onboardingAudioAccess": "Přístup ke zvuku",
   "onboardingAudioAccessDesc": "Potřebné pro přehrávání a správu hudební knihovny",
   "onboardingBack": "Zpět",
@@ -169,12 +169,12 @@
   "onboardingDynamicColors": "Dynamické barvy",
   "onboardingDynamicColorsDesc": "Přizpůsobit se barvám tapety systému",
   "onboardingGrantPermissions": "Udělit oprávnění",
-  "onboardingInternetSubtitle": "Jak Aurora Music využívá internet",
+  "onboardingInternetSubtitle": "Jak Noxira Music využívá internet",
   "onboardingInternetTitle": "Využití internetu",
   "onboardingLocalMusic": "Hudba na vašem zařízení",
   "onboardingLocalMusicDesc": "Mějte své hudební soubory na dosah ruky",
   "onboardingLyrics": "Texty písní",
-  "onboardingLyricsDesc": "Stahuje synchronizované texty k vašim skladbám",
+  "onboardingLyricsDesc": "Stahuje synchronizované texty k vašim skladbám ze služeb LRCLIB, Better Lyrics, YouLyPlus a KuGou. Tyto služby obdrží název skladby, interpreta, album a délku. Jednotlivé zdroje můžete vypnout v Nastavení.",
   "onboardingLyricsSupport": "Podpora textů",
   "onboardingLyricsSupportDesc": "Zobrazuje synchronizované texty během poslechu",
   "onboardingMaterialDesign": "Material You Design",
@@ -184,7 +184,7 @@
   "onboardingNotifications": "Oznámení",
   "onboardingNotificationsDesc": "Zobrazení ovládacích prvků přehrávání a aktualizací",
   "onboardingOptional": "Volitelné",
-  "onboardingPermissionsSubtitle": "Aurora Music potřebuje tato oprávnění pro správné fungování",
+  "onboardingPermissionsSubtitle": "Noxira Music potřebuje tato oprávnění pro správné fungování",
   "onboardingPermissionsTitle": "Udělte oprávnění",
   "onboardingPrivacyNote": "Vaše soukromí je důležité. Všechny hudební soubory zůstávají na vašem zařízení.",
   "onboardingRequesting": "Vyžaduji...",
@@ -203,7 +203,7 @@
   "openFolderInfo": "Použijte správce souborů pro navigaci na toto umístění",
   "ownTimer": "Vlastní nastavení",
   "permDeny": "Oprávnění odepřeno",
-  "permissionExplanation": "Aurora Music potřebuje tato oprávnění pro správné fungování. Udělte prosím oprávnění v nastavení aplikace.",
+  "permissionExplanation": "Noxira Music potřebuje tato oprávnění pro správné fungování. Udělte prosím oprávnění v nastavení aplikace.",
   "permissionLater": "Oprávnění můžete udělit později v nastavení aplikace",
   "permissionRequired": "Vyžadováno oprávnění",
   "playAll": "Přehrát vše",
@@ -251,6 +251,45 @@
   "searchAlbums": "Hledat alba",
   "searchArtists": "Hledat umělce",
   "searchFailed": "Vyhledávání selhalo",
+  "lyricsSource": "Zdroj textů",
+  "alreadyInPlaylist": "Už je v tomto playlistu",
+  "inPlaylistHint": "V playlistu",
+  "removeDuplicates": "Odstranit duplicity",
+  "noDuplicatesFound": "Žádné duplicitní skladby",
+  "duplicatesRemoved": "Odstraněno duplicitních skladeb: {count}",
+  "@duplicatesRemoved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "supportNoxiraTitle": "Podpořte Noxiru!",
+  "supportButton": "Podpořit",
+  "supportGoalProgress": "{raised} z {goal} tento měsíc",
+  "@supportGoalProgress": {
+    "placeholders": {
+      "raised": {
+        "type": "String"
+      },
+      "goal": {
+        "type": "String"
+      }
+    }
+  },
+  "onboardingSupportGoal": "Cíl podpory",
+  "onboardingSupportGoalDesc": "Občas stáhne malý veřejný soubor s měsíčním cílem podpory a vybranou částkou. Jde o obyčejné stažení: nic o vás ani vaší hudbě se neodesílá.",
+  "songAddedChip": "Přidáno",
+  "tapToRemove": "Klepnutím odebrat",
+  "onboardingGetStarted": "Začít",
+  "onboardingYourLanguage": "Váš jazyk?",
+  "onboardingAllow": "Povolit",
+  "onboardingSummaryLanguage": "Jazyk",
+  "onboardingSummaryTheme": "Vzhled",
+  "onboardingSummaryLibrary": "Přístup k hudební knihovně",
+  "onboardingAllowed": "Povoleno",
+  "onboardingNotAllowed": "Zatím nepovoleno",
+  "onboardingBackgroundStyle": "Pozadí",
   "searchLyrics": "Hledat text",
   "searchMetadata": "Hledat metadata",
   "searchTracks": "Hledat skladby",
@@ -265,7 +304,7 @@
   "setMinutes": "Vyberte počet minut",
   "settings": "Nastavení",
   "settingsAbout": "O aplikaci",
-  "settingsAboutApp": "O Aurora Music",
+  "settingsAboutApp": "O Noxira Music",
   "settingsAboutSubtitle": "Verze, zpětná vazba a aktualizace",
   "settingsAccentColor": "Barva zvýraznění",
   "settingsAppearance": "Vzhled",
@@ -299,7 +338,16 @@
   "playlistAutomixTransitionDuration": "Délka přechodu",
   "playlistAutomixAutomatic": "Automaticky",
   "playlistAutomixAnalyzing": "Analyzýza playlistu… {current} / {total} skladeb",
-  "@playlistAutomixAnalyzing": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
+  "@playlistAutomixAnalyzing": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "settingsCrossfade": "Prolínání skladeb",
   "settingsCrossfadeDesc": "Plynule prolne konec skladby se začátkem další",
   "crossfadeDuration": "Délka prolínání",
@@ -329,8 +377,8 @@
   "settingsRecapContent": "Obsah přehledu",
   "settingsRecapContentDesc": "Ovládá, jak velkou historii přehled zobrazuje, když ho otevřete ručně nebo přes banner.",
   "settingsRecapSchedule": "Plán přehledů",
-  "settingsResetSetup": "Resetovat nastavení",
-  "settingsResetSetupDesc": "Restartovat průvodce nastavením",
+  "settingsResetSetup": "Spustit nastavení znovu",
+  "settingsResetSetupDesc": "Projít úvodní průvodce nastavením znovu",
   "settingsStorage": "Úložiště",
   "settingsStorageSubtitle": "Mezipaměť a mediální soubory",
   "settingsTheme": "Motiv",
@@ -351,14 +399,14 @@
   "songsLoaded": "Písní načteno",
   "standardQuality": "Standardní kvalita",
   "startType": "Začněte psát pro vyhledávání",
-  "storagePermissionNeeded": "Pro úpravu metadat potřebuje Aurora Music oprávnění ke správě souborů. Udělte prosím oprávnění 'Přístup ke všem souborům' v nastavení.",
+  "storagePermissionNeeded": "Pro úpravu metadat potřebuje Noxira Music oprávnění ke správě souborů. Udělte prosím oprávnění 'Přístup ke všem souborům' v nastavení.",
   "suggestedArtists": "Umělci pro tebe",
   "suggestedTracks": "Doporučené skladby",
-  "supportAurora": "Podpořit Auroru",
-  "supportAuroraBtn": "Podpořit Auroru",
+  "supportAurora": "Podpořit Noxiru",
+  "supportAuroraBtn": "Podpořit Noxiru",
   "supportAuroraDescShort": "Pomozte udržet aplikaci zdarma",
-  "supportAuroraMessage": "Pomozte udržet Aurora Music zdarma a podpořte budoucí vývoj. Každý příspěvek hodně znamená!",
-  "supportAuroraTitle": "Podpořte Aurora Music",
+  "supportAuroraMessage": "Pomozte udržet Noxira Music zdarma a podpořte budoucí vývoj. Každý příspěvek hodně znamená!",
+  "supportAuroraTitle": "Podpořte Noxira Music",
   "tapAddToAddSongs": "Klepněte na + pro přidání skladeb",
   "thankYouSupport": "Děkuji za vaši podporu!",
   "theme": "Téma",
@@ -378,7 +426,7 @@
   "viewArtist": "Zobrazit umělce",
   "viewDetails": "Zobrazit detaily",
   "welcomeBack": "Vítejte zpět",
-  "whatsNew": "Co je nového (v angličtině)",
+  "whatsNew": "Co je nového",
   "view_changelog": "Zobrazit seznam změn a nové funkce",
   "year": "Rok",
   "yes": "Ano",
@@ -397,14 +445,14 @@
   "back": "Zpět",
   "continueButton": "Pokračovat",
   "skip": "Přeskočit",
-  "feedback_title": "Líbí se vám Aurora Music?",
+  "feedback_title": "Líbí se vám Noxira Music?",
   "maybe_later": "Možná později",
   "send_feedback": "Odeslat zpětnou vazbu",
   "send_feedback_desc": "Nahlásit chyby nebo navrhnout funkce",
   "contributeTranslations": "Přeložit aplikaci",
-  "contributeTranslationsDesc": "Pomoci přeložit Aurora Music na Crowdin",
+  "contributeTranslationsDesc": "Pomoci přeložit Noxira Music na Crowdin",
   "contributeTranslationsTitle": "Přeložte aplikaci do vašeho jazyka",
-  "contributeTranslationsSubtitle": "Aurora Music je dostupná ve více jazycích díky naší úžasné komunitě. Pomozte nám oslovit ještě více uživatelů překladem aplikace do svého jazyka — začít trvá jen pár minut.",
+  "contributeTranslationsSubtitle": "Noxira Music je dostupná ve více jazycích díky naší úžasné komunitě. Pomozte nám oslovit ještě více uživatelů překladem aplikace do svého jazyka — začít trvá jen pár minut.",
   "contributeTranslationsOpenCrowdin": "Otevřít Crowdin",
   "close": "Zavřít",
   "settingsHighendUi": "Vysoce výkonné UI",
@@ -531,7 +579,7 @@
   "onboardingVisualizerAccess": "Vizualizér",
   "onboardingVisualizerAccessDesc": "Umožňuje vizualizéru číst audio session vašeho zařízení pro zobrazení vizualizéru. Mikrofon není nikdy použit pro nahrávání ani ukládání zvuku.",
   "microphoneAccessNeeded": "Je potřeba přístup k mikrofonu",
-  "microphoneAccessDesc": "Aurora potřebuje přístup k mikrofonu pro živý vizualizér. Žádný zvuk není nikdy nahrán ani uložen.",
+  "microphoneAccessDesc": "Noxira potřebuje přístup k mikrofonu pro živý vizualizér. Žádný zvuk není nikdy nahrán ani uložen.",
   "recapWeek": "týden",
   "recapMonth": "měsíc",
   "recapPeriodWeek": "Týden",
@@ -699,7 +747,6 @@
   "dismiss": "Zavřít",
   "updateVersionAvailable": "Verze {version} je nyní k dispozici.",
   "updateNewVersionAvailable": "Je dostupná nová verze.",
-  "whatsNew": "Co je nového",
   "lyricsPasteLyricsTitle": "Vložit texty",
   "lyricsUseLyrics": "Použít texty",
   "lyricsPaste": "Vložit",
@@ -710,6 +757,34 @@
   "lyricsAllStamped": "✓  Všechny řádky označeny",
   "lyricsPasteFirst": "Nejdříve vložte texty",
   "lyricsTapToStamp": "⏱  OZNAČIT ŘÁDEK {current} / {total}",
-  "@lyricsTapToStamp": {"placeholders": {"current": {"type": "int"}, "total": {"type": "int"}}},
-  "lyricsNextLabel": "Další"
+  "@lyricsTapToStamp": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "lyricsNextLabel": "Další",
+  "settingsLyricsSources": "Zdroje textů",
+  "lyricsProviderDesc": "Použije se, když LRCLIB nemá text. Obdrží název, interpreta, album a délku.",
+  "onlineAboutArtist": "O interpretovi",
+  "onlineFansAlsoLike": "Fanoušci také poslouchají",
+  "onlinePopularTracks": "Právě populární",
+  "onlineReadMore": "Číst dál",
+  "onlineBioDisclaimer": "Automaticky získáno z veřejných zdrojů. Správnost není zaručena.",
+  "onlineShowLess": "Zobrazit méně",
+  "onlineWikipedia": "Wikipedie",
+  "onlineFansCount": "{count} fanoušků",
+  "@onlineFansCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsOnlineSuggestions": "Online návrhy",
+  "settingsOnlineSuggestionsDesc": "Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta."
 }

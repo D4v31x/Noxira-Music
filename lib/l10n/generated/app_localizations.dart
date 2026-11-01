@@ -187,7 +187,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music'**
+  /// **'Noxira Music'**
   String get appName;
 
   /// No description provided for @artist.
@@ -235,7 +235,7 @@ abstract class AppLocalizations {
   /// No description provided for @auroraMusic.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music'**
+  /// **'Noxira Music'**
   String get auroraMusic;
 
   /// No description provided for @autoPlaylists.
@@ -625,13 +625,13 @@ abstract class AppLocalizations {
   /// No description provided for @enjoyingAurora.
   ///
   /// In en, this message translates to:
-  /// **'Enjoying Aurora?'**
+  /// **'Enjoying Noxira?'**
   String get enjoyingAurora;
 
   /// No description provided for @enjoyingAuroraDesc.
   ///
   /// In en, this message translates to:
-  /// **'If you love using Aurora Music, consider supporting its development. Your support helps keep it free!'**
+  /// **'If you love using Noxira Music, consider supporting its development. Your support helps keep it free!'**
   String get enjoyingAuroraDesc;
 
   /// No description provided for @error.
@@ -1021,7 +1021,7 @@ abstract class AppLocalizations {
   /// No description provided for @noPermissionExplanation.
   ///
   /// In en, this message translates to:
-  /// **'Without permissions, Aurora Music won\'t be able to access your music library.'**
+  /// **'Without permissions, Noxira Music won\'t be able to access your music library.'**
   String get noPermissionExplanation;
 
   /// No description provided for @noPlaylists.
@@ -1105,7 +1105,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingAppInfoTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Aurora Music'**
+  /// **'Welcome to Noxira Music'**
   String get onboardingAppInfoTitle;
 
   /// No description provided for @onboardingAudioAccess.
@@ -1201,7 +1201,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingInternetSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'How Aurora Music uses the internet'**
+  /// **'How Noxira Music uses the internet'**
   String get onboardingInternetSubtitle;
 
   /// No description provided for @onboardingInternetTitle.
@@ -1231,7 +1231,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingLyricsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Downloads synchronized lyrics for your songs'**
+  /// **'Downloads synchronized lyrics for your songs from LRCLIB, Better Lyrics, YouLyPlus and KuGou. These services receive the song title, artist, album and length. You can turn individual sources off in Settings.'**
   String get onboardingLyricsDesc;
 
   /// No description provided for @onboardingLyricsSupport.
@@ -1291,7 +1291,7 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingPermissionsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music needs these permissions to work properly'**
+  /// **'Noxira Music needs these permissions to work properly'**
   String get onboardingPermissionsSubtitle;
 
   /// No description provided for @onboardingPermissionsTitle.
@@ -1393,7 +1393,7 @@ abstract class AppLocalizations {
   /// No description provided for @beta_welcome_thanks.
   ///
   /// In en, this message translates to:
-  /// **'Thank you for joining our beta testing program and helping us improve Aurora Music.'**
+  /// **'Thank you for joining our beta testing program and helping us improve Noxira Music.'**
   String get beta_welcome_thanks;
 
   /// No description provided for @beta_expect_bugs_title.
@@ -1465,7 +1465,7 @@ abstract class AppLocalizations {
   /// No description provided for @permissionExplanation.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music needs these permissions to function properly. Please grant the permissions in the app settings.'**
+  /// **'Noxira Music needs these permissions to function properly. Please grant the permissions in the app settings.'**
   String get permissionExplanation;
 
   /// No description provided for @permissionLater.
@@ -1750,6 +1750,138 @@ abstract class AppLocalizations {
   /// **'Search failed'**
   String get searchFailed;
 
+  /// No description provided for @lyricsSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics source'**
+  String get lyricsSource;
+
+  /// No description provided for @alreadyInPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Already in this playlist'**
+  String get alreadyInPlaylist;
+
+  /// No description provided for @inPlaylistHint.
+  ///
+  /// In en, this message translates to:
+  /// **'In a playlist'**
+  String get inPlaylistHint;
+
+  /// No description provided for @removeDuplicates.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove duplicates'**
+  String get removeDuplicates;
+
+  /// No description provided for @noDuplicatesFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No duplicate songs found'**
+  String get noDuplicatesFound;
+
+  /// No description provided for @duplicatesRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} duplicate songs removed'**
+  String duplicatesRemoved(int count);
+
+  /// No description provided for @supportNoxiraTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Support Noxira!'**
+  String get supportNoxiraTitle;
+
+  /// No description provided for @supportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get supportButton;
+
+  /// No description provided for @supportGoalProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{raised} of {goal} this month'**
+  String supportGoalProgress(String raised, String goal);
+
+  /// No description provided for @onboardingSupportGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Support goal'**
+  String get onboardingSupportGoal;
+
+  /// No description provided for @onboardingSupportGoalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Occasionally downloads a tiny public file with this month\'s support goal and amount raised. It is a plain download: nothing about you or your music is sent.'**
+  String get onboardingSupportGoalDesc;
+
+  /// No description provided for @songAddedChip.
+  ///
+  /// In en, this message translates to:
+  /// **'Added'**
+  String get songAddedChip;
+
+  /// No description provided for @tapToRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to remove'**
+  String get tapToRemove;
+
+  /// No description provided for @onboardingGetStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get onboardingGetStarted;
+
+  /// No description provided for @onboardingYourLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your language?'**
+  String get onboardingYourLanguage;
+
+  /// No description provided for @onboardingAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get onboardingAllow;
+
+  /// No description provided for @onboardingSummaryLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get onboardingSummaryLanguage;
+
+  /// No description provided for @onboardingSummaryTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Look'**
+  String get onboardingSummaryTheme;
+
+  /// No description provided for @onboardingSummaryLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Music library access'**
+  String get onboardingSummaryLibrary;
+
+  /// No description provided for @onboardingAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed'**
+  String get onboardingAllowed;
+
+  /// No description provided for @onboardingNotAllowed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not allowed yet'**
+  String get onboardingNotAllowed;
+
+  /// No description provided for @onboardingBackgroundStyle.
+  ///
+  /// In en, this message translates to:
+  /// **'Background'**
+  String get onboardingBackgroundStyle;
+
   /// No description provided for @searchLyrics.
   ///
   /// In en, this message translates to:
@@ -1837,7 +1969,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAboutApp.
   ///
   /// In en, this message translates to:
-  /// **'About Aurora Music'**
+  /// **'About Noxira Music'**
   String get settingsAboutApp;
 
   /// No description provided for @settingsAboutSubtitle.
@@ -2251,13 +2383,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsResetSetup.
   ///
   /// In en, this message translates to:
-  /// **'Reset Setup'**
+  /// **'Run Setup Again'**
   String get settingsResetSetup;
 
   /// No description provided for @settingsResetSetupDesc.
   ///
   /// In en, this message translates to:
-  /// **'Restart the onboarding flow'**
+  /// **'Go through the welcome setup again'**
   String get settingsResetSetupDesc;
 
   /// No description provided for @settingsUpdateAvailable.
@@ -2359,7 +2491,7 @@ abstract class AppLocalizations {
   /// No description provided for @storagePermissionNeeded.
   ///
   /// In en, this message translates to:
-  /// **'To edit metadata, Aurora Music needs permission to manage files. Please grant \'All files access\' in settings.'**
+  /// **'To edit metadata, Noxira Music needs permission to manage files. Please grant \'All files access\' in settings.'**
   String get storagePermissionNeeded;
 
   /// No description provided for @suggestedArtists.
@@ -2377,13 +2509,13 @@ abstract class AppLocalizations {
   /// No description provided for @supportAurora.
   ///
   /// In en, this message translates to:
-  /// **'Support Aurora'**
+  /// **'Support Noxira'**
   String get supportAurora;
 
   /// No description provided for @supportAuroraBtn.
   ///
   /// In en, this message translates to:
-  /// **'Support Aurora'**
+  /// **'Support Noxira'**
   String get supportAuroraBtn;
 
   /// No description provided for @supportAuroraDescShort.
@@ -2395,19 +2527,19 @@ abstract class AppLocalizations {
   /// No description provided for @supportAuroraMessage.
   ///
   /// In en, this message translates to:
-  /// **'Help keep Aurora Music free and support future development. Every contribution means a lot!'**
+  /// **'Help keep Noxira Music free and support future development. Every contribution means a lot!'**
   String get supportAuroraMessage;
 
   /// No description provided for @supportAuroraTitle.
   ///
   /// In en, this message translates to:
-  /// **'Support Aurora Music'**
+  /// **'Support Noxira Music'**
   String get supportAuroraTitle;
 
   /// No description provided for @updatedTitle.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music was updated'**
+  /// **'Noxira Music was updated'**
   String get updatedTitle;
 
   /// No description provided for @updatedHighlights.
@@ -2671,7 +2803,7 @@ abstract class AppLocalizations {
   /// No description provided for @feedback_title.
   ///
   /// In en, this message translates to:
-  /// **'Enjoying Aurora Music?'**
+  /// **'Enjoying Noxira Music?'**
   String get feedback_title;
 
   /// No description provided for @maybe_later.
@@ -2695,7 +2827,7 @@ abstract class AppLocalizations {
   /// No description provided for @rateApp.
   ///
   /// In en, this message translates to:
-  /// **'Rate Aurora Music'**
+  /// **'Rate Noxira Music'**
   String get rateApp;
 
   /// No description provided for @rateAppDesc.
@@ -2749,7 +2881,7 @@ abstract class AppLocalizations {
   /// No description provided for @contributeTranslationsDesc.
   ///
   /// In en, this message translates to:
-  /// **'Help translate Aurora Music on Crowdin'**
+  /// **'Help translate Noxira Music on Crowdin'**
   String get contributeTranslationsDesc;
 
   /// No description provided for @contributeTranslationsTitle.
@@ -2761,7 +2893,7 @@ abstract class AppLocalizations {
   /// No description provided for @contributeTranslationsSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music is available in multiple languages thanks to our amazing community. Help us reach even more users by translating the app into your language — it only takes a few minutes to get started.'**
+  /// **'Noxira Music is available in multiple languages thanks to our amazing community. Help us reach even more users by translating the app into your language — it only takes a few minutes to get started.'**
   String get contributeTranslationsSubtitle;
 
   /// No description provided for @contributeTranslationsOpenCrowdin.
@@ -3097,7 +3229,7 @@ abstract class AppLocalizations {
   /// No description provided for @microphoneAccessDesc.
   ///
   /// In en, this message translates to:
-  /// **'Aurora needs microphone access to tap your device\'s audio session for the live visualizer. No audio is ever recorded or stored.'**
+  /// **'Noxira needs microphone access to tap your device\'s audio session for the live visualizer. No audio is ever recorded or stored.'**
   String get microphoneAccessDesc;
 
   /// No description provided for @recapWeek.
@@ -3733,7 +3865,7 @@ abstract class AppLocalizations {
   /// No description provided for @newLanguagesAvailableBody.
   ///
   /// In en, this message translates to:
-  /// **'Aurora Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.'**
+  /// **'Noxira Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.'**
   String get newLanguagesAvailableBody;
 
   /// No description provided for @newLanguagesGoToSettings.
@@ -3747,6 +3879,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Got it'**
   String get newLanguagesDismiss;
+
+  /// No description provided for @settingsLyricsSources.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics sources'**
+  String get settingsLyricsSources;
+
+  /// No description provided for @lyricsProviderDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Used when LRCLIB has no lyrics. Receives the song title, artist, album and length.'**
+  String get lyricsProviderDesc;
+
+  /// No description provided for @onlineAboutArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get onlineAboutArtist;
+
+  /// No description provided for @onlineFansAlsoLike.
+  ///
+  /// In en, this message translates to:
+  /// **'Fans also like'**
+  String get onlineFansAlsoLike;
+
+  /// No description provided for @onlinePopularTracks.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular right now'**
+  String get onlinePopularTracks;
+
+  /// No description provided for @onlineReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read more'**
+  String get onlineReadMore;
+
+  /// No description provided for @onlineBioDisclaimer.
+  ///
+  /// In en, this message translates to:
+  /// **'Gathered automatically from public sources. Not guaranteed to be accurate.'**
+  String get onlineBioDisclaimer;
+
+  /// No description provided for @onlineShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get onlineShowLess;
+
+  /// No description provided for @onlineWikipedia.
+  ///
+  /// In en, this message translates to:
+  /// **'Wikipedia'**
+  String get onlineWikipedia;
+
+  /// No description provided for @onlineFansCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} fans'**
+  String onlineFansCount(String count);
+
+  /// No description provided for @settingsOnlineSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Online suggestions'**
+  String get settingsOnlineSuggestions;
+
+  /// No description provided for @settingsOnlineSuggestionsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.'**
+  String get settingsOnlineSuggestionsDesc;
 }
 
 class _AppLocalizationsDelegate

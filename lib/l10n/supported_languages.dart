@@ -1,4 +1,4 @@
-/// Centralized registry of languages supported by Aurora Music.
+/// Centralized registry of languages supported by Noxira Music.
 ///
 /// ## How to add a new language (for community translators)
 ///
@@ -22,7 +22,8 @@
 /// resolution) derives its data from this single list.
 ///
 library;
-/// Metadata for a single locale that Aurora Music ships.
+
+/// Metadata for a single locale that Noxira Music ships.
 class SupportedLanguage {
   /// BCP-47 language tag (matches the ARB filename suffix, e.g. `'de'`).
   final String code;
@@ -94,4 +95,3 @@ class SupportedLanguages {
   static String nativeNameFor(String languageCode) =>
       forCode(languageCode)?.nativeName ?? languageCode.toUpperCase();
 }
-

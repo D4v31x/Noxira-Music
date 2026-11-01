@@ -50,7 +50,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get allSongs => 'Všechny skladby';
 
   @override
-  String get appName => 'Aurora Music';
+  String get appName => 'Noxira Music';
 
   @override
   String get artist => 'Umělec';
@@ -74,7 +74,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get audioQualityDesc => 'Technické specifikace zvukového souboru';
 
   @override
-  String get auroraMusic => 'Aurora Music';
+  String get auroraMusic => 'Noxira Music';
 
   @override
   String get autoPlaylists => 'Automatické playlisty';
@@ -279,11 +279,11 @@ class AppLocalizationsCs extends AppLocalizations {
       'Automaticky rozdělit kombinovaná jména umělců';
 
   @override
-  String get enjoyingAurora => 'Líbí se vám Aurora?';
+  String get enjoyingAurora => 'Líbí se vám Noxira?';
 
   @override
   String get enjoyingAuroraDesc =>
-      'Pokud rádi používáte Aurora Music, zvažte podporu jejího vývoje. Vaše podpora pomáhá udržet aplikaci zdarma!';
+      'Pokud rádi používáte Noxira Music, zvažte podporu jejího vývoje. Vaše podpora pomáhá udržet aplikaci zdarma!';
 
   @override
   String get error => 'Chyba';
@@ -481,7 +481,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get noPermissionExplanation =>
-      'Bez oprávnění Aurora Music nemůže přistupovat k vaší hudební knihovně.';
+      'Bez oprávnění Noxira Music nemůže přistupovat k vaší hudební knihovně.';
 
   @override
   String get noPlaylists => 'Žádné playlisty';
@@ -525,7 +525,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get onboardingAppInfoSubtitle => 'Váš osobní hudební společník';
 
   @override
-  String get onboardingAppInfoTitle => 'Vítejte v Aurora Music';
+  String get onboardingAppInfoTitle => 'Vítejte v Noxira Music';
 
   @override
   String get onboardingAudioAccess => 'Přístup ke zvuku';
@@ -578,7 +578,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get onboardingGrantPermissions => 'Udělit oprávnění';
 
   @override
-  String get onboardingInternetSubtitle => 'Jak Aurora Music využívá internet';
+  String get onboardingInternetSubtitle => 'Jak Noxira Music využívá internet';
 
   @override
   String get onboardingInternetTitle => 'Využití internetu';
@@ -595,7 +595,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get onboardingLyricsDesc =>
-      'Stahuje synchronizované texty k vašim skladbám';
+      'Stahuje synchronizované texty k vašim skladbám ze služeb LRCLIB, Better Lyrics, YouLyPlus a KuGou. Tyto služby obdrží název skladby, interpreta, album a délku. Jednotlivé zdroje můžete vypnout v Nastavení.';
 
   @override
   String get onboardingLyricsSupport => 'Podpora textů';
@@ -630,7 +630,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get onboardingPermissionsSubtitle =>
-      'Aurora Music potřebuje tato oprávnění pro správné fungování';
+      'Noxira Music potřebuje tato oprávnění pro správné fungování';
 
   @override
   String get onboardingPermissionsTitle => 'Udělte oprávnění';
@@ -687,7 +687,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get beta_welcome_thanks =>
-      'Thank you for joining our beta testing program and helping us improve Aurora Music.';
+      'Thank you for joining our beta testing program and helping us improve Noxira Music.';
 
   @override
   String get beta_expect_bugs_title => 'Expect Bugs';
@@ -728,7 +728,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get permissionExplanation =>
-      'Aurora Music potřebuje tato oprávnění pro správné fungování. Udělte prosím oprávnění v nastavení aplikace.';
+      'Noxira Music potřebuje tato oprávnění pro správné fungování. Udělte prosím oprávnění v nastavení aplikace.';
 
   @override
   String get permissionLater =>
@@ -877,6 +877,77 @@ class AppLocalizationsCs extends AppLocalizations {
   String get searchFailed => 'Vyhledávání selhalo';
 
   @override
+  String get lyricsSource => 'Zdroj textů';
+
+  @override
+  String get alreadyInPlaylist => 'Už je v tomto playlistu';
+
+  @override
+  String get inPlaylistHint => 'V playlistu';
+
+  @override
+  String get removeDuplicates => 'Odstranit duplicity';
+
+  @override
+  String get noDuplicatesFound => 'Žádné duplicitní skladby';
+
+  @override
+  String duplicatesRemoved(int count) {
+    return 'Odstraněno duplicitních skladeb: $count';
+  }
+
+  @override
+  String get supportNoxiraTitle => 'Podpořte Noxiru!';
+
+  @override
+  String get supportButton => 'Podpořit';
+
+  @override
+  String supportGoalProgress(String raised, String goal) {
+    return '$raised z $goal tento měsíc';
+  }
+
+  @override
+  String get onboardingSupportGoal => 'Cíl podpory';
+
+  @override
+  String get onboardingSupportGoalDesc =>
+      'Občas stáhne malý veřejný soubor s měsíčním cílem podpory a vybranou částkou. Jde o obyčejné stažení: nic o vás ani vaší hudbě se neodesílá.';
+
+  @override
+  String get songAddedChip => 'Přidáno';
+
+  @override
+  String get tapToRemove => 'Klepnutím odebrat';
+
+  @override
+  String get onboardingGetStarted => 'Začít';
+
+  @override
+  String get onboardingYourLanguage => 'Váš jazyk?';
+
+  @override
+  String get onboardingAllow => 'Povolit';
+
+  @override
+  String get onboardingSummaryLanguage => 'Jazyk';
+
+  @override
+  String get onboardingSummaryTheme => 'Vzhled';
+
+  @override
+  String get onboardingSummaryLibrary => 'Přístup k hudební knihovně';
+
+  @override
+  String get onboardingAllowed => 'Povoleno';
+
+  @override
+  String get onboardingNotAllowed => 'Zatím nepovoleno';
+
+  @override
+  String get onboardingBackgroundStyle => 'Pozadí';
+
+  @override
   String get searchLyrics => 'Hledat text';
 
   @override
@@ -919,7 +990,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsAbout => 'O aplikaci';
 
   @override
-  String get settingsAboutApp => 'O Aurora Music';
+  String get settingsAboutApp => 'O Noxira Music';
 
   @override
   String get settingsAboutSubtitle => 'Verze, zpětná vazba a aktualizace';
@@ -1141,10 +1212,11 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsTools => 'Nástroje';
 
   @override
-  String get settingsResetSetup => 'Resetovat nastavení';
+  String get settingsResetSetup => 'Spustit nastavení znovu';
 
   @override
-  String get settingsResetSetupDesc => 'Restartovat průvodce nastavením';
+  String get settingsResetSetupDesc =>
+      'Projít úvodní průvodce nastavením znovu';
 
   @override
   String get settingsUpdateAvailable => 'Aktualizace k dispozici!';
@@ -1197,7 +1269,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get storagePermissionNeeded =>
-      'Pro úpravu metadat potřebuje Aurora Music oprávnění ke správě souborů. Udělte prosím oprávnění \'Přístup ke všem souborům\' v nastavení.';
+      'Pro úpravu metadat potřebuje Noxira Music oprávnění ke správě souborů. Udělte prosím oprávnění \'Přístup ke všem souborům\' v nastavení.';
 
   @override
   String get suggestedArtists => 'Umělci pro tebe';
@@ -1206,23 +1278,23 @@ class AppLocalizationsCs extends AppLocalizations {
   String get suggestedTracks => 'Doporučené skladby';
 
   @override
-  String get supportAurora => 'Podpořit Auroru';
+  String get supportAurora => 'Podpořit Noxiru';
 
   @override
-  String get supportAuroraBtn => 'Podpořit Auroru';
+  String get supportAuroraBtn => 'Podpořit Noxiru';
 
   @override
   String get supportAuroraDescShort => 'Pomozte udržet aplikaci zdarma';
 
   @override
   String get supportAuroraMessage =>
-      'Pomozte udržet Aurora Music zdarma a podpořte budoucí vývoj. Každý příspěvek hodně znamená!';
+      'Pomozte udržet Noxira Music zdarma a podpořte budoucí vývoj. Každý příspěvek hodně znamená!';
 
   @override
-  String get supportAuroraTitle => 'Podpořte Aurora Music';
+  String get supportAuroraTitle => 'Podpořte Noxira Music';
 
   @override
-  String get updatedTitle => 'Aurora Music was updated';
+  String get updatedTitle => 'Noxira Music was updated';
 
   @override
   String get updatedHighlights => 'Highlights';
@@ -1356,7 +1428,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get skip => 'Přeskočit';
 
   @override
-  String get feedback_title => 'Líbí se vám Aurora Music?';
+  String get feedback_title => 'Líbí se vám Noxira Music?';
 
   @override
   String get maybe_later => 'Možná později';
@@ -1368,7 +1440,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get send_feedback_desc => 'Nahlásit chyby nebo navrhnout funkce';
 
   @override
-  String get rateApp => 'Rate Aurora Music';
+  String get rateApp => 'Rate Noxira Music';
 
   @override
   String get rateAppDesc => 'Enjoying the app? Leave a review on Google Play';
@@ -1397,7 +1469,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get contributeTranslationsDesc =>
-      'Pomoci přeložit Aurora Music na Crowdin';
+      'Pomoci přeložit Noxira Music na Crowdin';
 
   @override
   String get contributeTranslationsTitle =>
@@ -1405,7 +1477,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get contributeTranslationsSubtitle =>
-      'Aurora Music je dostupná ve více jazycích díky naší úžasné komunitě. Pomozte nám oslovit ještě více uživatelů překladem aplikace do svého jazyka — začít trvá jen pár minut.';
+      'Noxira Music je dostupná ve více jazycích díky naší úžasné komunitě. Pomozte nám oslovit ještě více uživatelů překladem aplikace do svého jazyka — začít trvá jen pár minut.';
 
   @override
   String get contributeTranslationsOpenCrowdin => 'Otevřít Crowdin';
@@ -1601,7 +1673,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get microphoneAccessDesc =>
-      'Aurora potřebuje přístup k mikrofonu pro živý vizualizér. Žádný zvuk není nikdy nahrán ani uložen.';
+      'Noxira potřebuje přístup k mikrofonu pro živý vizualizér. Žádný zvuk není nikdy nahrán ani uložen.';
 
   @override
   String get recapWeek => 'týden';
@@ -1956,11 +2028,52 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get newLanguagesAvailableBody =>
-      'Aurora Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.';
+      'Noxira Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.';
 
   @override
   String get newLanguagesGoToSettings => 'Change Language';
 
   @override
   String get newLanguagesDismiss => 'Got it';
+
+  @override
+  String get settingsLyricsSources => 'Zdroje textů';
+
+  @override
+  String get lyricsProviderDesc =>
+      'Použije se, když LRCLIB nemá text. Obdrží název, interpreta, album a délku.';
+
+  @override
+  String get onlineAboutArtist => 'O interpretovi';
+
+  @override
+  String get onlineFansAlsoLike => 'Fanoušci také poslouchají';
+
+  @override
+  String get onlinePopularTracks => 'Právě populární';
+
+  @override
+  String get onlineReadMore => 'Číst dál';
+
+  @override
+  String get onlineBioDisclaimer =>
+      'Automaticky získáno z veřejných zdrojů. Správnost není zaručena.';
+
+  @override
+  String get onlineShowLess => 'Zobrazit méně';
+
+  @override
+  String get onlineWikipedia => 'Wikipedie';
+
+  @override
+  String onlineFansCount(String count) {
+    return '$count fanoušků';
+  }
+
+  @override
+  String get settingsOnlineSuggestions => 'Online návrhy';
+
+  @override
+  String get settingsOnlineSuggestionsDesc =>
+      'Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta.';
 }
