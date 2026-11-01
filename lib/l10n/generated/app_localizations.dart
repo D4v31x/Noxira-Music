@@ -3951,6 +3951,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.'**
   String get settingsOnlineSuggestionsDesc;
+
+  /// No description provided for @supportShowBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Show support banner'**
+  String get supportShowBanner;
+
+  /// No description provided for @supportShowBannerDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Bring the support goal back to the home screen'**
+  String get supportShowBannerDesc;
+
+  /// No description provided for @supportBannerShown.
+  ///
+  /// In en, this message translates to:
+  /// **'Support banner is now on the home screen'**
+  String get supportBannerShown;
 }
 
 class _AppLocalizationsDelegate

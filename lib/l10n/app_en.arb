@@ -890,5 +890,8 @@
     }
   },
   "settingsOnlineSuggestions": "Online suggestions",
-  "settingsOnlineSuggestionsDesc": "Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent."
+  "settingsOnlineSuggestionsDesc": "Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.",
+  "supportShowBanner": "Show support banner",
+  "supportShowBannerDesc": "Bring the support goal back to the home screen",
+  "supportBannerShown": "Support banner is now on the home screen"
 }

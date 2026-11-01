@@ -2104,4 +2104,15 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settingsOnlineSuggestionsDesc =>
       'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.';
+
+  @override
+  String get supportShowBanner => 'Support-Banner anzeigen';
+
+  @override
+  String get supportShowBannerDesc =>
+      'Das Unterstützungsziel wieder auf dem Startbildschirm zeigen';
+
+  @override
+  String get supportBannerShown =>
+      'Das Support-Banner ist jetzt auf dem Startbildschirm';
 }

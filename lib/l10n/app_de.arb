@@ -801,5 +801,8 @@
   },
   "lyricsNextLabel": "Weiter",
   "settingsLyricsSources": "Songtext-Quellen",
-  "lyricsProviderDesc": "Wird verwendet, wenn LRCLIB keine Texte hat. Erhält Titel, Interpret, Album und Länge."
+  "lyricsProviderDesc": "Wird verwendet, wenn LRCLIB keine Texte hat. Erhält Titel, Interpret, Album und Länge.",
+  "supportShowBanner": "Support-Banner anzeigen",
+  "supportShowBannerDesc": "Das Unterstützungsziel wieder auf dem Startbildschirm zeigen",
+  "supportBannerShown": "Das Support-Banner ist jetzt auf dem Startbildschirm"
 }

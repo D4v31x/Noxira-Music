@@ -1,6 +1,8 @@
 /// About settings sub-screen — version, changelog, support, updates & reset.
 library;
 
+import 'dart:async';
+
 import 'package:aurora_music_v01/shared/widgets/about_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
@@ -13,6 +15,7 @@ import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/donation_service.dart';
 import '../../../shared/services/notification_manager.dart';
+import '../../../shared/services/support_goal_service.dart';
 import '../../../shared/services/version_service.dart';
 import '../../../shared/widgets/changelog_dialog.dart';
 import '../../../shared/widgets/app_background.dart';
@@ -167,6 +170,23 @@ class AboutSettingsScreen extends StatelessWidget {
             children: [
               SettingsTiles.buildSectionHeader(context, l10n.settingsAbout),
               const SupportGoalCard(),
+              SettingsTiles.buildGlassmorphicCard(context, children: [
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: iconoir.Heart(color: primary, width: 20, height: 20),
+                  title: l10n.supportShowBanner,
+                  subtitle: l10n.supportShowBannerDesc,
+                  onTap: () {
+                    unawaited(SupportGoalService.showNow());
+                    notificationManager.showNotification(
+                      l10n.supportBannerShown,
+                      duration: const Duration(seconds: 2),
+                    );
+                  },
+                  isFirst: true,
+                ),
+              ]),
+              const SizedBox(height: 16),
               SettingsTiles.buildGlassmorphicCard(context, children: [
                 SettingsTiles.buildActionTile(
                   context,

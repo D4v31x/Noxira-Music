@@ -786,5 +786,8 @@
     }
   },
   "settingsOnlineSuggestions": "Online návrhy",
-  "settingsOnlineSuggestionsDesc": "Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta."
+  "settingsOnlineSuggestionsDesc": "Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta.",
+  "supportShowBanner": "Zobrazit podpůrný banner",
+  "supportShowBannerDesc": "Vrátit cíl podpory na domovskou obrazovku",
+  "supportBannerShown": "Podpůrný banner je nyní na domovské obrazovce"
 }
