@@ -28,7 +28,8 @@ void main() {
 
     test('clearCache allows fresh translation after clear', () async {
       // Populate via empty-input fast path then clear — verifies no state leak
-      await LyricsTranslationService.translateLines(texts: [], targetLang: 'ja');
+      await LyricsTranslationService.translateLines(
+          texts: [], targetLang: 'ja');
       LyricsTranslationService.clearCache();
       final result = await LyricsTranslationService.translateLines(
         texts: [],
