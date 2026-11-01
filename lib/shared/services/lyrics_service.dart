@@ -115,7 +115,41 @@ class TimedLyricsService {
     }
   }
 
+  final Map<String, Future<List<TimedLyric>?>> _inflightFetches = {};
+
+  /// Concurrent requests for the same song (the now-playing box and the full
+  /// screen both ask) share one lookup instead of racing each other.
   Future<List<TimedLyric>?> fetchTimedLyrics(
+    String artist,
+    String title, {
+    Duration? songDuration,
+    String? audioPath,
+    String? album,
+    void Function(String)? onLog,
+    Future<Map<String, dynamic>?> Function(List<Map<String, dynamic>>)?
+        onMultipleResults,
+  }) {
+    if (onMultipleResults != null) {
+      return _fetchTimedLyrics(artist, title,
+          songDuration: songDuration,
+          audioPath: audioPath,
+          album: album,
+          onLog: onLog,
+          onMultipleResults: onMultipleResults);
+    }
+    final key = '$artist-$title-${songDuration?.inSeconds}';
+    final running = _inflightFetches[key];
+    if (running != null) return running;
+    final future = _fetchTimedLyrics(artist, title,
+        songDuration: songDuration,
+        audioPath: audioPath,
+        album: album,
+        onLog: onLog);
+    _inflightFetches[key] = future;
+    return future.whenComplete(() => _inflightFetches.remove(key));
+  }
+
+  Future<List<TimedLyric>?> _fetchTimedLyrics(
     String artist,
     String title, {
     Duration? songDuration,
@@ -263,7 +297,8 @@ class TimedLyricsService {
             final lyrics = _parseLrc(normalizedContent);
             _log('✓ Parsed ${lyrics.length} lyric lines');
 
-            await _saveLyricsToFile(artist, title, normalizedContent);
+            await _saveLyricsToFile(artist, title, normalizedContent,
+                notify: false);
             _log('✓ USING direct match result');
             _log('=' * 60);
             return lyrics;
@@ -391,7 +426,8 @@ class TimedLyricsService {
 
                 _log('✓ User selected: "$foundTrack" by "$foundArtist"');
                 _log('✓ Parsed ${lyrics.length} lyric lines');
-                await _saveLyricsToFile(artist, title, lrcContent);
+                await _saveLyricsToFile(artist, title, lrcContent,
+                    notify: false);
                 _log('=' * 60);
                 return lyrics;
               } else {
@@ -418,7 +454,8 @@ class TimedLyricsService {
                 _log('📍 Got: "$foundTrack" by "$foundArtist"');
                 _log('✓ Parsed ${lyrics.length} lyric lines');
                 _log('✓ USING search result #${i + 1}');
-                await _saveLyricsToFile(artist, title, lrcContent);
+                await _saveLyricsToFile(artist, title, lrcContent,
+                    notify: false);
                 _log('=' * 60);
                 return lyrics;
               } else {
@@ -447,7 +484,7 @@ class TimedLyricsService {
               _log('⚠️ No exact duration match - using best result');
               _log('📍 Got: "$foundTrack" by "$foundArtist"');
               _log('✓ Parsed ${lyrics.length} lyric lines');
-              await _saveLyricsToFile(artist, title, lrcContent);
+              await _saveLyricsToFile(artist, title, lrcContent, notify: false);
               _log('=' * 60);
               return lyrics;
             }
@@ -524,7 +561,7 @@ class TimedLyricsService {
         continue;
       }
       _log('✓ USING ${providers[i].name} (${lyrics.length} lines)');
-      await _saveLyricsToFile(cacheArtist, cacheTitle, lrc);
+      await _saveLyricsToFile(cacheArtist, cacheTitle, lrc, notify: false);
       return lyrics;
     }
     return null;
@@ -683,8 +720,12 @@ class TimedLyricsService {
     return timedLyrics;
   }
 
-  Future<void> _saveLyricsToFile(
-      String artist, String title, String content) async {
+  /// [notify] bumps [lyricsRevisionNotifier] so open lyrics views reload. Only
+  /// edits and manual picks should do that: a save made by an automatic fetch
+  /// is handed straight to its caller, and notifying would make every open
+  /// view reload (and fetch again) in a loop.
+  Future<void> _saveLyricsToFile(String artist, String title, String content,
+      {bool notify = true}) async {
     _log('  Saving lyrics to cache...');
     try {
       final directory = await getApplicationDocumentsDirectory();
@@ -708,7 +749,9 @@ class TimedLyricsService {
       // Also add to memory cache for instant access
       final lyrics = _parseLrc(content);
       _addToMemoryCache(fileName, lyrics);
-      lyricsRevisionNotifier.value = lyricsRevisionNotifier.value + 1;
+      if (notify) {
+        lyricsRevisionNotifier.value = lyricsRevisionNotifier.value + 1;
+      }
     } catch (e) {
       _log('  ✗ Error saving lyrics: $e');
     }
@@ -792,19 +835,21 @@ class TimedLyricsService {
     return true;
   }
 
+  /// Whether lyrics plausibly belong to a song of this length. The last synced
+  /// line normally ends well before the song does (outro, fade-out), so being
+  /// shorter is fine; only lyrics running past the end, or covering a tiny
+  /// part of a long song, point to another version.
   bool _isLyricsDurationValid(List<TimedLyric> lyrics, Duration? songDuration) {
     if (songDuration == null || lyrics.isEmpty) return true;
 
     final lyricsDuration = _getLyricsDuration(lyrics);
-    final difference = (lyricsDuration - songDuration).abs();
+    final overrun = (lyricsDuration - songDuration).inMilliseconds;
+    final tolerance = max(songDuration.inMilliseconds * 0.1, 10000);
+    if (overrun > tolerance) return false;
 
-    // Allow 10% duration difference or 10 seconds, whichever is greater
-    final maxAllowedDifference = max(
-      songDuration.inMilliseconds * 0.1,
-      10000, // 10 seconds in milliseconds
-    );
-
-    return difference.inMilliseconds <= maxAllowedDifference;
+    final partial = songDuration.inSeconds > 60 &&
+        lyricsDuration.inMilliseconds < songDuration.inMilliseconds * 0.2;
+    return !partial;
   }
 
   Duration _getLyricsDuration(List<TimedLyric> lyrics) {

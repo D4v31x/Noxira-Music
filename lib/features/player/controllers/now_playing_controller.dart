@@ -116,8 +116,7 @@ class NowPlayingController {
         ((song.duration ?? 0) > 0
             ? Duration(milliseconds: song.duration!)
             : null);
-    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title,
-        songDuration: songDuration);
+    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title);
     if (song.id != _pendingSongLoadId) return;
 
     if (lyrics == null) {

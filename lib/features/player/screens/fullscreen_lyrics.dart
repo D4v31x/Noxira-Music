@@ -223,12 +223,17 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     });
   }
 
+  /// Identifies the newest load; an older one that finishes later must not
+  /// replace (or blank out) what a newer one already showed.
+  int _lyricsLoadSeq = 0;
+
   Future<void> _loadLyricsForCurrentSong(
       AudioPlayerService audioService) async {
     final song = audioService.currentSong;
     if (song == null) return;
 
     if (_lastSongId == song.id && _currentLyrics != null) return;
+    final loadSeq = ++_lyricsLoadSeq;
 
     setState(() {
       _isLoadingLyrics = true;
@@ -244,9 +249,14 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     final songDuration = (song.duration ?? 0) > 0
         ? Duration(milliseconds: song.duration!)
         : audioService.audioPlayer.duration;
-    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title,
-        songDuration: songDuration);
-    if (!mounted || audioService.currentSong?.id != song.id) return;
+    // Whatever is cached was accepted when it was saved (or picked by the
+    // user), so it is shown as is rather than re-judged against the song.
+    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title);
+    if (!mounted ||
+        loadSeq != _lyricsLoadSeq ||
+        audioService.currentSong?.id != song.id) {
+      return;
+    }
 
     lyrics ??= await timedLyricsService.fetchTimedLyrics(
       artist,
@@ -255,7 +265,11 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       audioPath: song.data,
       album: song.album,
     );
-    if (!mounted || audioService.currentSong?.id != song.id) return;
+    if (!mounted ||
+        loadSeq != _lyricsLoadSeq ||
+        audioService.currentSong?.id != song.id) {
+      return;
+    }
 
     // Reset translation whenever new lyrics are loaded for a different song.
     _pulseController.stop();
@@ -1255,11 +1269,9 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     if (song != null) {
       final artistRaw = song.artist ?? '';
       final artist = artistRaw.trim().isEmpty ? 'Unknown' : artistRaw.trim();
-      timedLyricsService.saveLyricsToCache(
-        artist,
-        song.title,
-        lrcContent,
-      );
+      final title = song.title.trim().isEmpty ? 'Unknown' : song.title.trim();
+      // Same key the loader uses, or the saved lyrics would never be found.
+      timedLyricsService.saveLyricsToCache(artist, title, lrcContent);
       if (mounted) {
         NotificationManager.showMessage(
           context,

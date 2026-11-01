@@ -150,6 +150,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
 
   StreamSubscription<Duration>? _positionSub;
   int? _pendingSongLoadId;
+
+  /// Identifies the newest lyrics load; an older one finishing later must not
+  /// replace what a newer one showed.
+  int _lyricsLoadSeq = 0;
   StreamSubscription<SongModel?>? _songChangeSubscription;
 
   // MARK: - Lifecycle
@@ -256,6 +260,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     final song = audioPlayerService.currentSong;
     if (song == null) return;
     _pendingSongLoadId = song.id;
+    final loadSeq = ++_lyricsLoadSeq;
 
     final timedLyricsService = TimedLyricsService();
     final artistRaw = song.artist ?? '';
@@ -268,9 +273,13 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         ((song.duration ?? 0) > 0
             ? Duration(milliseconds: song.duration!)
             : null);
-    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title,
-        songDuration: songDuration);
-    if (!mounted || song.id != _pendingSongLoadId) return;
+    // Cached lyrics were accepted when they were saved; show them as is.
+    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title);
+    if (!mounted ||
+        song.id != _pendingSongLoadId ||
+        loadSeq != _lyricsLoadSeq) {
+      return;
+    }
 
     lyrics ??= await timedLyricsService.fetchTimedLyrics(
       artist,
@@ -279,7 +288,11 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
       audioPath: song.data,
       album: song.album,
     );
-    if (!mounted || song.id != _pendingSongLoadId) return;
+    if (!mounted ||
+        song.id != _pendingSongLoadId ||
+        loadSeq != _lyricsLoadSeq) {
+      return;
+    }
 
     _lyricsNotifier.value = lyrics;
     _currentLyricIndexNotifier.value = 0;
