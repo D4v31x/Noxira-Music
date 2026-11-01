@@ -7,7 +7,6 @@ import 'package:aurora_music_v01/shared/providers/theme_provider.dart';
 import 'package:aurora_music_v01/shared/services/audio_player_service.dart';
 import 'package:aurora_music_v01/shared/services/background_manager_service.dart';
 import 'package:aurora_music_v01/shared/services/notification_manager.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
