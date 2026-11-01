@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'local_lyrics_source.dart';
 import 'lyrics_service.dart';
 import 'artwork_cache_service.dart';
 
@@ -230,12 +231,19 @@ class BatchDownloadService {
       return true;
     }
 
+    // Lyrics bundled with the file need no download.
+    if (await LocalLyricsSource.find(song.data) != null) return true;
+
     // Download and cache
     try {
       await _lyricsService.fetchTimedLyrics(
         artist,
         title,
-        songDuration: Duration(milliseconds: song.duration ?? 0),
+        songDuration: (song.duration ?? 0) > 0
+            ? Duration(milliseconds: song.duration!)
+            : null,
+        audioPath: song.data,
+        album: song.album,
       );
       // After attempting to fetch, check if lyrics are now available.
       final newLyrics = await _lyricsService.loadLyricsFromFile(artist, title);

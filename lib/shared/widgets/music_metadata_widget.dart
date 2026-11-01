@@ -91,7 +91,9 @@ class MusicMetadataWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
@@ -123,31 +125,35 @@ class MusicMetadataWidget extends StatelessWidget {
               );
             },
             child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: isLowEnd ? colorScheme.surfaceContainerHigh : Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: isLowEnd ? colorScheme.outlineVariant : Colors.white.withValues(alpha: 0.2),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.2),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isLowEnd
+                    ? colorScheme.surfaceContainerHigh
+                    : Colors.white.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isLowEnd
+                      ? colorScheme.outlineVariant
+                      : Colors.white.withValues(alpha: 0.2),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Quality badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _getQualityColor(loc).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Quality badge
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _getQualityColor(loc).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: _getQualityColor(loc).withValues(alpha: 0.3),
                       ),
@@ -177,17 +183,14 @@ class MusicMetadataWidget extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildStatItem(
-                          _getFileFormat(), loc.format),
-                      _buildDivider(),
-                      _buildStatItem('${_estimateBitrateValue()} kbps',
-                          loc.bitrate),
+                      _buildStatItem(_getFileFormat(), loc.format),
                       _buildDivider(),
                       _buildStatItem(
-                          _getFileSizeFormatted(), loc.size),
+                          '${_estimateBitrateValue()} kbps', loc.bitrate),
                       _buildDivider(),
-                      _buildStatItem(
-                          _formatDuration(), loc.duration),
+                      _buildStatItem(_getFileSizeFormatted(), loc.size),
+                      _buildDivider(),
+                      _buildStatItem(_formatDuration(), loc.duration),
                     ],
                   ),
                   const SizedBox(height: 16),

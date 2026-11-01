@@ -33,8 +33,7 @@ class SameLanguageException implements Exception {
 }
 
 class LyricsTranslationService {
-  static const String _baseUrl =
-      'https://api.mymemory.translated.net/get';
+  static const String _baseUrl = 'https://api.mymemory.translated.net/get';
 
   // MyMemory enforces a ~500 character limit per request.
   static const int _maxCharsPerRequest = 450;
@@ -134,8 +133,7 @@ class LyricsTranslationService {
             await http.get(uri).timeout(const Duration(seconds: 10));
 
         if (response.statusCode == 200) {
-          final data =
-              jsonDecode(response.body) as Map<String, dynamic>;
+          final data = jsonDecode(response.body) as Map<String, dynamic>;
 
           // On the first batch, detect the source language via majority vote
           // across all TM matches. Using only matches[0]['source'] is
@@ -150,9 +148,7 @@ class LyricsTranslationService {
               final target = targetLang.split('-')[0].toLowerCase();
               int targetCount = 0;
               for (final m in matches) {
-                final src = (m as Map?)?['source']
-                    ?.split('-')[0]
-                    .toLowerCase();
+                final src = (m as Map?)?['source']?.split('-')[0].toLowerCase();
                 if (src == target) targetCount++;
               }
               if (targetCount > matches.length * 0.6) {
@@ -181,8 +177,7 @@ class LyricsTranslationService {
         // (network, parse) are swallowed so one bad batch doesn't abort
         // the whole translation.
         if (e is SameLanguageException) rethrow;
-        debugPrint(
-            '[LyricsTranslation] Batch $i–${j - 1} failed: $e');
+        debugPrint('[LyricsTranslation] Batch $i–${j - 1} failed: $e');
       }
 
       i = j;

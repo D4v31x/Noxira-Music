@@ -8,6 +8,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../providers/performance_mode_provider.dart';
 import '../providers/theme_provider.dart';
 import '../utils/changelog_content.dart';
+import 'adaptive_blur.dart';
 
 /// Changelog dialog with glassmorphic styling.
 /// Performance-aware: Respects device performance mode for blur effects.
@@ -102,7 +103,8 @@ class ChangelogDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
-    const codename = String.fromEnvironment('CODE_NAME', defaultValue: 'Unknown');
+    const codename =
+        String.fromEnvironment('CODE_NAME', defaultValue: 'Unknown');
     final changelogSections =
         ChangelogContent.getChangelogForVersion(currentVersion);
 
@@ -239,8 +241,7 @@ class ChangelogDialog extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        AppLocalizations.of(context)
-                            .privacyNotice,
+                        AppLocalizations.of(context).privacyNotice,
                         style: TextStyle(
                           fontSize: 12,
                           fontFamily: FontConstants.fontFamily,
@@ -255,8 +256,7 @@ class ChangelogDialog extends StatelessWidget {
                         child: Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4.0),
                           child: Text(
-                            AppLocalizations.of(context)
-                                .privacyPolicyLink,
+                            AppLocalizations.of(context).privacyPolicyLink,
                             style: TextStyle(
                               fontSize: 12,
                               fontFamily: FontConstants.fontFamily,
@@ -309,7 +309,7 @@ class ChangelogDialog extends StatelessWidget {
     final Widget blurredContent = ClipRRect(
       borderRadius: BorderRadius.circular(28),
       child: shouldBlur
-          ? BackdropFilter(
+          ? AdaptiveBackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: dialogContent,
             )

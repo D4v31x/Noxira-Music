@@ -29,7 +29,8 @@ class AppBackground extends StatelessWidget {
         // (same cached Uint8List reference can be reused for the same song id,
         // but a different song id always needs a rebuild even if artwork bytes
         // happen to be the same object reference in the cache)
-        final shouldRebuild = !identical(prev.$1, next.$1) || prev.$2 != next.$2;
+        final shouldRebuild =
+            !identical(prev.$1, next.$1) || prev.$2 != next.$2;
         if (kDebugMode && shouldRebuild) {
           debugPrint(
               '🎨 [APP_BG] Rebuild background (hasArtwork: ${next.$1 != null}, bytes: ${next.$1?.length ?? 0}, songId: ${next.$2}, animated: $enableAnimation)');

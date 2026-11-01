@@ -110,13 +110,13 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
     // shouldRebuild ensures the builder body only runs when counts change, at
     // which point _getMemoizedStats() performs the full O(n) computation once.
     return Selector<AudioPlayerService, (int, int)>(
-      selector: (_, service) => (service.songs.length, service.playlists.length),
+      selector: (_, service) =>
+          (service.songs.length, service.playlists.length),
       shouldRebuild: (prev, next) => prev != next,
       builder: (context, counts, _) {
         final audioPlayerService =
             Provider.of<AudioPlayerService>(context, listen: false);
-        final stats =
-            _getMemoizedStats(audioPlayerService.songs, counts.$2);
+        final stats = _getMemoizedStats(audioPlayerService.songs, counts.$2);
         return GestureDetector(
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
@@ -131,83 +131,80 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
             duration: const Duration(milliseconds: 80),
             curve: Curves.easeOut,
             child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: GlassmorphicContainer(
-            borderRadius: BorderRadius.circular(20),
-            blur: 15,
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Minimal header
-                Row(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: GlassmorphicContainer(
+                borderRadius: BorderRadius.circular(20),
+                blur: 15,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.library_music_outlined,
-                      color: isDark ? Colors.white70 : Colors.black54,
-                      size: 20,
+                    // Minimal header
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.library_music_outlined,
+                          color: isDark ? Colors.white70 : Colors.black54,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          AppLocalizations.of(context).yourLibrary,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            fontFamily: FontConstants.fontFamily,
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          '${stats.totalHours}h ${stats.totalMinutes}m',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontFamily: FontConstants.fontFamily,
+                            color: isDark ? Colors.white38 : Colors.black38,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.insights_rounded,
+                          size: 16,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      AppLocalizations.of(context).yourLibrary,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white70 : Colors.black54,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '${stats.totalHours}h ${stats.totalMinutes}m',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white38 : Colors.black38,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.insights_rounded,
-                      size: 16,
-                      color: isDark
-                          ? Colors.white38
-                          : Colors.black38,
+                    const SizedBox(height: 20),
+                    // Stats row - minimalistic
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _MinimalStat(
+                          value: _formatNumber(stats.totalSongs),
+                          label: AppLocalizations.of(context).songs,
+                          isDark: isDark,
+                        ),
+                        _MinimalStat(
+                          value: _formatNumber(stats.totalArtists),
+                          label: AppLocalizations.of(context).artists,
+                          isDark: isDark,
+                        ),
+                        _MinimalStat(
+                          value: _formatNumber(stats.totalAlbums),
+                          label: AppLocalizations.of(context).albums,
+                          isDark: isDark,
+                        ),
+                        _MinimalStat(
+                          value: _formatNumber(stats.totalPlaylists),
+                          label: AppLocalizations.of(context).playlists,
+                          isDark: isDark,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                // Stats row - minimalistic
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _MinimalStat(
-                      value: _formatNumber(stats.totalSongs),
-                      label: AppLocalizations.of(context).songs,
-                      isDark: isDark,
-                    ),
-                    _MinimalStat(
-                      value: _formatNumber(stats.totalArtists),
-                      label: AppLocalizations.of(context).artists,
-                      isDark: isDark,
-                    ),
-                    _MinimalStat(
-                      value: _formatNumber(stats.totalAlbums),
-                      label: AppLocalizations.of(context).albums,
-                      isDark: isDark,
-                    ),
-                    _MinimalStat(
-                      value: _formatNumber(stats.totalPlaylists),
-                      label:
-                          AppLocalizations.of(context).playlists,
-                      isDark: isDark,
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
           ),
         );
       },

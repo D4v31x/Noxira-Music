@@ -68,8 +68,10 @@ class AudioPropertiesReader {
       if (magic.length < 4) return null;
 
       // FLAC – "fLaC"
-      if (magic[0] == 0x66 && magic[1] == 0x4C &&
-          magic[2] == 0x61 && magic[3] == 0x43) {
+      if (magic[0] == 0x66 &&
+          magic[1] == 0x4C &&
+          magic[2] == 0x61 &&
+          magic[3] == 0x43) {
         final headLen = math.min(_maxReadBytes, fileLen);
         await raf.setPosition(0);
         final bytes = await raf.read(headLen);
@@ -85,8 +87,10 @@ class AudioPropertiesReader {
       }
 
       // OGG container – "OggS"
-      if (magic[0] == 0x4F && magic[1] == 0x67 &&
-          magic[2] == 0x67 && magic[3] == 0x53) {
+      if (magic[0] == 0x4F &&
+          magic[1] == 0x67 &&
+          magic[2] == 0x67 &&
+          magic[3] == 0x53) {
         final headLen = math.min(_maxReadBytes, fileLen);
         await raf.setPosition(0);
         final bytes = await raf.read(headLen);
@@ -94,14 +98,19 @@ class AudioPropertiesReader {
       }
 
       // MP4 / M4A – "ftyp" box at offset 4
-      if (magic.length >= 8 && magic[4] == 0x66 && magic[5] == 0x74 &&
-          magic[6] == 0x79 && magic[7] == 0x70) {
+      if (magic.length >= 8 &&
+          magic[4] == 0x66 &&
+          magic[5] == 0x74 &&
+          magic[6] == 0x79 &&
+          magic[7] == 0x70) {
         return await _mp4(raf, fileLen);
       }
 
       // WAV – "RIFF"
-      if (magic[0] == 0x52 && magic[1] == 0x49 &&
-          magic[2] == 0x46 && magic[3] == 0x46) {
+      if (magic[0] == 0x52 &&
+          magic[1] == 0x49 &&
+          magic[2] == 0x46 &&
+          magic[3] == 0x46) {
         final headLen = math.min(_maxReadBytes, fileLen);
         await raf.setPosition(0);
         final bytes = await raf.read(headLen);
@@ -162,8 +171,8 @@ class AudioPropertiesReader {
 
   // Sample-rate lookup tables indexed by [version][srIndex]
   static const _mp3Sr = [
-    [11025, 12000, 8000],  // MPEG 2.5
-    <int>[],               // reserved
+    [11025, 12000, 8000], // MPEG 2.5
+    <int>[], // reserved
     [22050, 24000, 16000], // MPEG 2
     [44100, 48000, 32000], // MPEG 1
   ];
@@ -175,7 +184,7 @@ class AudioPropertiesReader {
       if ((b1 & 0xE0) != 0xE0) continue; // 11-bit sync must be all 1s
 
       final version = (b1 >> 3) & 0x03; // 00=2.5, 01=reserved, 10=2, 11=1
-      final layer = (b1 >> 1) & 0x03;   // 00=reserved, 01=L3, 10=L2, 11=L1
+      final layer = (b1 >> 1) & 0x03; // 00=reserved, 01=L3, 10=L2, 11=L1
       if (version == 1 || layer == 0) continue;
 
       final b2 = bytes[i + 2];
@@ -198,10 +207,14 @@ class AudioPropertiesReader {
     // OpusHead: bytes "OpusHead" (8 bytes) + version (1) + channels (1) +
     //           pre-skip (2 LE) + input sample rate (4 LE)
     for (int i = 0; i + 16 <= bytes.length; i++) {
-      if (bytes[i] == 0x4F && bytes[i + 1] == 0x70 &&
-          bytes[i + 2] == 0x75 && bytes[i + 3] == 0x73 &&
-          bytes[i + 4] == 0x48 && bytes[i + 5] == 0x65 &&
-          bytes[i + 6] == 0x61 && bytes[i + 7] == 0x64) {
+      if (bytes[i] == 0x4F &&
+          bytes[i + 1] == 0x70 &&
+          bytes[i + 2] == 0x75 &&
+          bytes[i + 3] == 0x73 &&
+          bytes[i + 4] == 0x48 &&
+          bytes[i + 5] == 0x65 &&
+          bytes[i + 6] == 0x61 &&
+          bytes[i + 7] == 0x64) {
         final sr = _uint32le(bytes, i + 12);
         return sr > 0 ? sr : 48000; // Opus always decodes at 48 kHz
       }
@@ -211,9 +224,12 @@ class AudioPropertiesReader {
     //                   sample rate (4 LE)
     for (int i = 0; i + 16 <= bytes.length; i++) {
       if (bytes[i] == 0x01 &&
-          bytes[i + 1] == 0x76 && bytes[i + 2] == 0x6F &&
-          bytes[i + 3] == 0x72 && bytes[i + 4] == 0x62 &&
-          bytes[i + 5] == 0x69 && bytes[i + 6] == 0x73) {
+          bytes[i + 1] == 0x76 &&
+          bytes[i + 2] == 0x6F &&
+          bytes[i + 3] == 0x72 &&
+          bytes[i + 4] == 0x62 &&
+          bytes[i + 5] == 0x69 &&
+          bytes[i + 6] == 0x73) {
         final sr = _uint32le(bytes, i + 12);
         return sr > 0 ? sr : null;
       }
@@ -235,7 +251,13 @@ class AudioPropertiesReader {
   }
 
   static const _mp4Containers = {
-    'moov', 'trak', 'mdia', 'minf', 'stbl', 'udta', 'ilst'
+    'moov',
+    'trak',
+    'mdia',
+    'minf',
+    'stbl',
+    'udta',
+    'ilst'
   };
 
   static int? _mp4Container(Uint8List b, int start, int end) {
@@ -288,8 +310,10 @@ class AudioPropertiesReader {
   static int? _wav(Uint8List bytes) {
     // RIFF(4) + file-size(4) + "WAVE"(4) = 12-byte header
     if (bytes.length < 36) return null;
-    if (bytes[8] != 0x57 || bytes[9] != 0x41 ||
-        bytes[10] != 0x56 || bytes[11] != 0x45) {
+    if (bytes[8] != 0x57 ||
+        bytes[9] != 0x41 ||
+        bytes[10] != 0x56 ||
+        bytes[11] != 0x45) {
       return null;
     }
 

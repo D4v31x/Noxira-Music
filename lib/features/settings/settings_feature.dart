@@ -1,4 +1,4 @@
-/// Aurora Music Settings Feature
+/// Noxira Music Settings Feature
 ///
 /// This library exports the settings feature components:
 /// - Settings screens

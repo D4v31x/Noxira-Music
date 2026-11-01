@@ -21,8 +21,8 @@ class InsightsSettingsScreen extends StatefulWidget {
 }
 
 class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
-  int  _periodDays     = InsightsPromoService.defaultPeriodDays;
-  bool _weeklyEnabled  = true;
+  int _periodDays = InsightsPromoService.defaultPeriodDays;
+  bool _weeklyEnabled = true;
   bool _monthlyEnabled = true;
 
   @override
@@ -32,13 +32,13 @@ class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
   }
 
   Future<void> _load() async {
-    final period  = await InsightsPromoService.getRecapPeriodDays();
-    final weekly  = await InsightsPromoService.getWeeklyEnabled();
+    final period = await InsightsPromoService.getRecapPeriodDays();
+    final weekly = await InsightsPromoService.getWeeklyEnabled();
     final monthly = await InsightsPromoService.getMonthlyEnabled();
     if (mounted) {
       setState(() {
-        _periodDays     = period;
-        _weeklyEnabled  = weekly;
+        _periodDays = period;
+        _weeklyEnabled = weekly;
         _monthlyEnabled = monthly;
       });
     }
@@ -47,133 +47,138 @@ class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cs     = Theme.of(context).colorScheme;
-    final l10n   = AppLocalizations.of(context);
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
-    return AppBackground(child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return AppBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: iconoir.NavArrowLeft(
-            color: isDark ? Colors.white : Colors.black,
-            width: 28,
-            height: 28,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: iconoir.NavArrowLeft(
+              color: isDark ? Colors.white : Colors.black,
+              width: 28,
+              height: 28,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
+          title: Text(
+            l10n.settingsInsights,
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
         ),
-        title: Text(
-          l10n.settingsInsights,
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-      ),
-      body: Selector<AudioPlayerService, bool>(
-        selector: (_, s) => s.currentSong != null,
-        builder: (context, hasCurrentSong, _) => ListView(
-          padding: EdgeInsets.only(
-            top: 10,
-            bottom: hasCurrentSong
-                ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
-                : MediaQuery.of(context).padding.bottom + 24,
-          ),
-          children: [
-            // ── RECAP SCHEDULE ──────────────────────────────────────────
-            SettingsTiles.buildSectionHeader(context, l10n.settingsRecapSchedule),
-            SettingsTiles.buildGlassmorphicCard(context, children: [
-              SettingsTiles.buildSwitchTile(
-                context,
-                icon: Icon(Icons.calendar_view_week_rounded,
-                    color: cs.primary, size: 20),
-                title: l10n.settingsWeeklyRecap,
-                subtitle: l10n.settingsWeeklyRecapDesc,
-                value: _weeklyEnabled,
-                onChanged: (v) async {
-                  await InsightsPromoService.setWeeklyEnabled(v);
-                  if (mounted) setState(() => _weeklyEnabled = v);
-                },
-                isFirst: true,
-              ),
-              SettingsTiles.buildSwitchTile(
-                context,
-                icon: Icon(Icons.calendar_month_rounded,
-                    color: cs.primary, size: 20),
-                title: l10n.settingsMonthlyRecap,
-                subtitle: l10n.settingsMonthlyRecapDesc,
-                value: _monthlyEnabled,
-                onChanged: (v) async {
-                  await InsightsPromoService.setMonthlyEnabled(v);
-                  if (mounted) setState(() => _monthlyEnabled = v);
-                },
-              ),
-            ]),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
-              child: Text(
-                l10n.settingsRecapBannerDesc,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFamily: FontConstants.fontFamily,
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.45),
-                  height: 1.5,
+        body: Selector<AudioPlayerService, bool>(
+          selector: (_, s) => s.currentSong != null,
+          builder: (context, hasCurrentSong, _) => ListView(
+            padding: EdgeInsets.only(
+              top: 10,
+              bottom: hasCurrentSong
+                  ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
+                  : MediaQuery.of(context).padding.bottom + 24,
+            ),
+            children: [
+              // ── RECAP SCHEDULE ──────────────────────────────────────────
+              SettingsTiles.buildSectionHeader(
+                  context, l10n.settingsRecapSchedule),
+              SettingsTiles.buildGlassmorphicCard(context, children: [
+                SettingsTiles.buildSwitchTile(
+                  context,
+                  icon: Icon(Icons.calendar_view_week_rounded,
+                      color: cs.primary, size: 20),
+                  title: l10n.settingsWeeklyRecap,
+                  subtitle: l10n.settingsWeeklyRecapDesc,
+                  value: _weeklyEnabled,
+                  onChanged: (v) async {
+                    await InsightsPromoService.setWeeklyEnabled(v);
+                    if (mounted) setState(() => _weeklyEnabled = v);
+                  },
+                  isFirst: true,
+                ),
+                SettingsTiles.buildSwitchTile(
+                  context,
+                  icon: Icon(Icons.calendar_month_rounded,
+                      color: cs.primary, size: 20),
+                  title: l10n.settingsMonthlyRecap,
+                  subtitle: l10n.settingsMonthlyRecapDesc,
+                  value: _monthlyEnabled,
+                  onChanged: (v) async {
+                    await InsightsPromoService.setMonthlyEnabled(v);
+                    if (mounted) setState(() => _monthlyEnabled = v);
+                  },
+                ),
+              ]),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+                child: Text(
+                  l10n.settingsRecapBannerDesc,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: FontConstants.fontFamily,
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.45),
+                    height: 1.5,
+                  ),
                 ),
               ),
-            ),
 
-            // ── RECAP CONTENT ────────────────────────────────────────────
-            SettingsTiles.buildSectionHeader(context, l10n.settingsRecapContent),
-            SettingsTiles.buildGlassmorphicCard(context, children: [
-              SettingsTiles.buildSegmentedChoiceTile(
-                context,
-                icon: Icon(Icons.bar_chart_rounded,
-                    color: cs.primary, size: 20),
-                title: l10n.settingsDataWindow,
-                subtitle: l10n.settingsDataWindowDesc,
-                options: [l10n.settingsLast7Days, l10n.settingsLast30Days],
-                selectedIndex: _periodDays == 7 ? 0 : 1,
-                onChanged: (i) async {
-                  final days = i == 0 ? 7 : 30;
-                  await InsightsPromoService.setRecapPeriodDays(days);
-                  if (mounted) setState(() => _periodDays = days);
-                },
-                isFirst: true,
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: Icon(Icons.play_circle_outline_rounded,
-                    color: cs.primary, size: 20),
-                title: l10n.settingsPreviewRecap,
-                subtitle: l10n.settingsPreviewRecapDesc,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ListeningRecapScreen(),
-                    ),
-                  );
-                },
-              ),
-            ]),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
-              child: Text(
-                l10n.settingsRecapContentDesc,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontFamily: FontConstants.fontFamily,
-                  color: (isDark ? Colors.white : Colors.black).withValues(alpha: 0.45),
-                  height: 1.5,
+              // ── RECAP CONTENT ────────────────────────────────────────────
+              SettingsTiles.buildSectionHeader(
+                  context, l10n.settingsRecapContent),
+              SettingsTiles.buildGlassmorphicCard(context, children: [
+                SettingsTiles.buildSegmentedChoiceTile(
+                  context,
+                  icon: Icon(Icons.bar_chart_rounded,
+                      color: cs.primary, size: 20),
+                  title: l10n.settingsDataWindow,
+                  subtitle: l10n.settingsDataWindowDesc,
+                  options: [l10n.settingsLast7Days, l10n.settingsLast30Days],
+                  selectedIndex: _periodDays == 7 ? 0 : 1,
+                  onChanged: (i) async {
+                    final days = i == 0 ? 7 : 30;
+                    await InsightsPromoService.setRecapPeriodDays(days);
+                    if (mounted) setState(() => _periodDays = days);
+                  },
+                  isFirst: true,
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: Icon(Icons.play_circle_outline_rounded,
+                      color: cs.primary, size: 20),
+                  title: l10n.settingsPreviewRecap,
+                  subtitle: l10n.settingsPreviewRecapDesc,
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ListeningRecapScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ]),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 10, 22, 0),
+                child: Text(
+                  l10n.settingsRecapContentDesc,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontFamily: FontConstants.fontFamily,
+                    color: (isDark ? Colors.white : Colors.black)
+                        .withValues(alpha: 0.45),
+                    height: 1.5,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-          ],
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }

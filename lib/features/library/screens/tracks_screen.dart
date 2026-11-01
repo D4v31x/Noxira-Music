@@ -202,7 +202,8 @@ class _TracksScreenState extends State<TracksScreen> {
       await FolderFilterService().ensureInitialized();
       _allSongs = FolderFilterService().filterSongs(rawSongs);
 
-      debugPrint('🎵 [TRACKS] Fetched ${_allSongs.length} songs from MediaStore');
+      debugPrint(
+          '🎵 [TRACKS] Fetched ${_allSongs.length} songs from MediaStore');
       setState(() => _isLoading = false);
 
       if (_allSongs.isEmpty) {
@@ -233,14 +234,9 @@ class _TracksScreenState extends State<TracksScreen> {
         ? await compute(
             _sortSongsIsolate,
             _SortParams(
-                songs: _allSongs,
-                option: _sortOption,
-                ascending: _isAscending))
-        : _sortSongsIsolate(
-            _SortParams(
-                songs: _allSongs,
-                option: _sortOption,
-                ascending: _isAscending));
+                songs: _allSongs, option: _sortOption, ascending: _isAscending))
+        : _sortSongsIsolate(_SortParams(
+            songs: _allSongs, option: _sortOption, ascending: _isAscending));
     if (!mounted) return;
     _allSongs = sorted;
     // Reset paging and load first page in one setState
@@ -276,7 +272,8 @@ class _TracksScreenState extends State<TracksScreen> {
 
     if (startIndex < _allSongs.length) {
       final newSongs = _allSongs.sublist(startIndex, endIndex);
-      debugPrint('🎵 [TRACKS] Loading page $_currentPage: songs $startIndex–${endIndex - 1} (${newSongs.length} songs displayed)');
+      debugPrint(
+          '🎵 [TRACKS] Loading page $_currentPage: songs $startIndex–${endIndex - 1} (${newSongs.length} songs displayed)');
 
       setState(() {
         _displayedSongs.addAll(newSongs);
@@ -426,7 +423,6 @@ class _TracksScreenState extends State<TracksScreen> {
         ),
       ),
     );
-    
   }
 
   PopupMenuItem<TrackSortOption> _sortItem(TrackSortOption opt, String label) {
@@ -617,7 +613,8 @@ class _TracksScreenState extends State<TracksScreen> {
         currentSongListenable: audioPlayerService.currentSongNotifier,
         isPlayingListenable: audioPlayerService.isPlayingNotifier,
         onTap: () {
-          debugPrint('🎵 [TRACKS] Song tapped: "${song.title}" by ${song.artist ?? 'Unknown'} (id: ${song.id}, index: $index)');
+          debugPrint(
+              '🎵 [TRACKS] Song tapped: "${song.title}" by ${song.artist ?? 'Unknown'} (id: ${song.id}, index: $index)');
           audioPlayerService.setPlaylist(
             _displayedSongs,
             index,

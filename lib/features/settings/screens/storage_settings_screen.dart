@@ -8,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/cache_manager.dart';
@@ -50,21 +50,10 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
 
   void _showClearCacheDialog() {
     final l10n = AppLocalizations.of(context);
-    final perfProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
-    final cs = Theme.of(context).colorScheme;
-    final bg = perfProvider.shouldEnableBlur
-        ? Colors.grey[900]!.withValues(alpha: 0.9)
-        : cs.surfaceContainerHigh;
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: bg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+      builder: (_) => GlassmorphicDialog(
         title: Text(l10n.settingsClearCacheTitle,
             style: const TextStyle(
                 fontFamily: FontConstants.fontFamily,
@@ -108,12 +97,6 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
 
   Future<void> _showCacheInfo() async {
     final l10n = AppLocalizations.of(context);
-    final perfProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
-    final cs = Theme.of(context).colorScheme;
-    final shouldBlur = perfProvider.shouldEnableBlur;
-    final bg =
-        shouldBlur ? Colors.grey[900]!.withValues(alpha: 0.9) : cs.surfaceContainerHigh;
 
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -140,16 +123,7 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
 
       await showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-          backgroundColor: bg,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(
-              color: shouldBlur
-                  ? Colors.white.withValues(alpha: 0.1)
-                  : cs.outlineVariant,
-            ),
-          ),
+        builder: (_) => GlassmorphicDialog(
           title: Text(l10n.settingsCacheInfo,
               style: const TextStyle(
                   fontFamily: FontConstants.fontFamily,
@@ -177,10 +151,12 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
                         color: Colors.white,
                         fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                _infoRow(l10n.lyrics, l10n.settingsCacheItems('${cacheSizes['lyrics']}')),
+                _infoRow(l10n.lyrics,
+                    l10n.settingsCacheItems('${cacheSizes['lyrics']}')),
                 _infoRow(l10n.onboardingAlbumArtwork,
                     l10n.settingsCacheItems('${cacheSizes['artwork']}')),
-                _infoRow(l10n.metadata, l10n.settingsCacheItems('${cacheSizes['metadata']}')),
+                _infoRow(l10n.metadata,
+                    l10n.settingsCacheItems('${cacheSizes['metadata']}')),
               ],
             ),
           ),
@@ -200,8 +176,7 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
     }
   }
 
-  Widget _infoRow(String label, String value, {bool bold = false}) =>
-      Padding(
+  Widget _infoRow(String label, String value, {bool bold = false}) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -209,13 +184,11 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
             Text(label,
                 style: TextStyle(
                     fontFamily: FontConstants.fontFamily,
-                    fontWeight:
-                        bold ? FontWeight.w600 : FontWeight.normal)),
+                    fontWeight: bold ? FontWeight.w600 : FontWeight.normal)),
             Text(value,
                 style: TextStyle(
                     fontFamily: FontConstants.fontFamily,
-                    fontWeight:
-                        bold ? FontWeight.w600 : FontWeight.normal)),
+                    fontWeight: bold ? FontWeight.w600 : FontWeight.normal)),
           ],
         ),
       );
@@ -236,67 +209,68 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    return AppBackground(child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return AppBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: iconoir.NavArrowLeft(
-            color: isDark ? Colors.white : Colors.black,
-            width: 28,
-            height: 28,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: iconoir.NavArrowLeft(
+              color: isDark ? Colors.white : Colors.black,
+              width: 28,
+              height: 28,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
+          title: Text(
+            l10n.settingsStorage,
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
         ),
-        title: Text(
-          l10n.settingsStorage,
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
+        body: Selector<AudioPlayerService, bool>(
+          selector: (_, s) => s.currentSong != null,
+          builder: (context, hasCurrentSong, _) => ListView(
+            padding: EdgeInsets.only(
+              top: 10,
+              bottom: hasCurrentSong
+                  ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
+                  : MediaQuery.of(context).padding.bottom + 24,
+            ),
+            children: [
+              SettingsTiles.buildSectionHeader(context, l10n.settingsStorage),
+              SettingsTiles.buildGlassmorphicCard(context, children: [
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: iconoir.Database(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 20,
+                      height: 20),
+                  title: l10n.settingsCacheInfo,
+                  subtitle: l10n.settingsCacheInfoDesc,
+                  onTap: _showCacheInfo,
+                  isFirst: true,
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: iconoir.Trash(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 20,
+                      height: 20),
+                  title: l10n.settingsClearCache,
+                  subtitle: l10n.settingsClearCacheDesc,
+                  onTap: _showClearCacheDialog,
+                ),
+              ]),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),
-      body: Selector<AudioPlayerService, bool>(
-        selector: (_, s) => s.currentSong != null,
-        builder: (context, hasCurrentSong, _) => ListView(
-          padding: EdgeInsets.only(
-            top: 10,
-            bottom: hasCurrentSong
-                ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
-                : MediaQuery.of(context).padding.bottom + 24,
-          ),
-          children: [
-            SettingsTiles.buildSectionHeader(context, l10n.settingsStorage),
-            SettingsTiles.buildGlassmorphicCard(context, children: [
-              SettingsTiles.buildActionTile(
-                context,
-                icon: iconoir.Database(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 20,
-                    height: 20),
-                title: l10n.settingsCacheInfo,
-                subtitle: l10n.settingsCacheInfoDesc,
-                onTap: _showCacheInfo,
-                isFirst: true,
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: iconoir.Trash(
-                    color: Theme.of(context).colorScheme.primary,
-                    width: 20,
-                    height: 20),
-                title: l10n.settingsClearCache,
-                subtitle: l10n.settingsClearCacheDesc,
-                onTap: _showClearCacheDialog,
-              ),
-            ]),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'dart:async';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
@@ -13,10 +14,12 @@ import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/library_screen_header.dart';
 import '../../../shared/widgets/glassmorphic_card.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/providers/performance_mode_provider.dart';
 import '../../../shared/utils/sort_preferences.dart';
 import 'playlist_detail_screen.dart';
 import 'smart_playlist_editor_screen.dart';
+import '../../../shared/widgets/adaptive_blur.dart';
 
 /// Data class to hold playlist-related state for efficient rebuilds
 class _PlaylistsState {
@@ -52,7 +55,8 @@ class _PlaylistsState {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! _PlaylistsState) return false;
-    if (likedPlaylist?.songs.length != other.likedPlaylist?.songs.length) return false;
+    if (likedPlaylist?.songs.length != other.likedPlaylist?.songs.length)
+      return false;
     if (autoPlaylists.length != other.autoPlaylists.length) return false;
     if (userPlaylists.length != other.userPlaylists.length) return false;
     for (var i = 0; i < userPlaylists.length; i++) {
@@ -362,7 +366,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                             child: GlassmorphicCard.playlist(
                               playlistName: autoName,
                               songCount: playlist.songs.length,
-                              subtitle: localizations.songCount(playlist.songs.length),
+                              subtitle: localizations
+                                  .songCount(playlist.songs.length),
                               playlistId: playlist.id,
                               onTap: () => Navigator.push(
                                 context,
@@ -406,7 +411,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                             height: 190,
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
                               itemCount: smartPlaylists.length,
                               itemBuilder: (context, index) {
                                 final sp = smartPlaylists[index];
@@ -525,7 +531,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
     bool isDark,
     AppLocalizations localizations,
   ) {
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
@@ -533,92 +540,92 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
         ),
       ),
       child: Container(
-          height: 72,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-            child: Row(
-              children: [
-                // Icon
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: const BoxDecoration(
-                    borderRadius:
-                        BorderRadius.horizontal(left: Radius.circular(16)),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(16)),
-                    child: Image.asset(
-                      'assets/images/UI/liked.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                // Text
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          localizations.favoriteSongs,
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${playlist.songs.length} ${localizations.tracks}',
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            color: isDark ? Colors.white54 : Colors.black45,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Play Button
-                GestureDetector(
-                  onTap: playlist.songs.isEmpty
-                      ? null
-                      : () => audioService.setPlaylist(playlist.songs, 0),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ],
+        height: 72,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-          ),
-    );
+          ],
+        ),
+        child: Row(
+          children: [
+            // Icon
+            Container(
+              width: 72,
+              height: 72,
+              decoration: const BoxDecoration(
+                borderRadius:
+                    BorderRadius.horizontal(left: Radius.circular(16)),
+              ),
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.horizontal(left: Radius.circular(16)),
+                child: Image.asset(
+                  'assets/images/UI/liked.png',
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            // Text
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      localizations.favoriteSongs,
+                      style: TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${playlist.songs.length} ${localizations.tracks}',
+                      style: TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Play Button
+            GestureDetector(
+              onTap: playlist.songs.isEmpty
+                  ? null
+                  : () => audioService.setPlaylist(playlist.songs, 0),
+              child: Container(
+                width: 40,
+                height: 40,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.play_arrow_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
   }
 
   Widget _buildPlaylistTile(
@@ -628,7 +635,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
     bool isDark,
     AppLocalizations localizations,
   ) {
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
@@ -638,76 +646,76 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       onLongPress: () =>
           _showPlaylistOptions(context, audioService, playlist, localizations),
       child: Container(
-          height: 64,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-            child: Row(
-              children: [
-                // Artwork
-                ClipRRect(
-                  borderRadius:
-                      const BorderRadius.horizontal(left: Radius.circular(14)),
-                  child: SizedBox(
-                    width: 64,
-                    height: 64,
-                    child: _buildPlaylistArtwork(playlist),
-                  ),
-                ),
-                // Info
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          playlist.name,
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 15,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '${playlist.songs.length} ${localizations.tracks}',
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            color: isDark ? Colors.white54 : Colors.black45,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Chevron
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: Icon(
-                    Icons.chevron_right_rounded,
-                    color: isDark ? Colors.white38 : Colors.black26,
-                    size: 24,
-                  ),
-                ),
-              ],
+        height: 64,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
-          ),
-    );
+          ],
+        ),
+        child: Row(
+          children: [
+            // Artwork
+            ClipRRect(
+              borderRadius:
+                  const BorderRadius.horizontal(left: Radius.circular(14)),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: _buildPlaylistArtwork(playlist),
+              ),
+            ),
+            // Info
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      playlist.name,
+                      style: TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: isDark ? Colors.white : Colors.black87,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${playlist.songs.length} ${localizations.tracks}',
+                      style: TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Chevron
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Icon(
+                Icons.chevron_right_rounded,
+                color: isDark ? Colors.white38 : Colors.black26,
+                size: 24,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ));
   }
 
   Widget _buildPlaylistArtwork(Playlist playlist) {
@@ -807,23 +815,20 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                 Navigator.pop(sheetContext);
                 final confirmed = await showDialog<bool>(
                   context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    backgroundColor: Colors.grey.shade900,
+                  builder: (dialogContext) => GlassmorphicDialog(
                     title: Text(l10n.editSmartPlaylist,
                         style: const TextStyle(color: Colors.white)),
                     content: Text(l10n.deleteSmartPlaylistConfirm,
                         style: const TextStyle(color: Colors.white70)),
                     actions: [
                       TextButton(
-                        onPressed: () =>
-                            Navigator.pop(dialogContext, false),
+                        onPressed: () => Navigator.pop(dialogContext, false),
                         child: Text(l10n.cancel),
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext, true),
                         child: Text(l10n.delete,
-                            style:
-                                const TextStyle(color: Colors.redAccent)),
+                            style: const TextStyle(color: Colors.redAccent)),
                       ),
                     ],
                   ),
@@ -849,17 +854,18 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       if (path == null) return;
       final lower = path.toLowerCase();
       if (!lower.endsWith('.m3u') && !lower.endsWith('.m3u8')) {
-        messenger.showSnackBar(SnackBar(
-            content: Text(loc.pleaseSelectM3uFile)));
+        messenger
+            .showSnackBar(SnackBar(content: Text(loc.pleaseSelectM3uFile)));
         return;
       }
       final playlist = await audioService.importPlaylistFromM3uFile(path);
       if (playlist == null) {
-        messenger.showSnackBar(SnackBar(
-            content: Text(loc.noMatchingSongsForPlaylist)));
+        messenger.showSnackBar(
+            SnackBar(content: Text(loc.noMatchingSongsForPlaylist)));
       } else {
         messenger.showSnackBar(SnackBar(
-            content: Text(loc.importedPlaylist(playlist.name, playlist.songs.length))));
+            content: Text(
+                loc.importedPlaylist(playlist.name, playlist.songs.length))));
       }
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(loc.importFailed('$e'))));
@@ -875,8 +881,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       if (folder == null) return;
       await audioService.setPlaylistSyncFolder(folder);
       await audioService.syncPlaylistsWithFolder();
-      messenger.showSnackBar(
-          SnackBar(content: Text(loc.playlistsSyncWith(folder))));
+      messenger
+          .showSnackBar(SnackBar(content: Text(loc.playlistsSyncWith(folder))));
     } catch (e) {
       messenger.showSnackBar(
           SnackBar(content: Text(loc.couldNotSetSyncFolder('$e'))));
@@ -889,8 +895,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
     final loc = AppLocalizations.of(context);
     final folder = await audioService.playlistSyncFolder();
     if (folder == null) {
-      messenger.showSnackBar(
-          SnackBar(content: Text(loc.setSyncFolderFirst)));
+      messenger.showSnackBar(SnackBar(content: Text(loc.setSyncFolderFirst)));
       return;
     }
     try {
@@ -994,9 +999,9 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                     child: GestureDetector(
                       onTap: () {
                         if (controller.text.isNotEmpty) {
-                          final audioService =
-                              Provider.of<AudioPlayerService>(context,
-                                  listen: false);
+                          final audioService = Provider.of<AudioPlayerService>(
+                              context,
+                              listen: false);
                           audioService.createPlaylist(controller.text, []);
                           Navigator.pop(context);
                         }
@@ -1035,7 +1040,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
           child: useBlur
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(20),
-                  child: BackdropFilter(
+                  child: AdaptiveBackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                     child: dialogContent,
                   ),
@@ -1059,71 +1064,70 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 24,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.1),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 24,
+              offset: const Offset(0, -4),
             ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Handle
-                Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.white24 : Colors.black12,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                // Playlist name
-                Text(
-                  playlist.name,
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    color: isDark ? Colors.white : Colors.black87,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Rename option
-                _buildOptionTile(
-                  context,
-                  Icons.edit_rounded,
-                  localizations.rename,
-                  isDark,
-                  () {
-                    Navigator.pop(context);
-                    _showRenameDialog(context, audioService, playlist);
-                  },
-                ),
-                // Delete option
-                _buildOptionTile(
-                  context,
-                  Icons.delete_outline_rounded,
-                  localizations.delete,
-                  isDark,
-                  () {
-                    Navigator.pop(context);
-                    _showDeleteConfirmation(
-                        context, audioService, playlist, localizations);
-                  },
-                  isDestructive: true,
-                ),
-              ],
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white24 : Colors.black12,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
+            // Playlist name
+            Text(
+              playlist.name,
+              style: TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Rename option
+            _buildOptionTile(
+              context,
+              Icons.edit_rounded,
+              localizations.rename,
+              isDark,
+              () {
+                Navigator.pop(context);
+                _showRenameDialog(context, audioService, playlist);
+              },
+            ),
+            // Delete option
+            _buildOptionTile(
+              context,
+              Icons.delete_outline_rounded,
+              localizations.delete,
+              isDark,
+              () {
+                Navigator.pop(context);
+                _showDeleteConfirmation(
+                    context, audioService, playlist, localizations);
+              },
+              isDestructive: true,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1185,119 +1189,107 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+        shape: const RoundedRectangleBorder(),
+        child: GlassDialogSurface(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                localizations.renamePlaylist,
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    localizations.renamePlaylist,
-                    style: TextStyle(
+              const SizedBox(height: 20),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.black.withValues(alpha: 0.06),
+                  ),
+                ),
+                child: TextField(
+                  controller: controller,
+                  autofocus: true,
+                  style: TextStyle(
+                    fontFamily: FontConstants.fontFamily,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: localizations.playlistName,
+                    hintStyle: TextStyle(
                       fontFamily: FontConstants.fontFamily,
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.04),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.12)
-                            : Colors.black.withValues(alpha: 0.06),
-                      ),
-                    ),
-                    child: TextField(
-                      controller: controller,
-                      autofocus: true,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white : Colors.black87,
-                      ),
-                      decoration: InputDecoration(
-                        hintText: localizations.playlistName,
-                        hintStyle: TextStyle(
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        localizations.cancel,
+                        style: TextStyle(
                           fontFamily: FontConstants.fontFamily,
-                          color: isDark ? Colors.white38 : Colors.black38,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 14,
+                          color: isDark ? Colors.white54 : Colors.black45,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        if (controller.text.isNotEmpty) {
+                          audioService.renamePlaylist(
+                              playlist.id, controller.text);
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
                           child: Text(
-                            localizations.cancel,
-                            style: TextStyle(
+                            localizations.save,
+                            style: const TextStyle(
                               fontFamily: FontConstants.fontFamily,
-                              color: isDark ? Colors.white54 : Colors.black45,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            if (controller.text.isNotEmpty) {
-                              audioService.renamePlaylist(
-                                  playlist.id, controller.text);
-                              Navigator.pop(context);
-                            }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.8),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: Text(
-                                localizations.save,
-                                style: const TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
+        ),
+      ),
     );
   }
 
@@ -1313,95 +1305,83 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
-        child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
+        shape: const RoundedRectangleBorder(),
+        child: GlassDialogSurface(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.delete_outline_rounded,
+                color: Colors.red.withValues(alpha: 0.8),
+                size: 48,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(height: 16),
+              Text(
+                localizations.deletePlaylist,
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: isDark ? Colors.white : Colors.black87,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${localizations.deletePlaylistConfirm} "${playlist.name}"?',
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: isDark ? Colors.white54 : Colors.black45,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
                 children: [
-                  Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.red.withValues(alpha: 0.8),
-                    size: 48,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    localizations.deletePlaylist,
-                    style: TextStyle(
-                      fontFamily: FontConstants.fontFamily,
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        localizations.cancel,
+                        style: TextStyle(
+                          fontFamily: FontConstants.fontFamily,
+                          color: isDark ? Colors.white54 : Colors.black45,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${localizations.deletePlaylistConfirm} "${playlist.name}"?',
-                    style: TextStyle(
-                      fontFamily: FontConstants.fontFamily,
-                      color: isDark ? Colors.white54 : Colors.black45,
-                      fontSize: 14,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        audioService.deletePlaylist(playlist);
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Center(
                           child: Text(
-                            localizations.cancel,
-                            style: TextStyle(
+                            localizations.delete,
+                            style: const TextStyle(
                               fontFamily: FontConstants.fontFamily,
-                              color: isDark ? Colors.white54 : Colors.black45,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            audioService.deletePlaylist(playlist);
-                            Navigator.pop(context);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.8),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Center(
-                              child: Text(
-                                localizations.delete,
-                                style: const TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
+        ),
+      ),
     );
   }
 }

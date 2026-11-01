@@ -81,9 +81,8 @@ class SmartPlaylistService extends ChangeNotifier {
   }
 
   Future<void> updateSmartPlaylist(SmartPlaylist updated) async {
-    _smartPlaylists = _smartPlaylists
-        .map((p) => p.id == updated.id ? updated : p)
-        .toList();
+    _smartPlaylists =
+        _smartPlaylists.map((p) => p.id == updated.id ? updated : p).toList();
     await _save();
     notifyListeners();
   }
@@ -126,11 +125,13 @@ class SmartPlaylistService extends ChangeNotifier {
 
     switch (playlist.sortBy) {
       case SmartPlaylistSortBy.titleAZ:
-        list.sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
+        list.sort(
+            (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
         break;
       case SmartPlaylistSortBy.artistAZ:
-        list.sort((a, b) =>
-            (a.artist ?? '').toLowerCase().compareTo((b.artist ?? '').toLowerCase()));
+        list.sort((a, b) => (a.artist ?? '')
+            .toLowerCase()
+            .compareTo((b.artist ?? '').toLowerCase()));
         break;
       case SmartPlaylistSortBy.dateAddedNewest:
         list.sort((a, b) => (b.dateAdded ?? 0).compareTo(a.dateAdded ?? 0));

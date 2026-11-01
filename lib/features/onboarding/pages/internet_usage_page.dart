@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:aurora_music_v01/core/constants/font_constants.dart';
-import 'package:provider/provider.dart';
-import '../../../shared/providers/providers.dart';
-import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/pill_button.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 
-class InternetUsagePage extends StatefulWidget {
+import '../../../l10n/generated/app_localizations.dart';
+import '../widgets/onboarding_kit.dart';
+
+/// Where the app talks to the internet, and what it sends.
+class InternetUsagePage extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
 
@@ -17,445 +16,81 @@ class InternetUsagePage extends StatefulWidget {
   });
 
   @override
-  State<InternetUsagePage> createState() => _InternetUsagePageState();
-}
-
-class _InternetUsagePageState extends State<InternetUsagePage>
-    with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late AnimationController _exitController;
-  late Animation<double> _titleFadeAnimation;
-  late Animation<Offset> _titleSlideAnimation;
-  late Animation<double> _subtitleFadeAnimation;
-  late Animation<double> _contentFadeAnimation;
-  late Animation<Offset> _contentSlideAnimation;
-  late Animation<double> _exitFadeAnimation;
-  late Animation<Offset> _exitSlideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 900),
-      vsync: this,
-    );
-
-    _titleFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.1, 0.6, curve: Curves.easeOut),
-      ),
-    );
-
-    _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.1, 0.7, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _subtitleFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-      ),
-    );
-
-    _contentFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.8, curve: Curves.easeOut),
-      ),
-    );
-
-    _contentSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.9, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _exitController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _exitFadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _exitController,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    _exitSlideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.08),
-    ).animate(
-      CurvedAnimation(
-        parent: _exitController,
-        curve: Curves.easeInCubic,
-      ),
-    );
-
-    _controller.forward();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _exitController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final subtitleColor =
-        isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6);
+    final l10n = AppLocalizations.of(context);
+    const color = Colors.white;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_controller, _exitController]),
-            builder: (context, child) {
-              return Column(
-                children: [
-                  const SizedBox(height: 48),
+    final services = <({Widget icon, String title, String body})>[
+      (
+        icon: const iconoir.MediaImage(color: color, width: 24, height: 24),
+        title: l10n.onboardingAlbumArtwork,
+        body: l10n.onboardingAlbumArtworkDesc,
+      ),
+      (
+        icon: const iconoir.InfoCircle(color: color, width: 24, height: 24),
+        title: l10n.onboardingMusicMetadata,
+        body: l10n.onboardingMusicMetadataDesc,
+      ),
+      (
+        icon: const iconoir.TextSize(color: color, width: 24, height: 24),
+        title: l10n.onboardingLyrics,
+        body: l10n.onboardingLyricsDesc,
+      ),
+      (
+        icon: const iconoir.Heart(color: color, width: 24, height: 24),
+        title: l10n.onboardingSupportGoal,
+        body: l10n.onboardingSupportGoalDesc,
+      ),
+      (
+        icon: const iconoir.Bug(color: color, width: 24, height: 24),
+        title: l10n.onboardingAnalytics,
+        body: l10n.onboardingAnalyticsDesc,
+      ),
+    ];
 
-                  // Page icon
-                  SlideTransition(
-                    position: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitSlideAnimation
-                        : _titleSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitFadeAnimation
-                          : _titleFadeAnimation,
-                      child: iconoir.Globe(
-                        color: Theme.of(context).colorScheme.primary,
-                        height: 56,
-                        width: 56,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Title
-                  SlideTransition(
-                    position: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitSlideAnimation
-                        : _titleSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitFadeAnimation
-                          : _titleFadeAnimation,
-                      child: Text(
-                        AppLocalizations.of(context)
-                            .onboardingInternetTitle,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
-                          letterSpacing: -0.8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Subtitle
-                  FadeTransition(
-                    opacity: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitFadeAnimation
-                        : _subtitleFadeAnimation,
-                    child: Text(
-                      AppLocalizations.of(context)
-                          .onboardingInternetSubtitle,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: subtitleColor,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  // Features list
-                  Expanded(
-                    child: SlideTransition(
-                      position: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitSlideAnimation
-                          : _contentSlideAnimation,
-                      child: FadeTransition(
-                        opacity: _exitController.isAnimating ||
-                                _exitController.isCompleted
-                            ? _exitFadeAnimation
-                            : _contentFadeAnimation,
-                        child: ListView(
-                          children: [
-                            _buildInfoCard(
-                              context: context,
-                              icon: iconoir.MediaImage(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 24,
-                                height: 24,
-                              ),
-                              title: AppLocalizations.of(context)
-                                  .onboardingAlbumArtwork,
-                              description: AppLocalizations.of(context)
-                                  .onboardingAlbumArtworkDesc,
-                              isOptional: false,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoCard(
-                              context: context,
-                              icon: iconoir.InfoCircle(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 24,
-                                height: 24,
-                              ),
-                              title: AppLocalizations.of(context)
-                                  .onboardingMusicMetadata,
-                              description: AppLocalizations.of(context)
-                                  .onboardingMusicMetadataDesc,
-                              isOptional: false,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoCard(
-                              context: context,
-                              icon: iconoir.TextSize(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 24,
-                                height: 24,
-                              ),
-                              title: AppLocalizations.of(context)
-                                  .onboardingLyrics,
-                              description: AppLocalizations.of(context)
-                                  .onboardingLyricsDesc,
-                              isOptional: false,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 16),
-                            _buildInfoCard(
-                              context: context,
-                              icon: iconoir.Bug(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 24,
-                                height: 24,
-                              ),
-                              title: AppLocalizations.of(context)
-                                  .onboardingAnalytics,
-                              description: AppLocalizations.of(context)
-                                  .onboardingAnalyticsDesc,
-                              isOptional: false,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(height: 24),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.3),
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  iconoir.Lock(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    width: 20,
-                                    height: 20,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      AppLocalizations.of(context)
-                                          .onboardingPrivacyNote,
-                                      style: TextStyle(
-                                        fontFamily: FontConstants.fontFamily,
-                                        fontSize: 13,
-                                        color: textColor.withValues(alpha: 0.9),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Navigation buttons
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 40.0, top: 16.0),
-                    child: PillNavigationButtons(
-                      backText: AppLocalizations.of(context).back,
-                      continueText: AppLocalizations.of(context)
-                          .continueButton,
-                      onBack: () async {
-                        await _exitController.forward();
-                        widget.onBack();
-                      },
-                      onContinue: () async {
-                        await _exitController.forward();
-                        widget.onContinue();
-                      },
-                    ),
-                  ),
-                ],
-              );
-            },
+    return StepScaffold(
+      title: l10n.onboardingInternetTitle,
+      lead: l10n.onboardingInternetSubtitle,
+      primaryLabel: l10n.continueButton,
+      onPrimary: onContinue,
+      onBack: onBack,
+      backLabel: l10n.back,
+      children: [
+        Column(
+          spacing: 12,
+          children: [
+            for (var i = 0; i < services.length; i++)
+              GlassRow(
+                order: 2 + i,
+                leading: services[i].icon,
+                title: services[i].title,
+                body: services[i].body,
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Reveal(
+          order: 2 + services.length,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 2),
+                child: iconoir.Lock(color: color, width: 18, height: 18),
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  l10n.onboardingPrivacyNote,
+                  textAlign: TextAlign.center,
+                  style: OnboardingText.rowBody,
+                ),
+              ),
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard({
-    required BuildContext context,
-    required Widget icon,
-    required String title,
-    required String description,
-    required bool isOptional,
-    required bool isDark,
-  }) {
-    final containerColor = isDark
-        ? Colors.white.withValues(alpha: 0.05)
-        : Colors.black.withValues(alpha: 0.05);
-    final borderColor =
-        isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1);
-    final titleColor = isDark ? Colors.white : Colors.black;
-    final descriptionColor =
-        isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6);
-    final tagBgColor =
-        isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1);
-    final tagTextColor =
-        isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: containerColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: borderColor,
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(child: icon),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: titleColor,
-                        ),
-                      ),
-                    ),
-                    if (isOptional)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tagBgColor,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context)
-                              .onboardingOptional,
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: tagTextColor,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    fontSize: 14,
-                    color: descriptionColor,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

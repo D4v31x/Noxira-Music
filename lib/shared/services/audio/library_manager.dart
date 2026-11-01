@@ -1,20 +1,25 @@
 part of '../audio_player_service.dart';
 
+/// Runs in a background isolate.
+List<bool> _pathsExist(List<String> paths) =>
+    [for (final p in paths) File(p).existsSync()];
+
 extension AudioLibraryManagerExtension on AudioPlayerService {
   // Drops songs whose file no longer exists on disk. MediaStore can keep a
   // stale row around after a file is deleted outside the app (e.g. via a
   // file manager) until the OS re-indexes that path, so don't trust it blindly.
   Future<List<SongModel>> _filterExistingFiles(List<SongModel> songs) async {
-    const batchSize = 200;
-    final existing = <SongModel>[];
-    for (var i = 0; i < songs.length; i += batchSize) {
-      final batch = songs.sublist(i, (i + batchSize).clamp(0, songs.length));
-      final flags = await Future.wait(batch.map((s) => File(s.data).exists()));
-      for (var j = 0; j < batch.length; j++) {
-        if (flags[j]) existing.add(batch[j]);
-      }
-    }
-    return existing;
+    if (songs.isEmpty) return songs;
+    // One background isolate with synchronous stats is much cheaper than
+    // thousands of async File.exists() round-trips on the UI isolate.
+    final flags = await compute(
+      _pathsExist,
+      songs.map((s) => s.data).toList(growable: false),
+    );
+    return [
+      for (var i = 0; i < songs.length; i++)
+        if (flags[i]) songs[i],
+    ];
   }
 
   // Check permissions safely without crashing the app
@@ -251,16 +256,62 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
     _scheduleNotify();
   }
 
-  void addSongToPlaylist(String playlistId, SongModel song) {
+  /// Whether [song] (matched by id, not object identity) is in the playlist.
+  bool isSongInPlaylist(String playlistId, SongModel song) {
+    if (playlistId == 'liked_songs') {
+      return _likedSongs.contains(song.id.toString());
+    }
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    return index != -1 && _playlists[index].songs.any((s) => s.id == song.id);
+  }
+
+  /// Whether [song] is in at least one playlist the user made (the
+  /// automatic "Most played" / "Recently added" lists don't count).
+  bool isSongInAnyUserPlaylist(SongModel? song) {
+    if (song == null) return false;
+    return _playlists.any((p) =>
+        p.id != kMostPlayedPlaylistId &&
+        p.id != kRecentlyAddedPlaylistId &&
+        p.songs.any((s) => s.id == song.id));
+  }
+
+  /// Adds [song] unless it is already there. Returns whether it was added.
+  bool addSongToPlaylist(String playlistId, SongModel song) {
     final playlistIndex = _playlists.indexWhere((p) => p.id == playlistId);
-    if (playlistIndex == -1) return;
+    if (playlistIndex == -1) return false;
     final playlist = _playlists[playlistIndex];
-    if (!playlist.songs.contains(song)) {
-      playlist.songs.add(song);
+    if (playlist.songs.any((s) => s.id == song.id)) return false;
+    playlist.songs.add(song);
+    _playlistsDirty = true;
+    _scheduleSavePlayCounts();
+    _scheduleNotify();
+    return true;
+  }
+
+  /// Number of repeated entries in the playlist (same song id more than once).
+  int countDuplicatesInPlaylist(String playlistId) {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return 0;
+    final songs = _playlists[index].songs;
+    return songs.length - songs.map((s) => s.id).toSet().length;
+  }
+
+  /// Removes repeated entries, keeping the first of each song. Returns how
+  /// many were removed.
+  int removeDuplicatesFromPlaylist(String playlistId) {
+    final index = _playlists.indexWhere((p) => p.id == playlistId);
+    if (index == -1) return 0;
+    final songs = _playlists[index].songs;
+    final seen = <int>{};
+    final before = songs.length;
+    songs.removeWhere((s) => !seen.add(s.id));
+    final removed = before - songs.length;
+    if (removed > 0) {
       _playlistsDirty = true;
       _scheduleSavePlayCounts();
       _scheduleNotify();
     }
+    return removed;
   }
 
   void removeSongFromPlaylist(String playlistId, SongModel song) {
@@ -272,7 +323,7 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
       final playlistIndex = _playlists.indexWhere((p) => p.id == playlistId);
       if (playlistIndex == -1) return;
       final playlist = _playlists[playlistIndex];
-      playlist.songs.remove(song);
+      playlist.songs.removeWhere((s) => s.id == song.id);
       _playlistsDirty = true;
       _scheduleSavePlayCounts();
     }
@@ -298,28 +349,32 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
     }
   }
 
-  void addSongsToPlaylist(String playlistId, List<SongModel> songs) {
+  /// Adds the songs that aren't already in the playlist (matched by id).
+  /// Returns how many were actually added.
+  int addSongsToPlaylist(String playlistId, List<SongModel> songs) {
+    var added = 0;
     if (playlistId == 'liked_songs') {
       for (final song in songs) {
-        if (!_likedSongs.contains(song.id.toString())) {
-          _likedSongs.add(song.id.toString());
-        }
+        if (_likedSongs.add(song.id.toString())) added++;
       }
       saveLikedSongs();
       _updateLikedSongsPlaylist();
     } else {
       final playlistIndex = _playlists.indexWhere((p) => p.id == playlistId);
-      if (playlistIndex == -1) return;
+      if (playlistIndex == -1) return 0;
       final playlist = _playlists[playlistIndex];
+      final existing = playlist.songs.map((s) => s.id).toSet();
       for (final song in songs) {
-        if (!playlist.songs.contains(song)) {
+        if (existing.add(song.id)) {
           playlist.songs.add(song);
+          added++;
         }
       }
       _playlistsDirty = true;
       _scheduleSavePlayCounts();
     }
     _scheduleNotify();
+    return added;
   }
 
   Future<void> addSongToLibrary(SongModel song) async {

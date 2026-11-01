@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 
 /// Optimized widgets for better performance in lists and grids
-/// 
+///
 /// These widgets are designed to minimize rebuilds and improve
 /// scroll performance by using const constructors, RepaintBoundary,
 /// and careful state management.

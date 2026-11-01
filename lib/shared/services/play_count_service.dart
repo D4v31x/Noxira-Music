@@ -278,10 +278,10 @@ class PlayCountService {
   }
 
   /// Disposes of resources.
-  /// 
+  ///
   /// Note: The save() call is intentionally not awaited here because
   /// dispose() is a synchronous method. The save will complete in the
-  /// background. If reliable persistence is needed, call save() 
+  /// background. If reliable persistence is needed, call save()
   /// explicitly before dispose().
   void dispose() {
     _saveDebounceTimer?.cancel();

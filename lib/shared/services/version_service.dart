@@ -15,13 +15,17 @@ class VersionService {
     debugPrint('[VersionService] Starting version check via Play Core API...');
     try {
       final info = await InAppUpdate.checkForUpdate();
-      debugPrint('[VersionService] updateAvailability: ${info.updateAvailability}');
-      debugPrint('[VersionService] availableVersionCode: ${info.availableVersionCode}');
+      debugPrint(
+          '[VersionService] updateAvailability: ${info.updateAvailability}');
+      debugPrint(
+          '[VersionService] availableVersionCode: ${info.availableVersionCode}');
 
       if (info.updateAvailability == UpdateAvailability.updateAvailable) {
         final versionCode = info.availableVersionCode?.toString();
-        debugPrint('[VersionService] Update available! Version code: $versionCode');
-        return VersionCheckResult(isUpdateAvailable: true, latestVersion: versionCode);
+        debugPrint(
+            '[VersionService] Update available! Version code: $versionCode');
+        return VersionCheckResult(
+            isUpdateAvailable: true, latestVersion: versionCode);
       }
     } catch (e) {
       debugPrint('[VersionService] Play Core check error: $e');

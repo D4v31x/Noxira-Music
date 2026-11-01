@@ -1,4 +1,4 @@
-/// Aurora Music Validators
+/// Noxira Music Validators
 ///
 /// This library exports validation utilities for:
 /// - File path validation and sanitization

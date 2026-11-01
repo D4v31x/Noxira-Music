@@ -1,15 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:aurora_music_v01/core/constants/font_constants.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:provider/provider.dart';
+import 'dart:async';
 import 'dart:ui' as ui;
-import '../../../l10n/locale_provider.dart';
-import '../../../l10n/generated/app_localizations.dart';
-import '../../../l10n/supported_languages.dart';
-import '../../../shared/providers/providers.dart';
-import '../../../shared/widgets/pill_button.dart';
-import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/locale_provider.dart';
+import '../../../l10n/supported_languages.dart';
+import '../widgets/onboarding_kit.dart';
+
+/// Pick the app language. The whole onboarding re-translates as you tap.
 class LanguageSelectionPage extends StatefulWidget {
   final VoidCallback onContinue;
   final VoidCallback? onBack;
@@ -24,422 +24,89 @@ class LanguageSelectionPage extends StatefulWidget {
   State<LanguageSelectionPage> createState() => _LanguageSelectionPageState();
 }
 
-class _LanguageSelectionPageState extends State<LanguageSelectionPage>
-    with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late AnimationController _exitController;
-  late Animation<double> _titleFadeAnimation;
-  late Animation<Offset> _titleSlideAnimation;
-  late Animation<double> _subtitleFadeAnimation;
-  late Animation<double> _contentFadeAnimation;
-  late Animation<Offset> _contentSlideAnimation;
-  late Animation<double> _exitFadeAnimation;
-  late Animation<Offset> _exitSlideAnimation;
-
-  String _selectedLanguage = 'en';
-
-  /// Derived from [SupportedLanguages.all] – add new languages there.
+class _LanguageSelectionPageState extends State<LanguageSelectionPage> {
+  String _selected = 'en';
   final List<SupportedLanguage> _languages = SupportedLanguages.all;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentLanguage();
-
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 900),
-      vsync: this,
-    );
-
-    _titleFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _subtitleFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.1, 0.6, curve: Curves.easeOut),
-      ),
-    );
-
-    _contentFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-      ),
-    );
-
-    _contentSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.9, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    // Exit animation
-    _exitController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _exitFadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _exitController,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    _exitSlideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.08),
-    ).animate(
-      CurvedAnimation(
-        parent: _exitController,
-        curve: Curves.easeInCubic,
-      ),
-    );
-
-    _controller.forward();
+    unawaited(_loadCurrent());
   }
 
-  Future<void> _loadCurrentLanguage() async {
+  Future<void> _loadCurrent() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _selectedLanguage = prefs.getString('languageCode') ?? 'en';
-    });
+    if (!mounted) return;
+    setState(() => _selected = prefs.getString('languageCode') ?? 'en');
   }
 
-  Future<void> _setLanguage(String languageCode) async {
+  Future<void> _setLanguage(String code) async {
+    if (code == _selected) return;
+    setState(() => _selected = code);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('languageCode', languageCode);
-
-    setState(() {
-      _selectedLanguage = languageCode;
-    });
-
-    // Update locale in the app
-    if (mounted) {
-      final localeProvider = LocaleProvider.of(context);
-      localeProvider?.setLocale(ui.Locale(languageCode));
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _exitController.dispose();
-    super.dispose();
+    await prefs.setString('languageCode', code);
+    if (!mounted) return;
+    LocaleProvider.of(context)?.setLocale(ui.Locale(code));
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final subtitleColor =
-        isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6);
-    final localizations = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_controller, _exitController]),
-            builder: (context, child) {
-              return Column(
-                children: [
-                  const SizedBox(height: 48),
+    return StepScaffold(
+      title: l10n.onboardingChooseLanguage,
+      lead: l10n.onboardingSelectLanguage,
+      primaryLabel: l10n.onboardingContinue,
+      onPrimary: widget.onContinue,
+      onBack: widget.onBack,
+      backLabel: l10n.onboardingBack,
+      footnote: Text(
+        l10n.translationDisclaimerNote,
+        textAlign: TextAlign.center,
+        style: OnboardingText.small,
+      ),
+      children: [
+        Column(
+          spacing: 12,
+          children: [
+            for (var i = 0; i < _languages.length; i++)
+              GlassRow(
+                order: 2 + i,
+                title: _languages[i].nativeName,
+                body: _languages[i].nativeName == _languages[i].englishName
+                    ? null
+                    : _languages[i].englishName,
+                selected: _selected == _languages[i].code,
+                onTap: () => _setLanguage(_languages[i].code),
+                trailing: _Check(visible: _selected == _languages[i].code),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
 
-                  // Page icon
-                  SlideTransition(
-                    position: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitSlideAnimation
-                        : _titleSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitFadeAnimation
-                          : _titleFadeAnimation,
-                      child: iconoir.Language(
-                        color: Theme.of(context).colorScheme.primary,
-                        height: 56,
-                        width: 56,
-                      ),
-                    ),
-                  ),
+class _Check extends StatelessWidget {
+  const _Check({required this.visible});
 
-                  const SizedBox(height: 20),
+  final bool visible;
 
-                  // Title
-                  SlideTransition(
-                    position: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitSlideAnimation
-                        : _titleSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitFadeAnimation
-                          : _titleFadeAnimation,
-                      child: Text(
-                        localizations.onboardingChooseLanguage,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
-                          letterSpacing: -0.8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Subtitle
-                  FadeTransition(
-                    opacity: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitFadeAnimation
-                        : _subtitleFadeAnimation,
-                    child: Text(
-                      localizations.onboardingSelectLanguage,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: subtitleColor,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  // Language options
-                  Expanded(
-                    child: SlideTransition(
-                      position: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitSlideAnimation
-                          : _contentSlideAnimation,
-                      child: FadeTransition(
-                        opacity: _exitController.isAnimating ||
-                                _exitController.isCompleted
-                            ? _exitFadeAnimation
-                            : _contentFadeAnimation,
-                        child: ListView.builder(
-                          itemCount: _languages.length,
-                          itemBuilder: (context, index) {
-                            final language = _languages[index];
-                            final isSelected =
-                                _selectedLanguage == language.code;
-
-                            final containerColor = isDark
-                                ? Colors.white.withValues(alpha: 0.05)
-                                : Colors.black.withValues(alpha: 0.05);
-                            final borderColor = isDark
-                                ? Colors.white.withValues(alpha: 0.1)
-                                : Colors.black.withValues(alpha: 0.1);
-                            final primaryTextColor = isDark
-                                ? Colors.white.withValues(alpha: 0.9)
-                                : Colors.black.withValues(alpha: 0.9);
-                            final secondaryTextColor = isDark
-                                ? Colors.white.withValues(alpha: 0.6)
-                                : Colors.black.withValues(alpha: 0.6);
-
-                            return Padding(
-                              padding: const EdgeInsets.only(bottom: 12.0),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  onTap: () => _setLanguage(language.code),
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    curve: Curves.easeInOut,
-                                    padding: const EdgeInsets.all(20),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .primary
-                                              .withValues(alpha: 0.15)
-                                          : containerColor,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                            : borderColor,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                language.nativeName,
-                                                style: TextStyle(
-                                                  fontFamily: FontConstants.fontFamily,
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: isSelected
-                                                      ? Theme.of(context)
-                                                          .colorScheme
-                                                          .primary
-                                                      : primaryTextColor,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                language.englishName,
-                                                style: TextStyle(
-                                                  fontFamily: FontConstants.fontFamily,
-                                                  fontSize: 14,
-                                                  color: secondaryTextColor,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        AnimatedOpacity(
-                                          duration:
-                                              const Duration(milliseconds: 300),
-                                          opacity: isSelected ? 1.0 : 0.0,
-                                          child: Icon(
-                                            Icons.check_circle,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary,
-                                            size: 28,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // "Language not listed" hint
-                  FadeTransition(
-                    opacity: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitFadeAnimation
-                        : _subtitleFadeAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 12.0, bottom: 4.0),
-                      child: Text(
-                        localizations.languageNotListedHint,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: subtitleColor,
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                  // Translation quality disclaimer
-                  FadeTransition(
-                    opacity: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitFadeAnimation
-                        : _subtitleFadeAnimation,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
-                      child: Text(
-                        localizations.translationDisclaimerNote,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: subtitleColor.withValues(alpha: 0.65),
-                          height: 1.4,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                  // Navigation buttons
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 40.0, top: 16.0),
-                    child: Row(
-                      children: [
-                        if (widget.onBack != null) ...[
-                          Expanded(
-                            child: PillButton(
-                              text: localizations.onboardingBack,
-                              onPressed: widget.onBack!,
-                              isPrimary: false,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                        ],
-                        Expanded(
-                          child: PillButton(
-                            text:
-                                localizations.onboardingContinue,
-                            onPressed: () async {
-                              await _exitController.forward();
-                              widget.onContinue();
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: visible ? 1 : 0.4,
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutBack,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        child: Container(
+          width: 26,
+          height: 26,
+          decoration:
+              const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+          child: const Icon(Icons.check_rounded, size: 18, color: Colors.black),
         ),
       ),
     );

@@ -1,12 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:aurora_music_v01/core/constants/font_constants.dart';
-import 'package:provider/provider.dart';
-import '../../../shared/providers/providers.dart';
-import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/pill_button.dart';
-import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
+import 'dart:async';
 
-class ThemeSelectionPage extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../../../core/constants/font_constants.dart';
+import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/providers/performance_mode_provider.dart';
+import '../../../shared/providers/theme_provider.dart';
+import '../widgets/onboarding_kit.dart';
+
+/// Pick the look. A small player preview changes colour as you choose.
+class ThemeSelectionPage extends StatelessWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
 
@@ -17,533 +21,366 @@ class ThemeSelectionPage extends StatefulWidget {
   });
 
   @override
-  State<ThemeSelectionPage> createState() => _ThemeSelectionPageState();
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Provider.of<ThemeProvider>(context);
+
+    return StepScaffold(
+      title: l10n.onboardingThemeTitle,
+      lead: l10n.onboardingThemeSubtitle,
+      primaryLabel: l10n.continueButton,
+      onPrimary: onContinue,
+      onBack: onBack,
+      backLabel: l10n.back,
+      children: [
+        const _PlayerPreview(),
+        const SizedBox(height: 14),
+        GlassRow(
+          order: 3,
+          title: l10n.onboardingDynamicColors,
+          body: l10n.onboardingDynamicColorsDesc,
+          onTap: theme.toggleDynamicColor,
+          trailing: _Toggle(value: theme.useDynamicColor),
+        ),
+        AnimatedSize(
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: theme.useDynamicColor
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 14),
+                  child: GlassPanel(
+                    order: 1,
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(l10n.accentColor, style: OnboardingText.rowTitle),
+                        const SizedBox(height: 4),
+                        Text(l10n.accentColorDesc,
+                            textAlign: TextAlign.center,
+                            style: OnboardingText.rowBody),
+                        const SizedBox(height: 18),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 12,
+                          runSpacing: 12,
+                          children: [
+                            for (var i = 0;
+                                i < AppThemePreset.presets.length;
+                                i++)
+                              _Swatch(
+                                preset: AppThemePreset.presets[i],
+                                selected: theme.customSeedColor.toARGB32() ==
+                                    AppThemePreset.presets[i].seedColor
+                                        .toARGB32(),
+                                onTap: () => theme.setPreset(i),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+        ),
+        const SizedBox(height: 14),
+        _BackgroundStyle(theme: theme),
+      ],
+    );
+  }
 }
 
-class _ThemeSelectionPageState extends State<ThemeSelectionPage>
-    with TickerProviderStateMixin {
-  late AnimationController _controller;
-  late AnimationController _exitController;
-  late Animation<double> _titleFadeAnimation;
-  late Animation<Offset> _titleSlideAnimation;
-  late Animation<double> _subtitleFadeAnimation;
-  late Animation<double> _contentFadeAnimation;
-  late Animation<Offset> _contentSlideAnimation;
-  late Animation<double> _exitFadeAnimation;
-  late Animation<Offset> _exitSlideAnimation;
+/// A miniature now-playing card that always shows the current accent; its
+/// progress bar keeps moving so it reads as a live player.
+class _PlayerPreview extends StatefulWidget {
+  const _PlayerPreview();
 
   @override
-  void initState() {
-    super.initState();
+  State<_PlayerPreview> createState() => _PlayerPreviewState();
+}
 
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 900),
-      vsync: this,
-    );
+class _PlayerPreviewState extends State<_PlayerPreview>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _progress = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 9),
+  );
 
-    _titleFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
-
-    _titleSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _subtitleFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.1, 0.6, curve: Curves.easeOut),
-      ),
-    );
-
-    _contentFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-      ),
-    );
-
-    _contentSlideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.3, 0.9, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    // Exit animation controller
-    _exitController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _exitFadeAnimation = Tween<double>(
-      begin: 1.0,
-      end: 0.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _exitController,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    _exitSlideAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0, -0.08),
-    ).animate(
-      CurvedAnimation(
-        parent: _exitController,
-        curve: Curves.easeInCubic,
-      ),
-    );
-
-    _controller.forward();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _progress
+        ..stop()
+        ..value = 0.42;
+    } else if (!_progress.isAnimating) {
+      unawaited(_progress.repeat());
+    }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
-    _exitController.dispose();
+    _progress.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final subtitleColor =
-        isDark ? Colors.white.withValues(alpha: 0.6) : Colors.black.withValues(alpha: 0.6);
+    final scheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_controller, _exitController]),
-            builder: (context, child) {
-              return Column(
-                children: [
-                  const SizedBox(height: 48),
-
-                  // Page icon
-                  SlideTransition(
-                    position: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitSlideAnimation
-                        : _titleSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitFadeAnimation
-                          : _titleFadeAnimation,
-                      child: iconoir.Palette(
-                        color: Theme.of(context).colorScheme.primary,
-                        height: 56,
-                        width: 56,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Title
-                  SlideTransition(
-                    position: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitSlideAnimation
-                        : _titleSlideAnimation,
-                    child: FadeTransition(
-                      opacity: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitFadeAnimation
-                          : _titleFadeAnimation,
-                      child: Text(
-                        AppLocalizations.of(context)
-                            .onboardingThemeTitle,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 32,
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
-                          letterSpacing: -0.8,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Subtitle
-                  FadeTransition(
-                    opacity: _exitController.isAnimating ||
-                            _exitController.isCompleted
-                        ? _exitFadeAnimation
-                        : _subtitleFadeAnimation,
-                    child: Text(
-                      AppLocalizations.of(context)
-                          .onboardingThemeSubtitle,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
-                        color: subtitleColor,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-
-                  const SizedBox(height: 48),
-
-                  // Theme options
-                  Expanded(
-                    child: SlideTransition(
-                      position: _exitController.isAnimating ||
-                              _exitController.isCompleted
-                          ? _exitSlideAnimation
-                          : _contentSlideAnimation,
-                      child: FadeTransition(
-                        opacity: _exitController.isAnimating ||
-                                _exitController.isCompleted
-                            ? _exitFadeAnimation
-                            : _contentFadeAnimation,
-                        child: SingleChildScrollView(
-                          child: Column(
+    return GlassPanel(
+      order: 2,
+      padding: const EdgeInsets.all(16),
+      child: TweenAnimationBuilder<Color?>(
+        tween: ColorTween(end: scheme.primary),
+        duration: const Duration(milliseconds: 420),
+        builder: (context, accent, _) {
+          final primary = accent ?? scheme.primary;
+          return Row(
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(Icons.music_note_rounded, color: primary, size: 34),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const _Bar(width: 120, height: 12, alpha: 0.9),
+                    const SizedBox(height: 8),
+                    const _Bar(width: 80, height: 9, alpha: 0.4),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: SizedBox(
+                        height: 4,
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
-                            // Dynamic color toggle
-                            Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () {
-                                  themeProvider.toggleDynamicColor();
-                                },
-                                borderRadius: BorderRadius.circular(16),
-                                child: Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: isDark
-                                        ? Colors.white.withValues(alpha: 0.05)
-                                        : Colors.black.withValues(alpha: 0.05),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      iconoir.Palette(
-                                        width: 28,
-                                        height: 28,
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              AppLocalizations.of(context)
-                                                  .onboardingDynamicColors,
-                                              style: TextStyle(
-                                                fontFamily:
-                                                    FontConstants.fontFamily,
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w600,
-                                                color: textColor,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              AppLocalizations.of(context)
-                                                  .onboardingDynamicColorsDesc,
-                                              style: TextStyle(
-                                                fontFamily:
-                                                    FontConstants.fontFamily,
-                                                fontSize: 14,
-                                                color: subtitleColor,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Switch(
-                                        value: themeProvider.useDynamicColor,
-                                        onChanged: (_) {
-                                          themeProvider.toggleDynamicColor();
-                                        },
-                                        activeThumbColor: Theme.of(context)
-                                            .colorScheme
-                                            .primary,
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                            ColoredBox(
+                                color: Colors.white.withValues(alpha: 0.16)),
+                            AnimatedBuilder(
+                              animation: _progress,
+                              builder: (context, _) => FractionallySizedBox(
+                                alignment: Alignment.centerLeft,
+                                widthFactor: _progress.value,
+                                child: ColoredBox(color: primary),
                               ),
-                            ),
-
-                            // Accent color picker (when Material You is OFF)
-                            if (!themeProvider.useDynamicColor) ...
-                              _buildAccentColorSection(
-                                context: context,
-                                isDark: isDark,
-                                textColor: textColor,
-                                subtitleColor: subtitleColor,
-                                themeProvider: themeProvider,
-                              ),
-
-                            // Background style option
-                            const SizedBox(height: 16),
-                            _buildBackgroundStyleSection(
-                              context: context,
-                              isDark: isDark,
-                              textColor: textColor,
-                              subtitleColor: subtitleColor,
-                              themeProvider: themeProvider,
                             ),
                           ],
                         ),
-                        ),
                       ),
                     ),
-                  ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                width: 46,
+                height: 46,
+                decoration:
+                    BoxDecoration(color: primary, shape: BoxShape.circle),
+                child: Icon(Icons.play_arrow_rounded,
+                    color: scheme.onPrimary, size: 28),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
 
-                  // Navigation buttons
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 40.0, top: 16.0),
-                    child: PillNavigationButtons(
-                      backText: AppLocalizations.of(context).back,
-                      continueText: AppLocalizations.of(context)
-                          .continueButton,
-                      onBack: widget.onBack,
-                      onContinue: () async {
-                        await _exitController.forward();
-                        widget.onContinue();
-                      },
-                    ),
-                  ),
-                ],
-              );
-            },
+class _Bar extends StatelessWidget {
+  const _Bar({required this.width, required this.height, required this.alpha});
+
+  final double width;
+  final double height;
+  final double alpha;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: alpha),
+          borderRadius: BorderRadius.circular(height / 2),
+        ),
+      );
+}
+
+class _Toggle extends StatelessWidget {
+  const _Toggle({required this.value});
+
+  final bool value;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: 54,
+      height: 32,
+      padding: const EdgeInsets.all(4),
+      alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: value ? Colors.white : Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        width: 24,
+        height: 24,
+        decoration: BoxDecoration(
+          color: value ? Colors.black : Colors.white,
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
+class _Swatch extends StatelessWidget {
+  const _Swatch({
+    required this.preset,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final AppThemePreset preset;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: preset.name,
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          width: 46,
+          height: 46,
+          decoration: BoxDecoration(
+            color: preset.seedColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: selected ? Colors.white : Colors.transparent,
+              width: 3,
+            ),
+          ),
+          child: AnimatedScale(
+            scale: selected ? 1 : 0,
+            duration: const Duration(milliseconds: 240),
+            curve: Curves.easeOutBack,
+            child: const Icon(Icons.check_rounded, color: Colors.white),
           ),
         ),
       ),
     );
   }
+}
 
-  List<Widget> _buildAccentColorSection({
-    required BuildContext context,
-    required bool isDark,
-    required Color textColor,
-    required Color subtitleColor,
-    required ThemeProvider themeProvider,
-  }) {
-    final presetColors = [
-      Colors.deepPurple,
-      Colors.blue,
-      Colors.teal,
-      Colors.green,
-      Colors.orange,
-      Colors.red,
-      Colors.pink,
-    ];
+/// Solid or artwork-based background, depending on the device tier.
+class _BackgroundStyle extends StatelessWidget {
+  const _BackgroundStyle({required this.theme});
 
-    return [
-      const SizedBox(height: 16),
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : Colors.black.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                iconoir.ColorPicker(
-                  color: Theme.of(context).colorScheme.primary,
-                  height: 24,
-                  width: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  AppLocalizations.of(context).accentColor,
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              AppLocalizations.of(context).accentColorDesc,
-              style: TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                fontSize: 14,
-                color: subtitleColor,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: presetColors.map((color) {
-                final isSelected = themeProvider.customSeedColor.toARGB32() ==
-                    color.toARGB32();
-                return GestureDetector(
-                  onTap: () => themeProvider.setCustomSeedColor(color),
-                  child: Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: color,
-                      shape: BoxShape.circle,
-                      border: isSelected
-                          ? Border.all(color: Colors.white, width: 3)
-                          : Border.all(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              width: 1.5),
-                    ),
-                    child: isSelected
-                        ? const Icon(Icons.check, color: Colors.white, size: 18)
-                        : null,
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    ];
-  }
+  final ThemeProvider theme;
 
-  Widget _buildBackgroundStyleSection({
-    required BuildContext context,
-    required bool isDark,
-    required Color textColor,
-    required Color subtitleColor,
-    required ThemeProvider themeProvider,
-  }) {
-    final performanceProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
-    final isLowEnd = performanceProvider.isLowEndDevice;
-    final isHighEnd = performanceProvider.shouldEnableBlur;
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final perf = Provider.of<PerformanceModeProvider>(context, listen: false);
+    final isLowEnd = perf.isLowEndDevice;
+    if (!isLowEnd && !perf.shouldEnableBlur) return const SizedBox.shrink();
 
-    if (!isLowEnd && !isHighEnd) return const SizedBox.shrink();
+    final title =
+        isLowEnd ? l10n.backgroundLowEndStyle : l10n.backgroundHighEndStyle;
+    final body = isLowEnd
+        ? l10n.backgroundLowEndStyleDesc
+        : l10n.backgroundHighEndStyleDesc;
+    final options = isLowEnd
+        ? [l10n.backgroundBlobs, l10n.backgroundSolid]
+        : [l10n.backgroundBlurredArtwork, l10n.backgroundSolid];
+    final selected = isLowEnd
+        ? (theme.lowEndBackground == LowEndBackground.blobs ? 0 : 1)
+        : (theme.highEndBackground == HighEndBackground.blurredArtwork ? 0 : 1);
 
-    final String title = isLowEnd
-        ? AppLocalizations.of(context).backgroundLowEndStyle
-        : AppLocalizations.of(context).backgroundHighEndStyle;
-    final String subtitle = isLowEnd
-        ? AppLocalizations.of(context).backgroundLowEndStyleDesc
-        : AppLocalizations.of(context).backgroundHighEndStyleDesc;
-    final List<String> options = isLowEnd
-        ? [
-            AppLocalizations.of(context).backgroundBlobs,
-            AppLocalizations.of(context).backgroundSolid,
-          ]
-        : [
-            AppLocalizations.of(context).backgroundBlurredArtwork,
-            AppLocalizations.of(context).backgroundSolid,
-          ];
-    final int selectedIndex = isLowEnd
-        ? (themeProvider.lowEndBackground == LowEndBackground.blobs ? 0 : 1)
-        : (themeProvider.highEndBackground == HighEndBackground.blurredArtwork
-            ? 0
-            : 1);
+    void choose(int i) {
+      if (isLowEnd) {
+        theme.setLowEndBackground(
+            i == 0 ? LowEndBackground.blobs : LowEndBackground.solid);
+      } else {
+        theme.setHighEndBackground(i == 0
+            ? HighEndBackground.blurredArtwork
+            : HighEndBackground.solid);
+      }
+    }
 
-    return Container(
+    return GlassPanel(
+      order: 4,
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? Colors.white.withValues(alpha: 0.05)
-            : Colors.black.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
-          ),
+          Text(title, style: OnboardingText.rowTitle),
           const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              fontSize: 14,
-              color: subtitleColor,
-            ),
-          ),
+          Text(body,
+              textAlign: TextAlign.center, style: OnboardingText.rowBody),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: SegmentedButton<int>(
-              segments: options.asMap().entries.map((entry) {
-                return ButtonSegment<int>(
-                  value: entry.key,
-                  label: Text(
-                    entry.value,
-                    style: const TextStyle(
-                      fontFamily: FontConstants.fontFamily,
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Row(
+              children: [
+                for (var i = 0; i < options.length; i++)
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => choose(i),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        decoration: BoxDecoration(
+                          color:
+                              selected == i ? Colors.white : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Center(
+                          child: Text(
+                            options[i],
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: FontConstants.fontFamily,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color:
+                                  selected == i ? Colors.black : Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                );
-              }).toList(),
-              selected: {selectedIndex},
-              onSelectionChanged: (selection) {
-                if (selection.isEmpty) return;
-                final idx = selection.first;
-                if (isLowEnd) {
-                  themeProvider.setLowEndBackground(
-                    idx == 0 ? LowEndBackground.blobs : LowEndBackground.solid,
-                  );
-                } else {
-                  themeProvider.setHighEndBackground(
-                    idx == 0
-                        ? HighEndBackground.blurredArtwork
-                        : HighEndBackground.solid,
-                  );
-                }
-              },
+              ],
             ),
           ),
         ],
       ),
     );
   }
-
 }

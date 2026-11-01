@@ -29,7 +29,9 @@ class GlassmorphicContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = borderRadius ?? BorderRadius.circular(15);
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     final Color bgColor;

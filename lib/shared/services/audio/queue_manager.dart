@@ -17,7 +17,8 @@ extension AudioQueueManagerExtension on AudioPlayerService {
     }
 
     // Insert after any already-queued songs, before source continuation.
-    final insertIndex = (_currentIndex + 1 + _queueCount).clamp(0, _playlist.length);
+    final insertIndex =
+        (_currentIndex + 1 + _queueCount).clamp(0, _playlist.length);
     _playlist.insert(insertIndex, song);
     _queueCount++;
 
@@ -25,7 +26,8 @@ extension AudioQueueManagerExtension on AudioPlayerService {
       try {
         final mediaItem = _createMediaItemSync(song);
         final uri = song.uri ?? song.data;
-        await _audioPlayer.insertAudioSource(insertIndex, AudioSource.uri(Uri.parse(uri), tag: mediaItem));
+        await _audioPlayer.insertAudioSource(
+            insertIndex, AudioSource.uri(Uri.parse(uri), tag: mediaItem));
 
         // Update notification queue with lightweight items
         final mediaItems =
@@ -56,7 +58,8 @@ extension AudioQueueManagerExtension on AudioPlayerService {
       return;
     }
 
-    final insertStart = (_currentIndex + 1 + _queueCount).clamp(0, _playlist.length);
+    final insertStart =
+        (_currentIndex + 1 + _queueCount).clamp(0, _playlist.length);
     _playlist.insertAll(insertStart, songs);
     _queueCount += songs.length;
 
@@ -383,8 +386,9 @@ extension AudioQueueManagerExtension on AudioPlayerService {
 
     // Map each song in the restored order back to its index in the still-live
     // audio source order, so it can be reordered in place.
-    final newOrderIndices =
-        _playlist.map((s) => liveOrder.indexWhere((o) => o.id == s.id)).toList();
+    final newOrderIndices = _playlist
+        .map((s) => liveOrder.indexWhere((o) => o.id == s.id))
+        .toList();
     unawaited(_reorderAudioSourceInPlace(newOrderIndices));
   }
 

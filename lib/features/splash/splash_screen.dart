@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import 'dart:ui';
 import '../../shared/services/audio_player_service.dart';
 import '../../shared/services/artist_aggregator_service.dart';
 import '../../shared/services/artwork_cache_service.dart';
 import '../../shared/services/user_preferences.dart';
 import '../../shared/services/logging_service.dart';
 import '../../core/constants/font_constants.dart';
+import 'animated_logo.dart';
+import 'splash_backdrop.dart';
 import '../onboarding/screens/onboarding_screen.dart';
 import '../home/screens/home_screen.dart';
 import 'package:provider/provider.dart';
+import '../../shared/providers/performance_mode_provider.dart';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../shared/widgets/expanding_player.dart';
@@ -39,7 +41,6 @@ class _SplashScreenState extends State<SplashScreen>
   final List<String> _completedTasks = [];
   double _progress = 0.0;
   final List<String> _warnings = [];
-  bool _hasConnectivityIssues = false;
   static const Duration _minimumSplashDuration = Duration.zero;
 
   @override
@@ -65,7 +66,6 @@ class _SplashScreenState extends State<SplashScreen>
     try {
       final startedAt = DateTime.now();
       final tasks = <(String, Future<void> Function())>[
-        ('Warming shaders', _warmupShaders),
         ('Initializing Services', _initializeServices),
         ('Loading Library', _loadAppData),
         ('Preparing Home', _prepareHomeData),
@@ -99,17 +99,11 @@ class _SplashScreenState extends State<SplashScreen>
               // Batch update: warnings and connectivity issues together
               setState(() {
                 _warnings.add('Issue with ${task.$1.toLowerCase()}');
-                _hasConnectivityIssues = true;
               });
             }
-            await Future.delayed(const Duration(seconds: 1));
           }
           continue;
         }
-      }
-
-      if (_hasConnectivityIssues && _warnings.isNotEmpty) {
-        await Future.delayed(const Duration(seconds: 2));
       }
 
       await _waitForMinimumSplashDuration(startedAt);
@@ -153,9 +147,7 @@ class _SplashScreenState extends State<SplashScreen>
         setState(() {
           _warnings.add('No internet connection');
           _warnings.add('Offline mode active');
-          _hasConnectivityIssues = true;
         });
-        await Future.delayed(const Duration(seconds: 1));
         return;
       }
     } catch (e) {
@@ -163,9 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
         // Batch update for error warnings
         setState(() {
           _warnings.add('Some features may be limited');
-          _hasConnectivityIssues = true;
         });
-        await Future.delayed(const Duration(seconds: 1));
       }
     }
   }
@@ -276,9 +266,6 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     try {
-      // Pre-compile common shaders used in home screen
-      await _warmupHomeScreenShaders();
-
       // Pre-cache essential images
       final homeImages = [
         'assets/images/UI/liked.png',
@@ -305,32 +292,6 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  Future<void> _warmupHomeScreenShaders() async {
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    // Warm up glassmorphism effects
-    final glassPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-          const Rect.fromLTWH(0, 0, 100, 100), const Radius.circular(12)),
-      glassPaint,
-    );
-
-    // Warm up gradient effects
-    final gradientPaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [Colors.purple, Colors.blue],
-      ).createShader(const Rect.fromLTWH(0, 0, 100, 100));
-    canvas.drawRect(const Rect.fromLTWH(0, 0, 100, 100), gradientPaint);
-
-    final picture = recorder.endRecording();
-    await picture.toImage(100, 100);
-    picture.dispose();
-  }
-
   Future<void> _loadVersionInfo() async {
     final PackageInfo packageInfo = await PackageInfo.fromPlatform();
     const String codeName =
@@ -343,16 +304,15 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _initializeAnimations() {
-    // Primary controller drives a simple logo fade-in.
+    // Primary controller drives the self-drawing logo animation.
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: AnimatedLogo.duration,
       vsync: this,
     );
 
-    // Logo gently fades in.
     _logoFadeAnimation = CurvedAnimation(
       parent: _fadeController,
-      curve: Curves.easeOut,
+      curve: Curves.linear,
     );
 
     // Transition controller for exit
@@ -394,8 +354,10 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    // Start the logo fade-in immediately.
-    _fadeController.forward();
+    // Start drawing the logo as soon as the SVG has been parsed.
+    AnimatedLogo.preload().whenComplete(() {
+      if (mounted) _fadeController.forward();
+    });
   }
 
   void _checkAndTransition() {
@@ -424,6 +386,17 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _navigateToScreenWithHero(Widget screen) {
     if (screen is HomeScreen) ExpandingPlayer.hiddenNotifier.value = false;
+    if (context.read<PerformanceModeProvider>().isLowEndDevice) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => screen,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+              FadeTransition(opacity: animation, child: child),
+          transitionDuration: const Duration(milliseconds: 250),
+        ),
+      );
+      return;
+    }
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) => screen,
@@ -473,7 +446,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: const Color(0xFF080B14),
       body: AnimatedBuilder(
-        animation: Listenable.merge([_fadeController, _transitionController]),
+        animation: _transitionController,
         builder: (context, _) {
           final fade = _backgroundFadeAnimation.value;
           return Opacity(
@@ -481,22 +454,17 @@ class _SplashScreenState extends State<SplashScreen>
             child: Stack(
               children: [
                 // ── Background ──────────────────────────────────────────────
-                Positioned.fill(child: _buildBackground(size)),
+                const Positioned.fill(child: SplashBackdrop()),
 
                 // ── Logo (centre) ─────────────────────────────────────────
                 Center(
                   child: Transform.scale(
                     scale: _scaleAnimation.value,
-                    child: FadeTransition(
-                      opacity: _logoFadeAnimation,
-                      child: Hero(
-                        tag: 'app_logo_hero',
-                        child: Image.asset(
-                          'assets/images/logo/Music_full_logo.png',
-                          fit: BoxFit.contain,
-                          width: size.width * 0.5,
-                          filterQuality: FilterQuality.high,
-                        ),
+                    child: Hero(
+                      tag: 'app_logo_hero',
+                      child: AnimatedLogo(
+                        animation: _logoFadeAnimation,
+                        width: size.width * 0.7,
                       ),
                     ),
                   ),
@@ -551,156 +519,6 @@ class _SplashScreenState extends State<SplashScreen>
         },
       ),
     );
-  }
-
-  // ── Helper: full-screen mesh-gradient background ─────────────────────────
-  // A smoky blurred-artwork mesh inspired by dark album covers: charcoal depth,
-  // silver haze and crimson light bands melting through the middle.
-  Widget _buildBackground(Size size) {
-    final width = size.width;
-    final height = size.height;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        const ColoredBox(color: Color(0xFF151515)),
-        Positioned.fill(
-          child: ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 95, sigmaY: 95),
-            child: Stack(
-              children: [
-                _meshOval(
-                  width * 1.15,
-                  height * 0.42,
-                  top: -height * 0.14,
-                  right: -width * 0.22,
-                  color: const Color(0xFFECECEA),
-                ),
-                _meshOval(
-                  width * 1.05,
-                  height * 0.36,
-                  top: height * 0.30,
-                  left: -width * 0.32,
-                  color: const Color(0xFFFF254C),
-                ),
-                _meshOval(
-                  width * 1.05,
-                  height * 0.34,
-                  top: height * 0.27,
-                  right: -width * 0.18,
-                  color: const Color(0xFFFF355C),
-                  alpha: 0.90,
-                ),
-                _meshOval(
-                  width * 1.10,
-                  height * 0.48,
-                  top: height * 0.18,
-                  left: width * 0.18,
-                  color: const Color(0xFF171717),
-                  alpha: 1.0,
-                ),
-                _meshOval(
-                  width * 0.95,
-                  height * 0.28,
-                  bottom: height * 0.12,
-                  left: -width * 0.10,
-                  color: const Color(0xFF9B9B96),
-                  alpha: 0.72,
-                ),
-                _meshOval(
-                  width * 1.05,
-                  height * 0.42,
-                  bottom: -height * 0.15,
-                  left: -width * 0.28,
-                  color: const Color(0xFFE3E3E0),
-                  alpha: 0.84,
-                ),
-                _meshOval(
-                  width * 1.18,
-                  height * 0.45,
-                  bottom: -height * 0.12,
-                  right: -width * 0.16,
-                  color: const Color(0xFF101010),
-                  alpha: 1.0,
-                ),
-              ],
-            ),
-          ),
-        ),
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.black.withValues(alpha: 0.24),
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.35),
-                ],
-                stops: const [0.0, 0.45, 1.0],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // A soft oval used to shape wide blurred colour bands.
-  Widget _meshOval(
-    double ovalWidth,
-    double ovalHeight, {
-    double? top,
-    double? left,
-    double? right,
-    double? bottom,
-    required Color color,
-    double alpha = 0.95,
-  }) {
-    return Positioned(
-      top: top,
-      left: left,
-      right: right,
-      bottom: bottom,
-      child: Container(
-        width: ovalWidth,
-        height: ovalHeight,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(ovalHeight),
-          gradient: RadialGradient(
-            colors: [
-              color.withValues(alpha: alpha),
-              color.withValues(alpha: 0.0),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── Helper: shader warmup ────────────────────────────────────────────────
-  Future<void> _warmupShaders() async {
-    // Simplified shader warmup for better performance on low-end devices
-    const size = Size(25, 25); // Even smaller size for faster warmup
-    final recorder = PictureRecorder();
-    final canvas = Canvas(recorder);
-    final paint = Paint();
-
-    // Simple gradient warmup - essential for UI performance
-    paint.shader = LinearGradient(
-      colors: [Colors.white, Colors.white.withValues(alpha: 0.0)],
-      stops: const [0.8, 1.0],
-    ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-
-    // Skip blur warmup on low-performance devices to speed up initialization
-    try {
-      final picture = recorder.endRecording();
-      await picture.toImage(size.width.toInt(), size.height.toInt());
-      picture.dispose();
-    } catch (e) {
-      // If shader warmup fails, continue silently
-    }
   }
 }
 

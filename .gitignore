@@ -68,3 +68,7 @@ to_translate_cs.txt
 android/build/reports/problems/problems-report.html
 dev_assets/flutter_arb_translator_config.json
 android/build/reports/problems/problems-report.html
+AURORA_MUSIC_REPORT.txt
+WEBSITE_BRIEF.md
+graphify-out/
+graphify-out/cache/

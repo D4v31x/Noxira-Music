@@ -27,9 +27,8 @@ class EqualizerPreset {
   factory EqualizerPreset.fromJson(Map<String, dynamic> json) =>
       EqualizerPreset(
         name: json['name'] as String,
-        gains: (json['gains'] as List)
-            .map((e) => (e as num).toDouble())
-            .toList(),
+        gains:
+            (json['gains'] as List).map((e) => (e as num).toDouble()).toList(),
         isCustom: true,
       );
 }
@@ -51,77 +50,109 @@ class EqualizerService extends ChangeNotifier {
   List<EqualizerPreset> get customPresets => List.unmodifiable(_customPresets);
 
   static const List<EqualizerPreset> builtInPresets = [
-    EqualizerPreset(name: 'Flat',         gains: [0, 0, 0, 0, 0]),
-    EqualizerPreset(name: 'Bass Boost',   gains: [6, 4, 0, 0, 0]),
-    EqualizerPreset(name: 'Bass Cut',     gains: [-6, -4, 0, 0, 0]),
+    EqualizerPreset(name: 'Flat', gains: [0, 0, 0, 0, 0]),
+    EqualizerPreset(name: 'Bass Boost', gains: [6, 4, 0, 0, 0]),
+    EqualizerPreset(name: 'Bass Cut', gains: [-6, -4, 0, 0, 0]),
     EqualizerPreset(name: 'Treble Boost', gains: [0, 0, 0, 4, 6]),
-    EqualizerPreset(name: 'Treble Cut',   gains: [0, 0, 0, -4, -6]),
-    EqualizerPreset(name: 'Rock',         gains: [4, 2, -2, 2, 4]),
-    EqualizerPreset(name: 'Pop',          gains: [-2, 2, 4, 2, -1]),
-    EqualizerPreset(name: 'Jazz',         gains: [3, 0, 2, 0, 2]),
-    EqualizerPreset(name: 'Classical',    gains: [4, 2, 0, 2, 4]),
-    EqualizerPreset(name: 'Electronic',   gains: [4, 2, 0, 2, 4]),
-    EqualizerPreset(name: 'Hip Hop',      gains: [5, 3, 0, 2, 3]),
-    EqualizerPreset(name: 'R&B',          gains: [3, 4, 0, -1, 2]),
-    EqualizerPreset(name: 'Vocal',        gains: [0, 2, 4, 2, 0]),
-    EqualizerPreset(name: 'Acoustic',     gains: [3, 1, 0, 1, 3]),
-    EqualizerPreset(name: 'Dance',        gains: [4, 2, 0, -2, 1]),
-    EqualizerPreset(name: 'Metal',        gains: [5, 3, -1, 3, 5]),
-    EqualizerPreset(name: 'Lounge',       gains: [-1, 2, 3, 2, -1]),
-    EqualizerPreset(name: 'Spoken Word',  gains: [-3, 0, 4, 3, 1]),
+    EqualizerPreset(name: 'Treble Cut', gains: [0, 0, 0, -4, -6]),
+    EqualizerPreset(name: 'Rock', gains: [4, 2, -2, 2, 4]),
+    EqualizerPreset(name: 'Pop', gains: [-2, 2, 4, 2, -1]),
+    EqualizerPreset(name: 'Jazz', gains: [3, 0, 2, 0, 2]),
+    EqualizerPreset(name: 'Classical', gains: [4, 2, 0, 2, 4]),
+    EqualizerPreset(name: 'Electronic', gains: [4, 2, 0, 2, 4]),
+    EqualizerPreset(name: 'Hip Hop', gains: [5, 3, 0, 2, 3]),
+    EqualizerPreset(name: 'R&B', gains: [3, 4, 0, -1, 2]),
+    EqualizerPreset(name: 'Vocal', gains: [0, 2, 4, 2, 0]),
+    EqualizerPreset(name: 'Acoustic', gains: [3, 1, 0, 1, 3]),
+    EqualizerPreset(name: 'Dance', gains: [4, 2, 0, -2, 1]),
+    EqualizerPreset(name: 'Metal', gains: [5, 3, -1, 3, 5]),
+    EqualizerPreset(name: 'Lounge', gains: [-1, 2, 3, 2, -1]),
+    EqualizerPreset(name: 'Spoken Word', gains: [-3, 0, 4, 3, 1]),
   ];
 
   /// Backward-compatible alias for [builtInPresets].
   static List<EqualizerPreset> get presets => builtInPresets;
 
   /// All presets — built-in first, then user-created.
-  List<EqualizerPreset> get allPresets => [...builtInPresets, ..._customPresets];
+  List<EqualizerPreset> get allPresets =>
+      [...builtInPresets, ..._customPresets];
 
-  Future<void> init(AndroidEqualizer eq) async {
-    if (_initialized) return;
+  Future<void> init(AndroidEqualizer eq, {bool retry = false}) async {
+    if (_initialized && !retry) return;
+    if (_initializing != null) return _initializing!;
+
+    _initializing = _initializeWithRetry(eq);
     try {
-      _params = await eq.parameters.timeout(
-        const Duration(seconds: 8),
-        onTimeout: () => throw StateError('Equalizer parameters timed out — no audio pipeline active yet'),
-      );
-      final prefs = await SharedPreferences.getInstance();
-      _enabled = prefs.getBool('eq_enabled') ?? false;
-      _preset = prefs.getString('eq_preset') ?? 'Flat';
+      await _initializing;
+    } finally {
+      _initializing = null;
+    }
+  }
 
-      await eq.setEnabled(_enabled);
+  Future<void>? _initializing;
 
-      // Restore user-created presets
-      final customJson = prefs.getString('eq_custom_presets');
-      if (customJson != null) {
-        final list = jsonDecode(customJson) as List;
-        _customPresets.addAll(
-          list.map((e) => EqualizerPreset.fromJson(e as Map<String, dynamic>)),
-        );
-      }
-
-      final gainsJson = prefs.getString('eq_gains');
-      if (gainsJson != null) {
-        final list = (jsonDecode(gainsJson) as List)
-            .map((e) => (e as num).toDouble())
-            .toList();
-        final bands = _params!.bands;
-        final minDb = _params!.minDecibels.toDouble();
-        final maxDb = _params!.maxDecibels.toDouble();
-        for (int i = 0; i < bands.length && i < list.length; i++) {
-          await bands[i].setGain(list[i].clamp(minDb, maxDb));
+  Future<void> _initializeWithRetry(AndroidEqualizer eq) async {
+    Object? lastError;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        // The equalizer is attached to the player pipeline before this runs,
+        // but Android may expose its parameters a little later, especially
+        // after a cold start or when no track has played yet.
+        if (attempt > 0) {
+          await Future<void>.delayed(Duration(milliseconds: 350 * attempt));
         }
-      } else {
-        // Default to flat
-        await _applyGains(builtInPresets.first.gains);
-        _preset = 'Flat';
+        _params = await eq.parameters.timeout(
+          const Duration(seconds: 4),
+          onTimeout: () => throw StateError(
+              'Equalizer parameters timed out while the audio session starts'),
+        );
+        await _restoreSettings(eq);
+        _initialized = true;
+        notifyListeners();
+        return;
+      } catch (e) {
+        lastError = e;
+        debugPrint('[EQ] init attempt ${attempt + 1}/3 failed: $e');
       }
+    }
 
-      _initialized = true;
-      notifyListeners();
-    } catch (e) {
-      debugPrint('[EQ] init failed: $e');
-      _initialized = true; // Mark initialized even on failure so UI doesn't spin
-      notifyListeners();
+    // Keep params null, but mark initialization complete so the UI can offer
+    // the native equalizer. A later explicit retry can recover a slow session.
+    _params = null;
+    _initialized = true;
+    debugPrint('[EQ] unavailable after retries: $lastError');
+    notifyListeners();
+  }
+
+  Future<void> _restoreSettings(AndroidEqualizer eq) async {
+    final prefs = await SharedPreferences.getInstance();
+    _enabled = prefs.getBool('eq_enabled') ?? false;
+    _preset = prefs.getString('eq_preset') ?? 'Flat';
+    await eq.setEnabled(_enabled);
+
+    _customPresets.clear();
+    final customJson = prefs.getString('eq_custom_presets');
+    if (customJson != null) {
+      final list = jsonDecode(customJson) as List;
+      _customPresets.addAll(
+        list.map((e) => EqualizerPreset.fromJson(e as Map<String, dynamic>)),
+      );
+    }
+
+    final gainsJson = prefs.getString('eq_gains');
+    if (gainsJson != null) {
+      final list = (jsonDecode(gainsJson) as List)
+          .map((e) => (e as num).toDouble())
+          .toList();
+      final bands = _params!.bands;
+      final minDb = _params!.minDecibels.toDouble();
+      final maxDb = _params!.maxDecibels.toDouble();
+      for (int i = 0; i < bands.length && i < list.length; i++) {
+        await bands[i].setGain(list[i].clamp(minDb, maxDb));
+      }
+    } else {
+      await _applyGains(builtInPresets.first.gains);
+      _preset = 'Flat';
     }
   }
 
@@ -170,7 +201,8 @@ class EqualizerService extends ChangeNotifier {
     if (p == null) return;
     _customPresets.removeWhere((cp) => cp.name == name);
     final gains = p.bands.map((b) => b.gain).toList();
-    _customPresets.add(EqualizerPreset(name: name, gains: gains, isCustom: true));
+    _customPresets
+        .add(EqualizerPreset(name: name, gains: gains, isCustom: true));
     _preset = name;
     await _saveCustomPresets();
     await _save();

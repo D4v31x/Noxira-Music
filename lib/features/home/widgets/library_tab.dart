@@ -192,7 +192,8 @@ class _LibraryTabState extends State<LibraryTab>
             const SizedBox(height: 24.0),
             buildCategorySection(
               title: AppLocalizations.of(context).artists,
-              items: _artistsFuture ?? audioPlayerService.getMostPlayedArtists(),
+              items:
+                  _artistsFuture ?? audioPlayerService.getMostPlayedArtists(),
               onDetailsTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ArtistsScreen()),
@@ -261,7 +262,8 @@ class _LibraryTabState extends State<LibraryTab>
                 Expanded(
                   child: _buildTabletCategorySection(
                     title: AppLocalizations.of(context).tracks,
-                    items: _tracksFuture ?? audioPlayerService.getMostPlayedTracks(),
+                    items: _tracksFuture ??
+                        audioPlayerService.getMostPlayedTracks(),
                     onDetailsTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -285,7 +287,8 @@ class _LibraryTabState extends State<LibraryTab>
                 Expanded(
                   child: _buildTabletCategorySection(
                     title: AppLocalizations.of(context).albums,
-                    items: _albumsFuture ?? audioPlayerService.getMostPlayedAlbums(),
+                    items: _albumsFuture ??
+                        audioPlayerService.getMostPlayedAlbums(),
                     onDetailsTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -317,8 +320,7 @@ class _LibraryTabState extends State<LibraryTab>
                     selector: (context, service) => service.playlists,
                     builder: (context, playlists, child) {
                       return _buildTabletCategorySection(
-                        title:
-                            AppLocalizations.of(context).playlists,
+                        title: AppLocalizations.of(context).playlists,
                         items: audioPlayerService.getThreePlaylists(),
                         onDetailsTap: () => Navigator.push(
                           context,
@@ -344,7 +346,8 @@ class _LibraryTabState extends State<LibraryTab>
                 Expanded(
                   child: _buildTabletCategorySection(
                     title: AppLocalizations.of(context).artists,
-                    items: _artistsFuture ?? audioPlayerService.getMostPlayedArtists(),
+                    items: _artistsFuture ??
+                        audioPlayerService.getMostPlayedArtists(),
                     onDetailsTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -471,14 +474,16 @@ class _LibraryTabState extends State<LibraryTab>
                           ),
                         );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text(AppLocalizations.of(context).errorMessage('${snapshot.error}')));
+                        return Center(
+                            child: Text(AppLocalizations.of(context)
+                                .errorMessage('${snapshot.error}')));
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return Center(
                           child: Text(
                             AppLocalizations.of(context).noData,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color:
-                                  theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6),
                             ),
                           ),
                         );
@@ -661,14 +666,16 @@ class _LibraryTabState extends State<LibraryTab>
                           ),
                         );
                       } else if (snapshot.hasError) {
-                        return Center(child: Text(AppLocalizations.of(context).errorMessage('${snapshot.error}')));
+                        return Center(
+                            child: Text(AppLocalizations.of(context)
+                                .errorMessage('${snapshot.error}')));
                       } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                         return Center(
                           child: Text(
                             AppLocalizations.of(context).noData,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color:
-                                  theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                              color: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6),
                             ),
                           ),
                         );
@@ -698,7 +705,8 @@ class _LibraryTabState extends State<LibraryTab>
     );
   }
 
-  Widget _buildItemCard(BuildContext context, dynamic item, Function(dynamic)? onItemTap) {
+  Widget _buildItemCard(
+      BuildContext context, dynamic item, Function(dynamic)? onItemTap) {
     if (item is SongModel) {
       return GlassmorphicCard.song(
         key: ValueKey('song_${item.id}'),

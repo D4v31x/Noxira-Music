@@ -39,8 +39,7 @@ extension AudioPlayCountsExtension on AudioPlayerService {
 
   /// Number of times [song] has been played, for use in smart-playlist rule
   /// evaluation and other statistics.
-  int playCountFor(SongModel song) =>
-      _trackPlayCounts[song.id.toString()] ?? 0;
+  int playCountFor(SongModel song) => _trackPlayCounts[song.id.toString()] ?? 0;
 
   void _incrementPlayCount(SongModel song) {
     // Commit the real listened time of the previously-playing song before

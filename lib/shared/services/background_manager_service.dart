@@ -171,8 +171,7 @@ class BackgroundManagerService extends ChangeNotifier {
       final image = frame.image;
       final imageWidth = image.width;
       final imageHeight = image.height;
-      final rawPixels =
-          await image.toByteData();
+      final rawPixels = await image.toByteData();
       image.dispose();
       codec.dispose();
 
@@ -204,8 +203,8 @@ class BackgroundManagerService extends ChangeNotifier {
 
       // Ensure at least 2 colors.
       if (colors.length == 1) {
-        colors.add(
-            _adjustColorBrightness(colors.first, _isDarkMode ? 0.7 : 1.3));
+        colors
+            .add(_adjustColorBrightness(colors.first, _isDarkMode ? 0.7 : 1.3));
       }
 
       if (colors.length >= 2) {

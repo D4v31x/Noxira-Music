@@ -147,7 +147,8 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
 
   @override
   Widget build(BuildContext context) {
-    final audioService = Provider.of<AudioPlayerService>(context, listen: false);
+    final audioService =
+        Provider.of<AudioPlayerService>(context, listen: false);
     final song = audioService.currentSong;
     final padding = MediaQuery.of(context).padding;
 
@@ -163,23 +164,23 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
               onTap: _toggleControls,
               behavior: HitTestBehavior.opaque,
               child: _artworkProvider != null
-                    ? Image(
-                        image: _artworkProvider!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        height: double.infinity,
-                        gaplessPlayback: true,
-                      )
-                    : Container(
+                  ? Image(
+                      image: _artworkProvider!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      gaplessPlayback: true,
+                    )
+                  : Container(
                       color: Colors.grey[900],
                       child: const Center(
-                          child: Icon(
-                            Icons.music_note_rounded,
-                            color: Colors.white24,
-                            size: 100,
-                          ),
+                        child: Icon(
+                          Icons.music_note_rounded,
+                          color: Colors.white24,
+                          size: 100,
                         ),
                       ),
+                    ),
             ),
 
             // Top gradient (only when controls visible)
@@ -586,7 +587,9 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
               },
               icon: Icon(
                 Icons.shuffle_rounded,
-                color: isShuffle ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                color: isShuffle
+                    ? Colors.white
+                    : Colors.white.withValues(alpha: 0.5),
                 size: 24,
               ),
             );

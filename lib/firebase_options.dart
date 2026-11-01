@@ -59,5 +59,4 @@ class DefaultFirebaseOptions {
     projectId: 'aurora-music-14da5',
     storageBucket: 'aurora-music-14da5.firebasestorage.app',
   );
-
 }

@@ -149,7 +149,8 @@ mixin DetailScreenMixin<T extends StatefulWidget> on State<T> {
           color: isPrimary ? null : Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isPrimary ? dominantColor : Colors.white.withValues(alpha: 0.2),
+            color:
+                isPrimary ? dominantColor : Colors.white.withValues(alpha: 0.2),
             width: 1.5,
           ),
         ),
@@ -158,22 +159,21 @@ mixin DetailScreenMixin<T extends StatefulWidget> on State<T> {
           mainAxisSize: MainAxisSize.min,
           children: [
             icon,
-            if (!iconOnly) ...
-              [
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+            if (!iconOnly) ...[
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ],
+              ),
+            ],
           ],
         ),
       ),
@@ -190,7 +190,8 @@ mixin DetailScreenMixin<T extends StatefulWidget> on State<T> {
         children: [
           Expanded(
             child: buildActionButton(
-              icon: const iconoir.Play(color: Colors.white, width: 22, height: 22),
+              icon: const iconoir.Play(
+                  color: Colors.white, width: 22, height: 22),
               label: AppLocalizations.of(context).playAll,
               onTap: playAllSongs,
               isPrimary: true,
@@ -198,14 +199,16 @@ mixin DetailScreenMixin<T extends StatefulWidget> on State<T> {
           ),
           const SizedBox(width: 8),
           buildActionButton(
-            icon: const iconoir.Shuffle(color: Colors.white, width: 22, height: 22),
+            icon: const iconoir.Shuffle(
+                color: Colors.white, width: 22, height: 22),
             label: AppLocalizations.of(context).shuffle,
             onTap: shuffleAllSongs,
             iconOnly: true,
           ),
           const SizedBox(width: 8),
           buildActionButton(
-            icon: const iconoir.Playlist(color: Colors.white, width: 22, height: 22),
+            icon: const iconoir.Playlist(
+                color: Colors.white, width: 22, height: 22),
             label: AppLocalizations.of(context).queue,
             onTap: addAllToQueue,
             iconOnly: true,

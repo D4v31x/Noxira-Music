@@ -1,3 +1,6 @@
+import '../../../shared/widgets/online/online_artist_widgets.dart';
+import '../../../shared/services/album_query_cache.dart';
+import '../../../shared/widgets/motion/touch_and_reveal.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
@@ -7,7 +10,6 @@ import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/utils/album_sanitizer.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'dart:typed_data';
 import '../../../shared/services/artwork_cache_service.dart';
@@ -70,7 +72,9 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
     _dominantColorNotifier = ValueNotifier(Colors.deepPurple.shade900);
-    _loadSongs();
+    whenRouteSettled(context).then((_) {
+      if (mounted) _loadSongs();
+    });
   }
 
   AudioPlayerService? _audioServiceRef;
@@ -108,13 +112,18 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
   }
 
   Future<void> _loadSongs() async {
-    final rawSongs = await _audioQuery.querySongs(
-      orderType: OrderType.ASC_OR_SMALLER,
-      uriType: UriType.EXTERNAL,
-      ignoreCase: true,
-    );
-    await FolderFilterService().ensureInitialized();
-    final songs = FolderFilterService().filterSongs(rawSongs);
+    // The player already holds the filtered library; querying MediaStore again
+    // decodes thousands of songs on the UI thread.
+    List<SongModel> songs = _audioServiceRef?.songs ?? const [];
+    if (songs.isEmpty) {
+      final rawSongs = await _audioQuery.querySongs(
+        orderType: OrderType.ASC_OR_SMALLER,
+        uriType: UriType.EXTERNAL,
+        ignoreCase: true,
+      );
+      await FolderFilterService().ensureInitialized();
+      songs = FolderFilterService().filterSongs(rawSongs);
+    }
 
     final albumSongs = songs
         .where((song) => song.album == widget.albumName)
@@ -132,23 +141,26 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
       }
     }
 
-    // Get related albums from same artist
-    final allAlbums = sanitizeAlbums(await _audioQuery.queryAlbums());
-    final related = allAlbums
-        .where((album) =>
-            album.artist == artistName && album.album != widget.albumName)
-        .toList();
-
     if (!mounted) return;
     setState(() {
       _allSongs = albumSongs;
       _artistName = artistName;
       _totalDuration = totalDuration;
-      _relatedAlbums = related;
     });
 
     _loadMoreSongs();
     unawaited(_updateDominantColor());
+
+    // Related albums come last so they don't delay the song list.
+    final allAlbums = sanitizeAlbums(await AlbumQueryCache.get(
+        _audioQuery, _audioServiceRef?.songs ?? songs));
+    if (!mounted) return;
+    setState(() {
+      _relatedAlbums = allAlbums
+          .where((album) =>
+              album.artist == artistName && album.album != widget.albumName)
+          .toList();
+    });
   }
 
   void _loadMoreSongs() {
@@ -264,7 +276,6 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
                       ? '${_allSongs.length} ${localizations.songs} · ${formatDuration(_totalDuration)}'
                       : null,
                   badge: localizations.album,
-                  heroTag: 'album_image_${widget.albumName}',
                   accentColor: dominantColor == Colors.deepPurple.shade900
                       ? Colors.cyan
                       : dominantColor,
@@ -361,6 +372,11 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
                   ),
                 ],
 
+                if (_artistName != null && _artistName!.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SimilarArtistsRow(artistName: _artistName!),
+                  ),
+
                 // Bottom padding for mini player
                 buildMiniPlayerPadding(),
               ],
@@ -393,92 +409,84 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
           final durationString =
               '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
 
-          return AnimationConfiguration.staggeredList(
-            position: index < 12 ? index : 0,
-            duration: const Duration(milliseconds: 200),
-            child: SlideAnimation(
-              verticalOffset: 30.0,
-              child: FadeInAnimation(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 4.0,
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Provider.of<AudioPlayerService>(context, listen: false)
-                          .setPlaylist(_allSongs, index);
-                    },
-                    onLongPress: () => _showSongOptions(song),
-                    child: GlassmorphicContainer(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        child: Row(
-                          children: [
-                            // Track number
-                            SizedBox(
-                              width: 32,
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Song info
-                            Expanded(
-                              child: Text(
-                                song.title,
-                                style: const TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            // Duration
-                            Text(
-                              durationString,
+          return RevealOnAppear(
+              revealKey: '${identityHashCode(ModalRoute.of(context))}_0_$index',
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 4.0,
+                ),
+                child: GestureDetector(
+                  onTap: () {
+                    Provider.of<AudioPlayerService>(context, listen: false)
+                        .setPlaylist(_allSongs, index);
+                  },
+                  onLongPress: () => _showSongOptions(song),
+                  child: GlassmorphicContainer(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      child: Row(
+                        children: [
+                          // Track number
+                          SizedBox(
+                            width: 32,
+                            child: Text(
+                              '${index + 1}',
                               style: TextStyle(
                                 fontFamily: FontConstants.fontFamily,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
+                              textAlign: TextAlign.center,
                             ),
-                            // More options
-                            const SizedBox(width: 4),
-                            GestureDetector(
-                              onTap: () => _showSongOptions(song),
-                              child: Icon(
-                                Icons.more_vert,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          // Song info
+                          Expanded(
+                            child: Text(
+                              song.title,
+                              style: const TextStyle(
+                                fontFamily: FontConstants.fontFamily,
+                                color: Colors.white,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w500,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                        ),
+                          ),
+                          // Duration
+                          Text(
+                            durationString,
+                            style: TextStyle(
+                              fontFamily: FontConstants.fontFamily,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 13,
+                            ),
+                          ),
+                          // More options
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () => _showSongOptions(song),
+                            child: Icon(
+                              Icons.more_vert,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          );
+              ));
         },
         childCount: _displayedSongs.length + (_hasMoreSongs ? 1 : 0),
       ),
     );
   }
 
-  void _showSongOptions(SongModel song) =>
-      showSongContextMenu(context, song);
+  void _showSongOptions(SongModel song) => showSongContextMenu(context, song);
 }

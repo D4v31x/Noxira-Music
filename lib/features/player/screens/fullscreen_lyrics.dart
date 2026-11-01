@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
-import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollCacheExtent;
@@ -11,11 +11,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/models/models.dart';
 import '../widgets/lyrics/lyrics_widgets.dart';
 import '../../../shared/services/audio_player_service.dart';
+import '../../../shared/providers/performance_mode_provider.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/lyrics_service.dart';
+import '../../../shared/services/lyrics_providers/lyrics_provider.dart';
 import '../../../shared/services/lyrics_translation_service.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
+import '../widgets/player_page_header.dart';
+import '../widgets/player_page_route.dart';
 import 'lyrics_editor_screen.dart';
 
 enum _TranslationState { idle, loading, done, error }
@@ -23,7 +28,15 @@ enum _TranslationState { idle, loading, done, error }
 class FullscreenLyricsScreen extends StatefulWidget {
   final void Function(List<TimedLyric>)? onLyricsChanged;
 
-  const FullscreenLyricsScreen({super.key, this.onLyricsChanged});
+  /// Where the shared cover/title/artist land when the page is opened with
+  /// the shared-element transition.
+  final PlayerPageTargets? targets;
+
+  const FullscreenLyricsScreen({
+    super.key,
+    this.onLyricsChanged,
+    this.targets,
+  });
 
   @override
   State<FullscreenLyricsScreen> createState() => _FullscreenLyricsScreenState();
@@ -35,6 +48,36 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
 
   int _currentLyricIndex = 0;
   StreamSubscription<Duration>? _positionSubscription;
+  StreamSubscription<bool>? _playingSubscription;
+  late final LyricsClock _clock;
+  late final LyricsStagger _stagger;
+  late final AnimationController _recenterCtl;
+  late final AnimationController _immersionCtl;
+  final PlayerPageTargets _fallbackTargets = PlayerPageTargets();
+  PlayerPageTargets get _targets => widget.targets ?? _fallbackTargets;
+
+  /// Chrome (header and controls) tucked away so the lyrics have the screen.
+  bool _immersive = false;
+  Timer? _immersiveTimer;
+  bool _autoHideChrome = true;
+  bool _userScrolling = false;
+  double _lastScrollPixels = 0;
+  double _recenterFrom = 0;
+  double _recenterTo = 0;
+  double _recenterLastPixels = 0;
+  int _recenterAnchorRow = 0;
+
+  /// The first positioning after lyrics load puts the line straight at its
+  /// resting place; animating there from the top would scroll through the
+  /// whole song.
+  bool _placeInstantly = false;
+  bool _refiningPlacement = false;
+
+  // Rows are the sung lines interleaved with instrumental-gap dot rows.
+  List<LyricsRow> _rows = [];
+  Map<int, int> _lineRow = {};
+  int? _activeInterludeRow;
+  bool _blurEnabled = true;
   StreamSubscription<SongModel?>? _songChangeSubscription;
 
   // Auto-scroll-to-current-lyric is paused while the user is manually
@@ -42,10 +85,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   bool _autoFollowPaused = false;
   Timer? _resumeAutoFollowTimer;
 
-  late AnimationController _fadeController;
-
   final GlobalKey _scrollKey = GlobalKey();
-  Map<int, GlobalKey> _lyricKeys = {};
+  Map<int, GlobalKey> _rowKeys = {};
 
   List<TimedLyric>? _currentLyrics;
   int? _lastSongId;
@@ -64,16 +105,31 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
 
   static const String _fontSizeKey = 'lyrics_font_size';
   static const String _syncOffsetKey = 'lyrics_sync_offset';
+  static const String _blurKey = 'lyrics_blur_enabled';
+  static const String _autoHideKey = 'lyrics_auto_hide_chrome';
+
+  /// Idle time before the header and controls tuck away.
+  static const Duration _immersiveDelay = Duration(milliseconds: 3500);
+
+  /// Where the active line rests, as a fraction of the viewport height; never
+  /// less than one lyric row so the line just sung stays in view above it.
+  static const double _restFraction = 0.055;
+  static const double _minRestPx = 72;
 
   @override
   void initState() {
     super.initState();
-    _loadSettings();
-
-    _fadeController = AnimationController(
-      duration: kLyricsFadeDuration,
+    _clock = LyricsClock(this)..addListener(_onClockTick);
+    _stagger = LyricsStagger(this);
+    _recenterCtl = AnimationController(
       vsync: this,
-    )..forward();
+      duration: kLyricsRecenterDuration,
+    )..addListener(_onRecenterTick);
+    _immersionCtl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _loadSettings();
 
     _pulseController = AnimationController(
       vsync: this,
@@ -88,9 +144,15 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
           Provider.of<AudioPlayerService>(context, listen: false);
       _loadLyricsForCurrentSong(audioService);
 
-      _positionSubscription =
-          audioService.audioPlayer.positionStream.listen((position) {
-        if (mounted) _updateCurrentLyric(position);
+      final player = audioService.audioPlayer;
+      void syncClock() => _clock.sync(player.position,
+          playing: player.playing, speed: player.speed);
+      syncClock();
+      _positionSubscription = player.positionStream.listen((_) {
+        if (mounted) syncClock();
+      });
+      _playingSubscription = player.playingStream.listen((_) {
+        if (mounted) syncClock();
       });
 
       _songChangeSubscription = audioService.currentSongStream.listen((song) {
@@ -99,13 +161,16 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
         }
       });
 
-      TimedLyricsService().lyricsRevisionNotifier.addListener(_onLyricsRevisionChanged);
+      TimedLyricsService()
+          .lyricsRevisionNotifier
+          .addListener(_onLyricsRevisionChanged);
     });
   }
 
   void _onLyricsRevisionChanged() {
     if (!mounted) return;
-    final audioService = Provider.of<AudioPlayerService>(context, listen: false);
+    final audioService =
+        Provider.of<AudioPlayerService>(context, listen: false);
     if (audioService.currentSong == null) return;
     // Force a reload for the current song even though its id hasn't
     // changed — the lyrics content itself was just edited.
@@ -114,11 +179,36 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   }
 
   Future<void> _loadSettings() async {
+    final lowEnd = Provider.of<PerformanceModeProvider>(context, listen: false)
+        .isLowEndDevice;
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _fontSize = prefs.getDouble(_fontSizeKey) ?? 1.0;
       _syncOffset = prefs.getInt(_syncOffsetKey) ?? 0;
+      _blurEnabled = prefs.getBool(_blurKey) ?? true;
+      _autoHideChrome = prefs.getBool(_autoHideKey) ?? !lowEnd;
+      _clock.offsetMs = _syncOffset;
     });
+    if (_autoHideChrome) _scheduleImmersive();
+  }
+
+  Future<void> _toggleAutoHide() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoHideKey, !_autoHideChrome);
+    if (!mounted) return;
+    setState(() => _autoHideChrome = !_autoHideChrome);
+    if (_autoHideChrome) {
+      _scheduleImmersive();
+    } else {
+      _immersiveTimer?.cancel();
+      _setImmersive(false);
+    }
+  }
+
+  Future<void> _toggleBlur() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_blurKey, !_blurEnabled);
+    if (mounted) setState(() => _blurEnabled = !_blurEnabled);
   }
 
   Future<void> _saveFontSize(double size) async {
@@ -130,7 +220,10 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   Future<void> _saveSyncOffset(int offset) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_syncOffsetKey, offset);
-    setState(() => _syncOffset = offset);
+    setState(() {
+      _syncOffset = offset;
+      _clock.offsetMs = offset;
+    });
   }
 
   Future<void> _loadLyricsForCurrentSong(
@@ -151,10 +244,20 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     final artist = artistRaw.trim().isEmpty ? 'Unknown' : artistRaw.trim();
     final title = titleRaw.trim().isEmpty ? 'Unknown' : titleRaw.trim();
 
-    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title);
+    final songDuration = (song.duration ?? 0) > 0
+        ? Duration(milliseconds: song.duration!)
+        : audioService.audioPlayer.duration;
+    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title,
+        songDuration: songDuration);
     if (!mounted || audioService.currentSong?.id != song.id) return;
 
-    lyrics ??= await timedLyricsService.fetchTimedLyrics(artist, title);
+    lyrics ??= await timedLyricsService.fetchTimedLyrics(
+      artist,
+      title,
+      songDuration: songDuration,
+      audioPath: song.data,
+      album: song.album,
+    );
     if (!mounted || audioService.currentSong?.id != song.id) return;
 
     // Reset translation whenever new lyrics are loaded for a different song.
@@ -163,19 +266,15 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
 
     setState(() {
       _currentLyrics = lyrics;
-      _currentLyricIndex = 0;
       _isLoadingLyrics = false;
-      _lyricKeys = {};
       _translationState = _TranslationState.idle;
       _translatedLines = [];
       _showTranslated = false;
-      if (_currentLyrics != null) {
-        for (int i = 0; i < _currentLyrics!.length; i++) {
-          _lyricKeys[i] = GlobalKey();
-        }
-      }
+      _rebuildRows();
     });
 
+    _recenterCtl.stop();
+    _stagger.clear();
     if (_scrollController.hasClients) {
       _scrollController.jumpTo(0);
     }
@@ -184,17 +283,36 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     _autoFollowPaused = false;
   }
 
-  void _updateCurrentLyric(Duration position) {
-    if (_currentLyrics == null || _currentLyrics!.isEmpty) return;
+  void _rebuildRows() {
+    final lyrics = _currentLyrics ?? const <TimedLyric>[];
+    _rows = LyricsTiming.buildRows(lyrics);
+    _lineRow = {};
+    _rowKeys = {};
+    for (var i = 0; i < _rows.length; i++) {
+      _rowKeys[i] = GlobalKey();
+      if (!_rows[i].isInterlude) _lineRow[_rows[i].lineIndex] = i;
+    }
+    _currentLyricIndex = 0;
+    _activeInterludeRow = null;
+    _placeInstantly = true;
+    // Pick the right line straight away, even while paused.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _onClockTick();
+    });
+  }
 
-    // Apply sync offset
-    final adjustedPosition = position + Duration(milliseconds: _syncOffset);
+  int get _focusRow => _activeInterludeRow ?? _lineRow[_currentLyricIndex] ?? 0;
 
-    // Binary search: find the last lyric whose time <= adjustedPosition.
-    int lo = 0, hi = _currentLyrics!.length - 1, newIndex = 0;
+  void _onClockTick() {
+    final lyrics = _currentLyrics;
+    if (lyrics == null || lyrics.isEmpty) return;
+    final ms = _clock.value;
+
+    // Binary search: find the last lyric whose time <= position.
+    int lo = 0, hi = lyrics.length - 1, newIndex = 0;
     while (lo <= hi) {
       final mid = (lo + hi) >> 1;
-      if (_currentLyrics![mid].time <= adjustedPosition) {
+      if (lyrics[mid].time.inMilliseconds <= ms) {
         newIndex = mid;
         lo = mid + 1;
       } else {
@@ -202,9 +320,32 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       }
     }
 
-    if (newIndex != _currentLyricIndex) {
-      setState(() => _currentLyricIndex = newIndex);
-      if (!_autoFollowPaused) _scrollToCurrentLyric();
+    int? interlude;
+    for (var i = 0; i < _rows.length; i++) {
+      final gap = _rows[i].interlude;
+      if (gap != null && ms >= gap.startMs && ms < gap.endMs) {
+        interlude = i;
+        break;
+      }
+    }
+
+    final changed =
+        newIndex != _currentLyricIndex || interlude != _activeInterludeRow;
+    if (changed) {
+      setState(() {
+        _currentLyricIndex = newIndex;
+        _activeInterludeRow = interlude;
+      });
+    }
+    if ((changed || _placeInstantly) && !_autoFollowPaused) {
+      // After a state change the focused row's widget exists next frame.
+      if (_placeInstantly) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _scrollToCurrentLyric();
+        });
+      } else {
+        _scrollToCurrentLyric();
+      }
     }
   }
 
@@ -213,60 +354,162 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
         notification.dragDetails != null) {
       // User-initiated drag — stop fighting them for scroll control.
       _resumeAutoFollowTimer?.cancel();
-      _autoFollowPaused = true;
+      _immersiveTimer?.cancel();
+      _recenterCtl.stop();
+      _userScrolling = true;
+      _lastScrollPixels = notification.metrics.pixels;
+      if (!_autoFollowPaused) setState(() => _autoFollowPaused = true);
+    } else if (notification is ScrollUpdateNotification && _userScrolling) {
+      // Scrolling down tucks the chrome away, scrolling up brings it back.
+      final delta = notification.metrics.pixels - _lastScrollPixels;
+      if (delta.abs() > 6) {
+        _lastScrollPixels = notification.metrics.pixels;
+        _setImmersive(delta > 0);
+      }
     } else if (notification is ScrollEndNotification) {
+      _userScrolling = false;
       _resumeAutoFollowTimer?.cancel();
-      _resumeAutoFollowTimer = Timer(const Duration(seconds: 3), () {
+      _resumeAutoFollowTimer = Timer(_immersiveDelay, () {
         if (!mounted) return;
-        _autoFollowPaused = false;
+        setState(() => _autoFollowPaused = false);
         _scrollToCurrentLyric();
       });
+      if (!_immersive) _scheduleImmersive();
     }
   }
 
+  void _scheduleImmersive() {
+    _immersiveTimer?.cancel();
+    if (!_autoHideChrome) return;
+    _immersiveTimer = Timer(_immersiveDelay, () {
+      if (mounted && !_userScrolling) _setImmersive(true);
+    });
+  }
+
+  void _setImmersive(bool value) {
+    if (_immersive == value) return;
+    _immersive = value;
+    if (value) {
+      _immersionCtl.animateTo(1, curve: const Cubic(0.4, 0, 0.2, 1));
+    } else {
+      _immersionCtl.animateBack(0, curve: const Cubic(0.4, 0, 0.2, 1));
+      _scheduleImmersive();
+    }
+  }
+
+  /// Recentres the focused row: it rests near the top of the list, one row
+  /// below the edge, with the line just sung still visible above it.
   void _scrollToCurrentLyric() {
     if (!_scrollController.hasClients) return;
 
-    final RenderBox? renderBox = _lyricKeys[_currentLyricIndex]
-        ?.currentContext
-        ?.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-
-    final RenderBox? scrollBox =
+    final row = _focusRow;
+    final renderBox =
+        _rowKeys[row]?.currentContext?.findRenderObject() as RenderBox?;
+    final scrollBox =
         _scrollKey.currentContext?.findRenderObject() as RenderBox?;
     if (scrollBox == null) return;
 
-    final position = renderBox.localToGlobal(Offset.zero, ancestor: scrollBox);
-    final itemHeight = renderBox.size.height;
-    final scrollBoxHeight = scrollBox.size.height;
+    if (renderBox == null) {
+      // Row not built yet (far down the list): get close, then refine once
+      // it exists.
+      if (_refiningPlacement || _rows.isEmpty) return;
+      _refiningPlacement = true;
+      final position = _scrollController.position;
+      _scrollController.jumpTo(
+        (position.maxScrollExtent * row / _rows.length)
+            .clamp(0.0, position.maxScrollExtent),
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _refiningPlacement = false;
+        if (mounted) _scrollToCurrentLyric();
+      });
+      return;
+    }
 
-    final targetOffset = _scrollController.offset +
-        position.dy -
-        (scrollBoxHeight / 2) +
-        (itemHeight / 2);
+    var top = renderBox.localToGlobal(Offset.zero, ancestor: scrollBox).dy;
 
-    _scrollController.animateTo(
-      targetOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
-      duration: const Duration(milliseconds: 500),
-      curve: Curves.easeOutCubic,
-    );
+    if (row > 0 && _rows[row - 1].isInterlude) {
+      // The dots above are collapsing in this same scroll, which lifts the
+      // row by their height on its own; scroll only the rest.
+      final above =
+          _rowKeys[row - 1]?.currentContext?.findRenderObject() as RenderBox?;
+      if (above != null) top -= above.size.height;
+    }
+
+    final rest = _restOffset(scrollBox.size.height);
+    final position = _scrollController.position;
+    final target = (_scrollController.offset + top - rest)
+        .clamp(0.0, position.maxScrollExtent);
+
+    if (_placeInstantly) {
+      _placeInstantly = false;
+      _recenterCtl.stop();
+      _scrollController.jumpTo(target);
+      return;
+    }
+
+    _recenterFrom = position.pixels;
+    _recenterTo = target;
+    _recenterLastPixels = position.pixels;
+    _recenterAnchorRow = row;
+    _recenterCtl
+      ..stop()
+      ..value = 0
+      ..forward();
+  }
+
+  double _restOffset(double viewportHeight) =>
+      math.max(viewportHeight * _restFraction, _minRestPx);
+
+  void _onRecenterTick() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    final t = kLyricsRecenterCurve.transform(_recenterCtl.value);
+    final next = (_recenterFrom + (_recenterTo - _recenterFrom) * t)
+        .clamp(position.minScrollExtent, position.maxScrollExtent);
+    _scrollController.jumpTo(next);
+
+    final consumed = position.pixels - _recenterLastPixels;
+    _recenterLastPixels = position.pixels;
+    if (consumed != 0) {
+      // Rows below the active line hold back by what just scrolled, then
+      // catch up on their own: the further down, the later.
+      _stagger.addScroll(
+        consumed,
+        [
+          for (var r = _recenterAnchorRow + 1;
+              r <= _recenterAnchorRow + 16 && r < _rows.length;
+              r++)
+            r,
+        ],
+        _recenterAnchorRow,
+      );
+    }
   }
 
   @override
   void dispose() {
     _positionSubscription?.cancel();
+    _playingSubscription?.cancel();
     _songChangeSubscription?.cancel();
+    _clock.dispose();
     _resumeAutoFollowTimer?.cancel();
-    TimedLyricsService().lyricsRevisionNotifier.removeListener(_onLyricsRevisionChanged);
+    _immersiveTimer?.cancel();
+    _recenterCtl.dispose();
+    _immersionCtl.dispose();
+    _stagger.dispose();
+    TimedLyricsService()
+        .lyricsRevisionNotifier
+        .removeListener(_onLyricsRevisionChanged);
     _scrollController.dispose();
-    _fadeController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final audioService = Provider.of<AudioPlayerService>(context, listen: false);
+    final audioService =
+        Provider.of<AudioPlayerService>(context, listen: false);
 
     if (audioService.currentSong != null &&
         audioService.currentSong!.id != _lastSongId) {
@@ -277,120 +520,167 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       });
     }
 
+    final route = PlayerPageScope.maybeOf(context)?.route;
+    final topInset = MediaQuery.paddingOf(context).top;
+
     return AppBackground(
       child: Scaffold(
-      backgroundColor: Colors.transparent,
-      resizeToAvoidBottomInset: false,
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(audioService),
-                Expanded(
-                  child: FadeTransition(
-                    opacity: _fadeController,
-                    child: _isLoadingLyrics
-                        ? _buildLoadingView()
-                        : (_currentLyrics == null || _currentLyrics!.isEmpty)
-                            ? _buildNoLyricsView(audioService)
-                            : _buildLyricsView(),
+        backgroundColor: Colors.transparent,
+        resizeToAvoidBottomInset: false,
+        body: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (_) {
+            if (!_immersive) _scheduleImmersive();
+          },
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              SafeArea(
+                child: Column(
+                  children: [
+                    _chrome(
+                      route: route,
+                      fromTop: true,
+                      child: _buildHeader(audioService, route),
+                    ),
+                    Expanded(
+                      child: _isLoadingLyrics
+                          ? _buildLoadingView()
+                          : (_currentLyrics == null || _currentLyrics!.isEmpty)
+                              ? _buildNoLyricsView(audioService)
+                              : _buildLyricsView(),
+                    ),
+                    _chrome(
+                      route: route,
+                      fromTop: false,
+                      child: _buildControls(audioService),
+                    ),
+                  ],
+                ),
+              ),
+
+              // While the chrome is tucked away, a tap at the top brings it back.
+              AnimatedBuilder(
+                animation: _immersionCtl,
+                builder: (context, _) => _immersionCtl.value > 0.5
+                    ? Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: topInset + 72,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: () => _setImmersive(false),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+
+              // Translate button — bottom-right, above controls
+              if (_currentLyrics != null && _currentLyrics!.isNotEmpty)
+                Positioned(
+                  right: 16,
+                  bottom: MediaQuery.of(context).padding.bottom + 152,
+                  child: AnimatedBuilder(
+                    animation: _immersionCtl,
+                    builder: (context, child) => Opacity(
+                      opacity: 1 - _immersionCtl.value,
+                      child: IgnorePointer(
+                        ignoring: _immersionCtl.value > 0.5,
+                        child: child,
+                      ),
+                    ),
+                    child: _buildFloatingTranslateButton(),
                   ),
                 ),
-                _buildControls(audioService),
-              ],
-            ),
+            ],
           ),
-
-          // Translate button — bottom-right, above controls
-          if (_currentLyrics != null && _currentLyrics!.isNotEmpty)
-            Positioned(
-              right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 152,
-              child: _buildFloatingTranslateButton(),
-            ),
-        ],
-      ),
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(AudioPlayerService audioService) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const iconoir.NavArrowDown(
-                color: Colors.white, width: 32, height: 32),
-            onPressed: () {
-              if (!mounted) return;
-              Navigator.pop(context);
-            },
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(
-                  audioService.currentSong?.title ?? '',
-                  style: const TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  audioService.currentSong?.artist ?? '',
-                  style: const TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
-              ],
+  /// Header/controls: fades in as the page opens, and collapses away (with
+  /// the lyrics growing into the space) in immersive mode.
+  Widget _chrome({
+    required PlayerPageRoute<dynamic>? route,
+    required bool fromTop,
+    required Widget child,
+  }) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _immersionCtl,
+        if (route != null) route.progress,
+      ]),
+      child: child,
+      builder: (context, child) {
+        final imm = _immersionCtl.value;
+        final enter = route == null
+            ? 1.0
+            : _smoothstep((route.progress.value - 0.22) / 0.5);
+        return ClipRect(
+          child: Align(
+            alignment: fromTop ? Alignment.bottomCenter : Alignment.topCenter,
+            heightFactor: (1 - imm).clamp(0.0, 1.0),
+            child: Opacity(
+              opacity: ((1 - imm) * enter).clamp(0.0, 1.0),
+              child: Transform.translate(
+                offset: Offset(0, (fromTop ? -24 : 24) * imm),
+                child: IgnorePointer(ignoring: imm > 0.5, child: child),
+              ),
             ),
           ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, color: Colors.white, size: 24),
-            color: Colors.grey.shade900,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            onSelected: (value) => _handleMenuAction(value, audioService),
-            itemBuilder: (context) => [
-              _buildMenuItem(
-                  Icons.refresh,
-                  AppLocalizations.of(context).refreshLyrics,
-                  'refresh'),
-              _buildMenuItem(
-                  Icons.search,
-                  AppLocalizations.of(context).searchLyrics,
-                  'search'),
-              _buildMenuItem(
-                  Icons.timer_outlined,
-                  AppLocalizations.of(context).adjustSync,
-                  'sync'),
-              _buildMenuItem(
-                  Icons.text_fields,
-                  AppLocalizations.of(context).fontSize,
-                  'font_size'),
-              _buildMenuItem(
-                  Icons.edit_note_rounded,
-                  'Edit / Create Lyrics',
-                  'edit_lyrics'),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeader(
+    AudioPlayerService audioService,
+    PlayerPageRoute<dynamic>? route,
+  ) {
+    return PlayerPageHeader(
+      song: audioService.currentSong,
+      targets: _targets,
+      route: route,
+      onCoverTap: () {
+        if (_immersive) {
+          _setImmersive(false);
+        } else if (mounted) {
+          Navigator.pop(context);
+        }
+      },
+      trailing: [
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white, size: 24),
+          color: Colors.grey.shade900,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          onSelected: (value) => _handleMenuAction(value, audioService),
+          itemBuilder: (context) => [
+            _buildMenuItem(Icons.refresh,
+                AppLocalizations.of(context).refreshLyrics, 'refresh'),
+            _buildMenuItem(Icons.search,
+                AppLocalizations.of(context).searchLyrics, 'search'),
+            _buildMenuItem(Icons.timer_outlined,
+                AppLocalizations.of(context).adjustSync, 'sync'),
+            _buildMenuItem(Icons.text_fields,
+                AppLocalizations.of(context).fontSize, 'font_size'),
+            _buildMenuItem(
+                Icons.blur_on_rounded,
+                _blurEnabled ? 'Lyrics blur: on' : 'Lyrics blur: off',
+                'toggle_blur'),
+            _buildMenuItem(
+                Icons.fullscreen_rounded,
+                _autoHideChrome
+                    ? 'Auto-hide controls: on'
+                    : 'Auto-hide controls: off',
+                'toggle_auto_hide'),
+            _buildMenuItem(
+                Icons.edit_note_rounded, 'Edit / Create Lyrics', 'edit_lyrics'),
+          ],
+        ),
+      ],
     );
   }
 
@@ -431,6 +721,12 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
         break;
       case 'font_size':
         _showFontSizeDialog();
+        break;
+      case 'toggle_blur':
+        _toggleBlur();
+        break;
+      case 'toggle_auto_hide':
+        _toggleAutoHide();
         break;
       case 'edit_lyrics':
         _openLyricsEditor(audioService);
@@ -477,7 +773,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       final song = audioService.currentSong;
       final lyricsTexts = lyrics.map((l) => l.text).toList();
       final lyricsFingerprint = lyricsTexts.join().hashCode;
-      final cacheKey = '${song?.artist ?? ""}|${song?.title ?? ""}|$lyricsFingerprint';
+      final cacheKey =
+          '${song?.artist ?? ""}|${song?.title ?? ""}|$lyricsFingerprint';
 
       final translated = await LyricsTranslationService.translateLines(
         texts: lyricsTexts,
@@ -512,106 +809,156 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
         }
       }));
     } finally {
-      _pulseController
-        ..stop()
-        ..reset();
+      // The screen may have been closed while translating; the controller is
+      // already disposed then, and stopping it would throw.
+      if (mounted) {
+        _pulseController
+          ..stop()
+          ..reset();
+      }
     }
   }
 
-  void _showSearchLyricsDialog(AudioPlayerService audioService) {
+  static const String _lrclibId = 'lrclib';
+
+  Future<void> _showSearchLyricsDialog(AudioPlayerService audioService) async {
     final song = audioService.currentSong;
     final artistController = TextEditingController(text: song?.artist ?? '');
     final titleController = TextEditingController(text: song?.title ?? '');
+    // LRCLIB (full result list) plus every secondary source the user hasn't
+    // switched off in Settings > Playback > Lyrics sources.
+    final sources = <({String id, String name})>[
+      (id: _lrclibId, name: 'LRCLIB'),
+      for (final p in await LyricsProviders.enabled()) (id: p.id, name: p.name),
+    ];
+    if (!mounted) return;
+    var selectedSource = _lrclibId;
 
-    showDialog(
+    await showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+      builder: (context) => GlassmorphicDialog(
+        title: Text(
+          AppLocalizations.of(context).searchLyrics,
+          style: const TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          title: Text(
-            AppLocalizations.of(context).searchLyrics,
-            style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: artistController,
-                style: const TextStyle(
-                    color: Colors.white, fontFamily: FontConstants.fontFamily),
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context).artists,
-                  labelStyle: const TextStyle(
-                      color: Colors.white70,
-                      fontFamily: FontConstants.fontFamily),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white),
-                  ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: artistController,
+              style: const TextStyle(
+                  color: Colors.white, fontFamily: FontConstants.fontFamily),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).artists,
+                labelStyle: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: FontConstants.fontFamily),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: titleController,
-                style: const TextStyle(
-                    color: Colors.white, fontFamily: FontConstants.fontFamily),
-                decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context).title,
-                  labelStyle: const TextStyle(
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: titleController,
+              style: const TextStyle(
+                  color: Colors.white, fontFamily: FontConstants.fontFamily),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).title,
+                labelStyle: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: FontConstants.fontFamily),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white),
+                ),
+              ),
+            ),
+            if (sources.length > 1) ...[
+              const SizedBox(height: 20),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  AppLocalizations.of(context).lyricsSource,
+                  style: const TextStyle(
                       color: Colors.white70,
-                      fontFamily: FontConstants.fontFamily),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white24),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.white),
+                      fontFamily: FontConstants.fontFamily,
+                      fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 8),
+              StatefulBuilder(
+                builder: (context, setSourceState) => Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      for (final source in sources)
+                        ChoiceChip(
+                          label: Text(source.name),
+                          selected: selectedSource == source.id,
+                          showCheckmark: false,
+                          labelStyle: TextStyle(
+                            fontFamily: FontConstants.fontFamily,
+                            color: selectedSource == source.id
+                                ? Colors.black
+                                : Colors.white,
+                          ),
+                          selectedColor: Colors.white,
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
+                          side: BorderSide.none,
+                          onSelected: (_) =>
+                              setSourceState(() => selectedSource = source.id),
+                        ),
+                    ],
                   ),
                 ),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                AppLocalizations.of(context).cancel,
-                style: const TextStyle(
-                    color: Colors.white70,
-                    fontFamily: FontConstants.fontFamily),
-              ),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                final artist = artistController.text.trim();
-                final title = titleController.text.trim();
-                if (artist.isNotEmpty && title.isNotEmpty) {
-                  unawaited(_performLyricsSearch(artist, title));
-                }
-              },
-              child: Text(
-                AppLocalizations.of(context).search,
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontFamily: FontConstants.fontFamily,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              AppLocalizations.of(context).cancel,
+              style: const TextStyle(
+                  color: Colors.white70, fontFamily: FontConstants.fontFamily),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final artist = artistController.text.trim();
+              final title = titleController.text.trim();
+              if (artist.isNotEmpty && title.isNotEmpty) {
+                unawaited(_performLyricsSearch(artist, title, selectedSource));
+              }
+            },
+            child: Text(
+              AppLocalizations.of(context).search,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontFamily: FontConstants.fontFamily,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -641,7 +988,72 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
         .timeout(retryTimeout, onTimeout: () => http.Response('', 408));
   }
 
-  Future<void> _performLyricsSearch(String artist, String title) async {
+  /// Asks one secondary provider for the song and presents its single match
+  /// in the same results dialog LRCLIB uses.
+  Future<void> _performProviderSearch(
+      String artist, String title, String providerId) async {
+    if (!mounted) return;
+    setState(() => _isLoadingLyrics = true);
+
+    try {
+      final provider =
+          LyricsProviders.all.firstWhere((p) => p.id == providerId);
+      final song =
+          Provider.of<AudioPlayerService>(context, listen: false).currentSong;
+      final album = song?.album;
+      final durationMs = song?.duration;
+      final raw = await provider
+          .fetchLrc(
+            LyricsQuery(
+              title: title,
+              artist: artist,
+              album: (album == null ||
+                      album.trim().isEmpty ||
+                      album == '<unknown>')
+                  ? null
+                  : album.trim(),
+              durationSeconds:
+                  durationMs == null ? null : (durationMs / 1000).round(),
+            ),
+            TimedLyricsService.httpClient,
+          )
+          .timeout(const Duration(seconds: 15), onTimeout: () => null);
+
+      if (!mounted) return;
+      setState(() => _isLoadingLyrics = false);
+
+      final lrc = raw == null ? null : sanitizeLrc(raw);
+      if (lrc == null || TimedLyricsService().parseLrcContent(lrc).isEmpty) {
+        NotificationManager.showMessage(
+          context,
+          AppLocalizations.of(context).noLyricsFound,
+        );
+        return;
+      }
+
+      _showLyricsResultsDialog([
+        {
+          'trackName': title,
+          'artistName': artist,
+          'albumName': provider.name,
+          'syncedLyrics': lrc,
+        }
+      ]);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingLyrics = false);
+      NotificationManager.showMessage(
+        context,
+        AppLocalizations.of(context).searchFailed,
+      );
+    }
+  }
+
+  Future<void> _performLyricsSearch(
+      String artist, String title, String providerId) async {
+    if (providerId != _lrclibId) {
+      return _performProviderSearch(artist, title, providerId);
+    }
     if (!mounted) return;
     setState(() => _isLoadingLyrics = true);
 
@@ -697,116 +1109,110 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   void _showLyricsResultsDialog(List<Map<String, dynamic>> results) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+      builder: (context) => GlassmorphicDialog(
+        title: Text(
+          '${AppLocalizations.of(context).results} (${results.length})',
+          style: const TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          title: Text(
-            '${AppLocalizations.of(context).results} (${results.length})',
-            style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 400,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: results.length,
-              itemBuilder: (context, index) {
-                final result = results[index];
-                final trackName = result['trackName'] ?? 'Unknown';
-                final artistName = result['artistName'] ?? 'Unknown';
-                final albumName = result['albumName'] ?? '';
-                final duration =
-                    _parseLyricsDuration(result['syncedLyrics'] as String?);
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: results.length,
+            itemBuilder: (context, index) {
+              final result = results[index];
+              final trackName = result['trackName'] ?? 'Unknown';
+              final artistName = result['artistName'] ?? 'Unknown';
+              final albumName = result['albumName'] ?? '';
+              final duration =
+                  _parseLyricsDuration(result['syncedLyrics'] as String?);
 
-                return Card(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  margin: const EdgeInsets.only(bottom: 8),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    onTap: () => _selectLyricsResult(context, result),
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    title: Text(
-                      trackName,
-                      style: const TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 15,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              return Card(
+                color: Colors.white.withValues(alpha: 0.1),
+                margin: const EdgeInsets.only(bottom: 8),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                child: ListTile(
+                  onTap: () => _selectLyricsResult(context, result),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  title: Text(
+                    trackName,
+                    style: const TextStyle(
+                      fontFamily: FontConstants.fontFamily,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15,
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        artistName,
+                        style: const TextStyle(
+                          fontFamily: FontConstants.fontFamily,
+                          color: Colors.white70,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (albumName.isNotEmpty) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          artistName,
-                          style: const TextStyle(
+                          albumName,
+                          style: TextStyle(
                             fontFamily: FontConstants.fontFamily,
-                            color: Colors.white70,
-                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontSize: 12,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (albumName.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            albumName,
-                            style: TextStyle(
-                              fontFamily: FontConstants.fontFamily,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ],
+                    ],
+                  ),
+                  trailing: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    trailing: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        duration,
-                        style: const TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                    child: Text(
+                      duration,
+                      style: const TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: Colors.white70,
+                        fontSize: 12,
                       ),
                     ),
                   ),
-                );
-              },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              AppLocalizations.of(context).cancel,
+              style: const TextStyle(
+                  color: Colors.white70, fontFamily: FontConstants.fontFamily),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                AppLocalizations.of(context).cancel,
-                style: const TextStyle(
-                    color: Colors.white70,
-                    fontFamily: FontConstants.fontFamily),
-              ),
-            ),
-          ],
-        ),
+        ],
+      ),
     );
   }
 
@@ -831,7 +1237,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 
-  void _selectLyricsResult(BuildContext dialogContext, Map<String, dynamic> result) {
+  void _selectLyricsResult(
+      BuildContext dialogContext, Map<String, dynamic> result) {
     if (!mounted) return;
     Navigator.pop(dialogContext);
 
@@ -841,13 +1248,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
 
     setState(() {
       _currentLyrics = lyrics;
-      _currentLyricIndex = 0;
-      _lyricKeys = {};
-      if (_currentLyrics != null) {
-        for (int i = 0; i < _currentLyrics!.length; i++) {
-          _lyricKeys[i] = GlobalKey();
-        }
-      }
+      _rebuildRows();
     });
 
     // Save to cache for future use
@@ -880,99 +1281,92 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-          builder: (context, setDialogState) => AlertDialog(
-            backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        builder: (context, setDialogState) => GlassmorphicDialog(
+          title: Text(
+            AppLocalizations.of(context).adjustSync,
+            style: const TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
-            title: Text(
-              AppLocalizations.of(context).adjustSync,
-              style: const TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${tempOffset >= 0 ? '+' : ''}${tempOffset}ms',
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${tempOffset >= 0 ? '+' : ''}${tempOffset}ms',
-                  style: const TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                tempOffset > 0
+                    ? AppLocalizations.of(context).lyricsAhead
+                    : tempOffset < 0
+                        ? AppLocalizations.of(context).lyricsBehind
+                        : AppLocalizations.of(context).lyricsSynced,
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white70,
+                  fontSize: 14,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  tempOffset > 0
-                      ? AppLocalizations.of(context).lyricsAhead
-                      : tempOffset < 0
-                          ? AppLocalizations.of(context)
-                              .lyricsBehind
-                          : AppLocalizations.of(context)
-                              .lyricsSynced,
-                  style: const TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildSyncButton(
-                        '-500', () => setDialogState(() => tempOffset -= 500)),
-                    _buildSyncButton(
-                        '-100', () => setDialogState(() => tempOffset -= 100)),
-                    _buildSyncButton(
-                        '+100', () => setDialogState(() => tempOffset += 100)),
-                    _buildSyncButton(
-                        '+500', () => setDialogState(() => tempOffset += 500)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => setDialogState(() => tempOffset = 0),
-                  child: Text(
-                    AppLocalizations.of(context).reset,
-                    style: const TextStyle(
-                        color: Colors.white70,
-                        fontFamily: FontConstants.fontFamily),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildSyncButton(
+                      '-500', () => setDialogState(() => tempOffset -= 500)),
+                  _buildSyncButton(
+                      '-100', () => setDialogState(() => tempOffset -= 100)),
+                  _buildSyncButton(
+                      '+100', () => setDialogState(() => tempOffset += 100)),
+                  _buildSyncButton(
+                      '+500', () => setDialogState(() => tempOffset += 500)),
+                ],
+              ),
+              const SizedBox(height: 16),
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => setDialogState(() => tempOffset = 0),
                 child: Text(
-                  AppLocalizations.of(context).cancel,
+                  AppLocalizations.of(context).reset,
                   style: const TextStyle(
                       color: Colors.white70,
                       fontFamily: FontConstants.fontFamily),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _saveSyncOffset(tempOffset);
-                },
-                child: Text(
-                  AppLocalizations.of(context).save,
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontFamily: FontConstants.fontFamily,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                AppLocalizations.of(context).cancel,
+                style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: FontConstants.fontFamily),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _saveSyncOffset(tempOffset);
+              },
+              child: Text(
+                AppLocalizations.of(context).save,
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: FontConstants.fontFamily,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
+      ),
     );
   }
 
@@ -1002,34 +1396,25 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   void _showFontSizeDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          title: Text(
-            AppLocalizations.of(context).fontSize,
-            style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildFontSizeOption(
-                  AppLocalizations.of(context).small, 0.8),
-              _buildFontSizeOption(
-                  AppLocalizations.of(context).medium, 1.0),
-              _buildFontSizeOption(
-                  AppLocalizations.of(context).large, 1.2),
-              _buildFontSizeOption(
-                  AppLocalizations.of(context).extraLarge, 1.4),
-            ],
+      builder: (context) => GlassmorphicDialog(
+        title: Text(
+          AppLocalizations.of(context).fontSize,
+          style: const TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildFontSizeOption(AppLocalizations.of(context).small, 0.8),
+            _buildFontSizeOption(AppLocalizations.of(context).medium, 1.0),
+            _buildFontSizeOption(AppLocalizations.of(context).large, 1.2),
+            _buildFontSizeOption(AppLocalizations.of(context).extraLarge, 1.4),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1058,43 +1443,81 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   }
 
   Widget _buildLyricsView() {
-    return RepaintBoundary(
-      child: ShaderMask(
-        shaderCallback: (bounds) => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Colors.transparent,
-            Colors.white,
-            Colors.white,
-            Colors.transparent
-          ],
-          stops: [0.0, 0.08, 0.92, 1.0],
-        ).createShader(bounds),
-        blendMode: BlendMode.dstIn,
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) {
-            _handleScrollNotification(notification);
-            return false;
-          },
-          child: ListView.builder(
-            scrollCacheExtent: const ScrollCacheExtent.pixels(1000), key: _scrollKey,
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: kLyricsHorizontalPadding,
-              vertical: MediaQuery.of(context).size.height * 0.3,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = constraints.maxHeight;
+        return RepaintBoundary(
+          child: ShaderMask(
+            shaderCallback: (bounds) => const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.transparent,
+                Colors.white,
+                Colors.white,
+                Colors.transparent,
+              ],
+              stops: [0.0, 0.10, 0.62, 1.0],
+            ).createShader(bounds),
+            blendMode: BlendMode.dstIn,
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                _handleScrollNotification(notification);
+                return false;
+              },
+              child: ListView.builder(
+                scrollCacheExtent: const ScrollCacheExtent.pixels(1000),
+                key: _scrollKey,
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: _restOffset(height),
+                  bottom: height * 0.55,
+                ),
+                itemCount: _rows.length + (_showTranslated ? 1 : 0),
+                itemBuilder: (context, index) {
+                  if (_showTranslated && index == 0) {
+                    return _buildTranslationDisclaimerHeader();
+                  }
+                  return _buildRow(_showTranslated ? index - 1 : index);
+                },
+              ),
             ),
-            itemCount: _currentLyrics!.length + (_showTranslated ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (_showTranslated && index == 0) {
-                return _buildTranslationDisclaimerHeader();
-              }
-              return _buildLyricLine(_showTranslated ? index - 1 : index);
-            },
           ),
-        ),
-      ),
+        );
+      },
+    );
+  }
+
+  /// Per-row motion layered over the list: the cascade lag while auto-scrolling
+  /// and the rise into place as the page opens out of its card.
+  Widget _rowFx(int row, Widget child) {
+    final route = PlayerPageScope.maybeOf(context)?.route;
+    final rowsBelow = (row - _focusRow).clamp(0, 8);
+
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _stagger,
+        if (route != null) route.progress,
+      ]),
+      child: child,
+      builder: (context, child) {
+        var dy = _stagger.lagOf(row);
+        var alpha = 1.0;
+        if (route != null) {
+          final e = route.progress.value;
+          if ((e - 1).abs() > 0.0005) {
+            // Short, staggered rise that starts once the card's own text has
+            // faded, so the two never overlap.
+            dy += (36 + 10 * rowsBelow) * (1 - e);
+            alpha = _smoothstep((e - 0.18) / 0.45);
+          }
+        }
+        return Opacity(
+          opacity: alpha,
+          child: Transform.translate(offset: Offset(0, dy), child: child),
+        );
+      },
     );
   }
 
@@ -1168,13 +1591,13 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     );
   }
 
-  Widget _buildTranslationDisclaimerHeader() {    return const Padding(
+  Widget _buildTranslationDisclaimerHeader() {
+    return const Padding(
       padding: EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.auto_awesome_rounded,
-              size: 12, color: Colors.white30),
+          Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white30),
           SizedBox(width: 5),
           Text(
             'AI translated \u00b7 accuracy may vary',
@@ -1191,89 +1614,47 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     );
   }
 
-  Widget _buildLyricLine(int index) {
-    final lyric = _currentLyrics![index];
-    final isCurrent = index == _currentLyricIndex;
-    final isPast = index < _currentLyricIndex;
-
-    final baseFontSize = isCurrent ? 24.0 : 18.0;
-    final adjustedFontSize = baseFontSize * _fontSize;
-
-    final mainColor = isCurrent
-        ? Colors.white
-        : isPast
-            ? Colors.white.withValues(alpha: 0.4)
-            : Colors.white.withValues(alpha: 0.6);
-
-    final translatedText =
-        (_showTranslated && index < _translatedLines.length)
-            ? _translatedLines[index]
-            : null;
-
-    return RepaintBoundary(
-      child: GestureDetector(
-        key: _lyricKeys[index],
-        onTap: () => _seekToLyric(index),
-        child: AnimatedContainer(
-          duration: kLyricsScrollDuration,
-          curve: Curves.easeOut,
-          padding: EdgeInsets.symmetric(vertical: isCurrent ? 14 : 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Main text: translated if available, otherwise original
-              AnimatedDefaultTextStyle(
-                duration: kLyricsScrollDuration,
-                style: TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  fontSize: adjustedFontSize,
-                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.w400,
-                  color: mainColor,
-                  height: 1.4,
-                ),
-                child: Text(
-                  translatedText ?? lyric.text,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              // Original subtitle — slides in/out when translation is active
-              AnimatedSize(
-                duration: const Duration(milliseconds: 350),
-                curve: Curves.easeInOut,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 320),
-                  transitionBuilder: (child, anim) => FadeTransition(
-                    opacity: anim,
-                    child: SizeTransition(
-                      sizeFactor: anim,
-                      alignment: const Alignment(-1.0, -1.0),
-                      child: child,
-                    ),
-                  ),
-                  child: translatedText != null
-                      ? Padding(
-                          key: const ValueKey('orig'),
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Center(
-                            child: Text(
-                              lyric.text,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: FontConstants.fontFamily,
-                                fontSize:
-                                    (adjustedFontSize * 0.65).clamp(10.0, 14.0),
-                                fontStyle: FontStyle.italic,
-                                color: mainColor.withValues(alpha: 0.5),
-                                height: 1.3,
-                              ),
-                            ),
-                          ),
-                        )
-                      : const SizedBox.shrink(key: ValueKey('empty')),
-                ),
-              ),
-            ],
+  Widget _buildRow(int row) {
+    final entry = _rows[row];
+    final interlude = entry.interlude;
+    if (interlude != null) {
+      return KeyedSubtree(
+        key: _rowKeys[row],
+        child: _rowFx(
+          row,
+          LyricInterludeDots(
+            startMs: interlude.startMs,
+            endMs: interlude.endMs,
+            clock: _clock,
+            accentColor: Theme.of(context).colorScheme.primary,
+            visible: row == _activeInterludeRow,
           ),
+        ),
+      );
+    }
+
+    final index = entry.lineIndex;
+    final lyric = _currentLyrics![index];
+    final translatedText = (_showTranslated && index < _translatedLines.length)
+        ? _translatedLines[index]
+        : null;
+
+    return KeyedSubtree(
+      key: _rowKeys[row],
+      child: _rowFx(
+        row,
+        LyricLineWidget(
+          text: translatedText ?? lyric.text,
+          subtitle: translatedText != null ? lyric.text : null,
+          isActive: row == _focusRow,
+          distance: (row - _focusRow).abs(),
+          isPast: row < _focusRow,
+          fontSize: _fontSize,
+          blurEnabled: _blurEnabled && !_autoFollowPaused,
+          onTap: () {
+            _setImmersive(false);
+            _seekToLyric(index);
+          },
         ),
       ),
     );
@@ -1327,8 +1708,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
               side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -1389,7 +1769,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
                                       Container(
                                         width: width,
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withValues(alpha: 0.3),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.3),
                                           borderRadius:
                                               BorderRadius.circular(1.5),
                                         ),
@@ -1496,4 +1877,9 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
   }
+}
+
+double _smoothstep(double x) {
+  final t = x.clamp(0.0, 1.0);
+  return t * t * (3 - 2 * t);
 }

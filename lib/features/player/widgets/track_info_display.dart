@@ -55,8 +55,10 @@ class TrackInfoDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currentSong = audioPlayerService.currentSong;
-    final titleFontSize = isTablet ? _kTitleFontSizeTablet : _kTitleFontSizePhone;
-    final artistFontSize = isTablet ? _kArtistFontSizeTablet : _kArtistFontSizePhone;
+    final titleFontSize =
+        isTablet ? _kTitleFontSizeTablet : _kTitleFontSizePhone;
+    final artistFontSize =
+        isTablet ? _kArtistFontSizeTablet : _kArtistFontSizePhone;
 
     return Padding(
       padding: padding ?? EdgeInsets.zero,
@@ -86,9 +88,8 @@ class TrackInfoDisplay extends StatelessWidget {
 
   /// Builds the artist name.
   Widget _buildArtistName(String? artist, double fontSize) {
-    final displayArtist = artist != null
-        ? splitArtists(artist).join(', ')
-        : 'Unknown artist';
+    final displayArtist =
+        artist != null ? splitArtists(artist).join(', ') : 'Unknown artist';
 
     return Text(
       displayArtist,

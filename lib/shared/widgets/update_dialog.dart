@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:upgrader/upgrader.dart';
 import 'glassmorphic_dialog.dart';
 
-/// Aurora Music's update prompt.
+/// Noxira Music's update prompt.
 ///
 /// Subclasses [UpgradeAlert] so all version-comparison and store-URL logic
 /// stays inside the upgrader package. Only [showTheDialog] is overridden to
@@ -48,36 +48,13 @@ class _AuroraUpgradeAlertState extends UpgradeAlertState {
         ? _decode(rawNotes)
         : null;
 
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      barrierColor: Colors.black54,
-      builder: (ctx) => GlassmorphicDialog(
-        title: Row(
-          children: [
-            const Icon(
-              Icons.system_update_alt_rounded,
-              color: Colors.white,
-              size: 20,
-            ),
-            const SizedBox(width: 10),
-            Text(AppLocalizations.of(context).updateAvailable),
-          ],
-        ),
-        content: _Content(storeVersion: storeVersion, notes: notes),
-        actions: [
-          GlassmorphicTextButton(
-            isPrimary: true,
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              // Delegates to upgrader which opens the Play Store app directly
-              // via LaunchMode.externalNonBrowserApplication on Android.
-              onUserUpdated(ctx, false);
-            },
-            child: Text(AppLocalizations.of(context).updateNow),
-          ),
-        ],
-      ),
+    showAuroraUpdateDialog(
+      context,
+      storeVersion: storeVersion,
+      notes: notes,
+      // Delegates to upgrader which opens the Play Store app directly
+      // via LaunchMode.externalNonBrowserApplication on Android.
+      onUpdate: (ctx) => onUserUpdated(ctx, false),
     );
   }
 
@@ -88,6 +65,44 @@ class _AuroraUpgradeAlertState extends UpgradeAlertState {
       .replaceAll('&quot;', '"')
       .replaceAll('&#39;', "'")
       .replaceAll('&apos;', "'");
+}
+
+/// Shows the update prompt; [onUpdate] is null for a non-functional preview.
+Future<void> showAuroraUpdateDialog(
+  BuildContext context, {
+  String? storeVersion,
+  String? notes,
+  void Function(BuildContext dialogContext)? onUpdate,
+}) {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: onUpdate == null,
+    barrierColor: Colors.black54,
+    builder: (ctx) => GlassmorphicDialog(
+      title: Row(
+        children: [
+          const Icon(
+            Icons.system_update_alt_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Text(AppLocalizations.of(context).updateAvailable),
+        ],
+      ),
+      content: _Content(storeVersion: storeVersion, notes: notes),
+      actions: [
+        GlassmorphicTextButton(
+          isPrimary: true,
+          onPressed: () {
+            Navigator.of(ctx).pop();
+            onUpdate?.call(ctx);
+          },
+          child: Text(AppLocalizations.of(context).updateNow),
+        ),
+      ],
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -111,7 +126,8 @@ class _Content extends StatelessWidget {
       children: [
         Text(
           storeVersion != null
-              ? AppLocalizations.of(context).updateVersionAvailable(storeVersion!)
+              ? AppLocalizations.of(context)
+                  .updateVersionAvailable(storeVersion!)
               : AppLocalizations.of(context).updateNewVersionAvailable,
         ),
         if (notes != null) ...[

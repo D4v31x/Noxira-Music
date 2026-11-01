@@ -76,7 +76,8 @@ class AlbumSection extends StatelessWidget {
   }
 
   /// Builds the album card with navigation.
-  Widget _buildAlbumCard(BuildContext context, SongModel currentSong, String albumName) {
+  Widget _buildAlbumCard(
+      BuildContext context, SongModel currentSong, String albumName) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: _kHorizontalMargin),
       child: AlbumCard(

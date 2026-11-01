@@ -10,6 +10,7 @@ import 'package:aurora_music_v01/shared/providers/performance_mode_provider.dart
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:provider/provider.dart';
+import 'adaptive_blur.dart';
 
 // MARK: - Constants
 
@@ -83,7 +84,9 @@ class BlurDialog extends StatelessWidget {
     final dialogContent = DecoratedBox(
       decoration: BoxDecoration(
         color: backgroundColor ??
-            (useGlass ? Colors.white.withValues(alpha: 0.1) : Colors.grey.shade900),
+            (useGlass
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.grey.shade900),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: Colors.white.withValues(alpha: _kDefaultBorderOpacity),
@@ -124,7 +127,7 @@ class BlurDialog extends StatelessWidget {
         child: useGlass
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(borderRadius),
-                child: BackdropFilter(
+                child: AdaptiveBackdropFilter(
                   filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
                   child: dialogContent,
                 ),
@@ -143,7 +146,8 @@ class BlurDialog extends StatelessWidget {
           if (title != null) Expanded(child: title!),
           if (showCloseButton)
             IconButton(
-              icon: const iconoir.Xmark(color: Colors.white70, width: 24, height: 24),
+              icon: const iconoir.Xmark(
+                  color: Colors.white70, width: 24, height: 24),
               onPressed: () => Navigator.of(context).pop(),
             ),
         ],

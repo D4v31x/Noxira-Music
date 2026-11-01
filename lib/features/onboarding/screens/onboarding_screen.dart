@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/services/user_preferences.dart';
-import '../../../shared/providers/providers.dart';
+import '../../../shared/providers/performance_mode_provider.dart';
 import '../../home/screens/home_screen.dart';
 import '../pages/welcome_page.dart';
 import '../pages/app_info_page.dart';
@@ -13,7 +13,8 @@ import '../pages/permissions_page.dart';
 import '../pages/completion_page.dart';
 import '../pages/donation_page.dart';
 import '../pages/translation_contribution_page.dart';
-import '../../../shared/widgets/grainy_gradient_background.dart';
+import '../widgets/onboarding_background.dart';
+import '../widgets/onboarding_kit.dart';
 import '../../../shared/widgets/expanding_player.dart';
 
 class OnboardingScreen extends HookWidget {
@@ -24,35 +25,38 @@ class OnboardingScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final currentPage = useState(0);
+    final lowEnd =
+        context.select<PerformanceModeProvider, bool>((p) => p.isLowEndDevice);
 
-    final transitionController = useAnimationController(
-      duration: const Duration(milliseconds: 400),
+    final transition = useAnimationController(
+      duration: Duration(milliseconds: lowEnd ? 150 : 280),
       initialValue: 1.0,
     );
+    final presence = useMemoized(() => ValueNotifier<double>(1.0));
 
-    final fadeAnimation = useAnimation(
-      CurvedAnimation(
-        parent: transitionController,
-        curve: Curves.easeInOut,
-      ),
-    );
+    useEffect(() {
+      void sync() =>
+          presence.value = Curves.easeInOut.transform(transition.value);
+      transition.addListener(sync);
+      return () => transition.removeListener(sync);
+    }, [transition]);
+
+    Future<void> goTo(int page) async {
+      await transition.reverse();
+      currentPage.value = page;
+      transition.value = 1.0;
+    }
 
     Future<void> nextPage() async {
       if (currentPage.value < _totalPages - 1) {
-        await transitionController.reverse();
-        currentPage.value++;
-        await transitionController.forward();
+        await goTo(currentPage.value + 1);
       } else {
         await _completeOnboarding(context);
       }
     }
 
     Future<void> previousPage() async {
-      if (currentPage.value > 0) {
-        await transitionController.reverse();
-        currentPage.value--;
-        await transitionController.forward();
-      }
+      if (currentPage.value > 0) await goTo(currentPage.value - 1);
     }
 
     Widget getCurrentPage() {
@@ -101,52 +105,27 @@ class OnboardingScreen extends HookWidget {
       }
     }
 
-    final themeProvider = Provider.of<ThemeProvider>(context);
-
-    return GrainyGradientBackground(
-      colors: themeProvider.currentGradientColors,
-      noiseOpacity: 0.08,
+    return OnboardingBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            // Main content with crossfade
-            FadeTransition(
-              opacity: AlwaysStoppedAnimation(fadeAnimation),
-              child: getCurrentPage(),
-            ),
-
-            // Page indicator
-            if (currentPage.value > 0 && currentPage.value < _totalPages - 1)
-              Positioned(
-                bottom: 20,
-                left: 0,
-                right: 0,
-                child: SafeArea(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      _totalPages - 2,
-                      (index) {
-                        final pageIndex = index + 1;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          height: 8,
-                          width: currentPage.value == pageIndex ? 24 : 8,
-                          decoration: BoxDecoration(
-                            color: currentPage.value == pageIndex
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.white.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        );
-                      },
-                    ),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Expanded(
+                // The page's own parts fade and lift away (see
+                // [OnboardingExit]); a fade layer around the whole page would
+                // hide the glass backdrops.
+                child: OnboardingExit(
+                  presence: presence,
+                  child: KeyedSubtree(
+                    key: ValueKey(currentPage.value),
+                    child: getCurrentPage(),
                   ),
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -156,11 +135,13 @@ class OnboardingScreen extends HookWidget {
     await UserPreferences.setFirstTimeUser(false);
     if (context.mounted) {
       ExpandingPlayer.hiddenNotifier.value = false;
+      final lowEnd = context.read<PerformanceModeProvider>().isLowEndDevice;
       await Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
               const HomeScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            if (lowEnd) return FadeTransition(opacity: animation, child: child);
             const begin = Offset(0.0, 1.0);
             const end = Offset.zero;
             const curve = Curves.easeInOutCubic;
@@ -177,7 +158,7 @@ class OnboardingScreen extends HookWidget {
               ),
             );
           },
-          transitionDuration: const Duration(milliseconds: 800),
+          transitionDuration: Duration(milliseconds: lowEnd ? 250 : 800),
         ),
       );
     }

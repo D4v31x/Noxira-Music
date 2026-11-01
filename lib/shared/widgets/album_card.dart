@@ -1,3 +1,4 @@
+import 'motion/musicfy_motion.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -117,24 +118,31 @@ class _AlbumCardState extends State<AlbumCard>
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
-    return RepaintBoundary(
+    return Press3D(
+        child: RepaintBoundary(
       child: InkWell(
         onTap: widget.onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: isLowEnd ? null : LinearGradient(
-              colors: [
-                Colors.white.withValues(alpha: 0.1),
-                Colors.white.withValues(alpha: 0.2),
-              ],
-            ),
+            gradient: isLowEnd
+                ? null
+                : LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.1),
+                      Colors.white.withValues(alpha: 0.2),
+                    ],
+                  ),
             color: isLowEnd ? colorScheme.surfaceContainerHigh : null,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: isLowEnd ? colorScheme.outlineVariant : Colors.white.withValues(alpha: 0.1),
+              color: isLowEnd
+                  ? colorScheme.outlineVariant
+                  : Colors.white.withValues(alpha: 0.1),
             ),
             boxShadow: [
               BoxShadow(
@@ -147,7 +155,8 @@ class _AlbumCardState extends State<AlbumCard>
           child: Row(
             children: [
               // Album artwork - matches ArtistCard size (80x80)
-              RepaintBoundary(
+              ArtworkHero(
+                  child: RepaintBoundary(
                 child: Container(
                   width: 80,
                   height: 80,
@@ -166,7 +175,7 @@ class _AlbumCardState extends State<AlbumCard>
                     child: _buildArtwork(),
                   ),
                 ),
-              ),
+              )),
               const SizedBox(width: 20),
               // Album info
               Expanded(
@@ -207,7 +216,7 @@ class _AlbumCardState extends State<AlbumCard>
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildArtwork() {
@@ -220,6 +229,7 @@ class _AlbumCardState extends State<AlbumCard>
         width: 80,
         height: 80,
         gaplessPlayback: true, // Prevents flickering on reload
+        frameBuilder: coverFadeFrameBuilder,
         errorBuilder: (_, __, ___) => _buildPlaceholder(),
       );
     }

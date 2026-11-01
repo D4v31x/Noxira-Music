@@ -1,46 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../widgets/motion/musicfy_motion.dart';
 
 enum LowEndBackground { blobs, solid }
+
 enum HighEndBackground { blurredArtwork, solid }
-
-/// Fast, GPU-cheap page transition used app-wide for every
-/// [MaterialPageRoute]. A short fade + subtle upward slide reads as snappy
-/// while avoiding the default ZoomPageTransition's scrim/snapshot overhead,
-/// keeping pushes and pops fluid even on low-end devices.
-class _FastFadePageTransitionsBuilder extends PageTransitionsBuilder {
-  const _FastFadePageTransitionsBuilder();
-
-  @override
-  Duration get transitionDuration => const Duration(milliseconds: 220);
-
-  @override
-  Widget buildTransitions<T>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    final curved = CurvedAnimation(
-      parent: animation,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    );
-    return FadeTransition(
-      opacity: curved,
-      child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(0, 0.02),
-          end: Offset.zero,
-        ).animate(curved),
-        child: child,
-      ),
-    );
-  }
-}
 
 class AppThemePreset {
   const AppThemePreset({required this.name, required this.seedColor});
@@ -110,9 +75,9 @@ class ThemeProvider with ChangeNotifier {
 
   // Fallback color scheme when dynamic colors are not available
   ColorScheme get _defaultDarkColorScheme => ColorScheme.fromSeed(
-    seedColor: _customSeedColor,
-    brightness: Brightness.dark,
-  );
+        seedColor: _customSeedColor,
+        brightness: Brightness.dark,
+      );
 
   ThemeData get darkTheme => _cachedDarkTheme ??= _buildDarkTheme();
 
@@ -120,7 +85,6 @@ class ThemeProvider with ChangeNotifier {
     final colorScheme = _useDynamicColor && _darkDynamicColorScheme != null
         ? _darkDynamicColorScheme!
         : _defaultDarkColorScheme;
-
 
     return ThemeData(
       useMaterial3: true,
@@ -131,8 +95,11 @@ class ThemeProvider with ChangeNotifier {
       // Fast, lightweight transitions for all MaterialPageRoutes.
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: <TargetPlatform, PageTransitionsBuilder>{
-          TargetPlatform.android: _FastFadePageTransitionsBuilder(),
-          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: MusicfyPageTransitionsBuilder(),
+          TargetPlatform.iOS: MusicfyPageTransitionsBuilder(),
+          TargetPlatform.linux: MusicfyPageTransitionsBuilder(),
+          TargetPlatform.macOS: MusicfyPageTransitionsBuilder(),
+          TargetPlatform.windows: MusicfyPageTransitionsBuilder(),
         },
       ),
       appBarTheme: AppBarTheme(
@@ -214,14 +181,17 @@ class ThemeProvider with ChangeNotifier {
       _customSeedColor = Color(savedColor);
     }
     _selectedPresetIndex = prefs.getInt(_selectedPresetIndexKey) ?? 0;
-    _blurIntensity = (prefs.getDouble(_blurIntensityKey) ?? 25.0).clamp(5.0, 40.0);
+    _blurIntensity =
+        (prefs.getDouble(_blurIntensityKey) ?? 25.0).clamp(5.0, 40.0);
     _overlayOpacity = prefs.getDouble(_overlayOpacityKey) ?? 0.3;
     final lowEndBgIndex = prefs.getInt(_lowEndBackgroundKey);
-    if (lowEndBgIndex != null && lowEndBgIndex < LowEndBackground.values.length) {
+    if (lowEndBgIndex != null &&
+        lowEndBgIndex < LowEndBackground.values.length) {
       _lowEndBackground = LowEndBackground.values[lowEndBgIndex];
     }
     final highEndBgIndex = prefs.getInt(_highEndBackgroundKey);
-    if (highEndBgIndex != null && highEndBgIndex < HighEndBackground.values.length) {
+    if (highEndBgIndex != null &&
+        highEndBgIndex < HighEndBackground.values.length) {
       _highEndBackground = HighEndBackground.values[highEndBgIndex];
     }
     _cachedDarkTheme = null;
@@ -278,7 +248,7 @@ class ThemeProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Updates blur intensity in memory immediately (no disk write).  
+  /// Updates blur intensity in memory immediately (no disk write).
   /// Use in slider [onChanged] for real-time feedback; call [setBlurIntensity]
   /// in [onChangeEnd] to persist.
   void updateBlurIntensity(double value) {

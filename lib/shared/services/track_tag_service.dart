@@ -69,7 +69,8 @@ class TrackTagService extends ChangeNotifier {
     try {
       final file = await _tagsFile();
       final json = _tagsBySongId.map(
-        (songId, tags) => MapEntry(songId, tags.map((t) => t.toJson()).toList()),
+        (songId, tags) =>
+            MapEntry(songId, tags.map((t) => t.toJson()).toList()),
       );
       await file.writeAsString(jsonEncode(json));
     } catch (e) {

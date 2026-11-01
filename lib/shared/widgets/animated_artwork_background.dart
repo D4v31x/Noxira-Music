@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 import '../providers/performance_mode_provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/background_manager_service.dart';
+import 'blurred_image.dart';
+import 'adaptive_blur.dart';
 
 /// A beautiful animated background that displays heavily blurred artwork
 /// with smooth transitions.
@@ -177,7 +179,8 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
               opacity: (1.0 - _crossfadeAnimation.value).clamp(0.0, 1.0),
               child: child!,
             ),
-            child: _buildBlurredArtwork(_previousArtworkCache!, shouldBlur, blurIntensity),
+            child: _buildBlurredArtwork(
+                _previousArtworkCache!, shouldBlur, blurIntensity),
           ),
 
         // Current artwork (always visible once loaded, no animation wrapper when stable)
@@ -195,15 +198,16 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
                   ),
                 )
               : RepaintBoundary(
-                  child:
-                      _buildBlurredArtwork(widget.currentArtwork!, shouldBlur, blurIntensity),
+                  child: _buildBlurredArtwork(
+                      widget.currentArtwork!, shouldBlur, blurIntensity),
                 ),
 
         // Overlay for better text readability
         Container(
           color: shouldBlur
               ? Colors.black.withValues(alpha: overlayOpacity)
-              : Colors.black.withValues(alpha: (overlayOpacity + 0.3).clamp(0.0, 1.0)),
+              : Colors.black
+                  .withValues(alpha: (overlayOpacity + 0.3).clamp(0.0, 1.0)),
         ),
 
         // Vignette effect for depth - only apply in high-end mode
@@ -248,35 +252,48 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
     );
   }
 
-  Widget _buildBlurredArtwork(Uint8List artworkData, bool shouldBlur, double blurIntensity) {
+  Widget _buildBlurredArtwork(
+      Uint8List artworkData, bool shouldBlur, double blurIntensity) {
     return RepaintBoundary(
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // The image layer
-          Image.memory(
-            artworkData,
-            fit: BoxFit.cover,
-            width: double.infinity,
-            height: double.infinity,
-            gaplessPlayback: true,
-          ),
-          // The blur layer on top - only apply if performance mode allows
           if (shouldBlur)
-            BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: blurIntensity,
-                sigmaY: blurIntensity,
-              ),
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.2),
+            BlurredImage(
+              provider: MemoryImage(artworkData),
+              sigma: blurIntensity,
+              fallback: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.memory(
+                    artworkData,
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    gaplessPlayback: true,
+                  ),
+                  AdaptiveBackdropFilter(
+                    filter: ImageFilter.blur(
+                      sigmaX: blurIntensity,
+                      sigmaY: blurIntensity,
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ],
               ),
             )
           else
-            // Fallback: solid darker overlay instead of blur for low-end devices
-            Container(
-              color: Colors.black.withValues(alpha: 0.6),
+            Image.memory(
+              artworkData,
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              gaplessPlayback: true,
             ),
+          // Tint over the blur, or the low-end stand-in for it.
+          Container(
+            color: Colors.black.withValues(alpha: shouldBlur ? 0.2 : 0.6),
+          ),
         ],
       ),
     );
@@ -318,8 +335,7 @@ class SimpleBlurredBackground extends StatelessWidget {
 
     // High-end: if user chose solid background, show surface color
     if (shouldBlur) {
-      final themeProvider =
-          Provider.of<ThemeProvider>(context, listen: false);
+      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
       if (themeProvider.highEndBackground == HighEndBackground.solid) {
         return ColoredBox(
           color: surfaceColor,
@@ -330,8 +346,7 @@ class SimpleBlurredBackground extends StatelessWidget {
 
     // For low-end mode, use animated color points instead of artwork
     if (isLowEndMode) {
-      final themeProvider =
-          Provider.of<ThemeProvider>(context, listen: false);
+      final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
       if (themeProvider.lowEndBackground == LowEndBackground.blobs) {
         return Stack(
           fit: StackFit.expand,
@@ -359,24 +374,30 @@ class SimpleBlurredBackground extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              // The image layer
-              Image.memory(
-                artwork!,
-                fit: BoxFit.cover,
-                width: double.infinity,
-                height: double.infinity,
-                gaplessPlayback: true,
-              ),
-              // The blur layer on top
-              BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: blurIntensity,
-                  sigmaY: blurIntensity,
+              BlurredImage(
+                provider: MemoryImage(artwork!),
+                sigma: blurIntensity,
+                fallback: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.memory(
+                      artwork!,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      height: double.infinity,
+                      gaplessPlayback: true,
+                    ),
+                    AdaptiveBackdropFilter(
+                      filter: ImageFilter.blur(
+                        sigmaX: blurIntensity,
+                        sigmaY: blurIntensity,
+                      ),
+                      child: const SizedBox.expand(),
+                    ),
+                  ],
                 ),
-                child: Container(
-                  color: overlayColor,
-                ),
               ),
+              Container(color: overlayColor),
             ],
           ),
         ),
@@ -446,18 +467,19 @@ class _AnimatedColorPointsBackgroundState
       vsync: this,
     );
 
-    _mergedListenable = Listenable.merge([_positionController, _colorController]);
+    _mergedListenable =
+        Listenable.merge([_positionController, _colorController]);
     _positionController.forward();
   }
 
   // Normalized [xMin, xMax, yMin, yMax] region per blob — wider ranges
   // give each blob more room to roam while still covering the whole screen.
   static const List<List<double>> _blobRegions = [
-    [0.0,  0.75, 0.0,  0.75], // top-left (large)
-    [0.25, 1.0,  0.0,  0.75], // top-right (large)
-    [0.0,  1.0,  0.0,  1.0],  // centre — free to roam anywhere
-    [0.0,  0.75, 0.25, 1.0],  // bottom-left (large)
-    [0.25, 1.0,  0.25, 1.0],  // bottom-right (large)
+    [0.0, 0.75, 0.0, 0.75], // top-left (large)
+    [0.25, 1.0, 0.0, 0.75], // top-right (large)
+    [0.0, 1.0, 0.0, 1.0], // centre — free to roam anywhere
+    [0.0, 0.75, 0.25, 1.0], // bottom-left (large)
+    [0.25, 1.0, 0.25, 1.0], // bottom-right (large)
   ];
 
   List<Offset> _generateRandomPositions() {
@@ -474,7 +496,8 @@ class _AnimatedColorPointsBackgroundState
   void didChangeDependencies() {
     super.didChangeDependencies();
     // Register dependency so this is called whenever BackgroundManagerService notifies
-    _updateColorsFrom(Provider.of<BackgroundManagerService>(context).currentColors);
+    _updateColorsFrom(
+        Provider.of<BackgroundManagerService>(context).currentColors);
   }
 
   void _updateColorsFrom(List<Color> newColors) {
@@ -482,9 +505,7 @@ class _AnimatedColorPointsBackgroundState
     final expanded = _expandColors(newColors, target: 5);
     if (expanded.isNotEmpty && !_areColorsEqual(expanded, _targetColors)) {
       setState(() {
-        _currentColors = _targetColors.isNotEmpty
-            ? _targetColors
-            : expanded;
+        _currentColors = _targetColors.isNotEmpty ? _targetColors : expanded;
         _targetColors = expanded;
       });
 

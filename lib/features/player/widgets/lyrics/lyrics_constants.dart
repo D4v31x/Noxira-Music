@@ -65,6 +65,28 @@ TextStyle lyricsDialogTextStyle() => TextStyle(
       fontFamily: FontConstants.fontFamily,
     );
 
+// MARK: - Page header
+
+/// Cover thumbnail in the lyrics page header and the gap to the text.
+const double kLyricsHeaderArtSize = 56.0;
+const double kLyricsHeaderArtRadius = 10.0;
+const double kLyricsHeaderGap = 16.0;
+
+/// Matches the Now Playing title/artist styles so the shared elements fly
+/// without a size change on phones.
+const TextStyle kLyricsHeaderTitleStyle = TextStyle(
+  fontSize: 18,
+  fontWeight: FontWeight.w600,
+  color: Colors.white,
+  fontFamily: FontConstants.fontFamily,
+);
+
+const TextStyle kLyricsHeaderArtistStyle = TextStyle(
+  fontSize: 14,
+  color: Color(0xB3FFFFFF),
+  fontFamily: FontConstants.fontFamily,
+);
+
 // MARK: - Decorations
 
 BoxDecoration lyricsDialogDecoration() => BoxDecoration(

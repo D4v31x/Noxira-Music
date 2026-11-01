@@ -116,7 +116,7 @@ class PlaylistPersistenceService {
   /// Adds a song to a playlist.
   void addSongToPlaylist(String playlistId, SongModel song) {
     final playlist = getPlaylist(playlistId);
-    if (playlist != null && !playlist.songs.contains(song)) {
+    if (playlist != null && !playlist.songs.any((s) => s.id == song.id)) {
       playlist.songs.add(song);
       _markDirty();
     }
@@ -126,10 +126,9 @@ class PlaylistPersistenceService {
   void addSongsToPlaylist(String playlistId, List<SongModel> songs) {
     final playlist = getPlaylist(playlistId);
     if (playlist != null) {
+      final existing = playlist.songs.map((s) => s.id).toSet();
       for (final song in songs) {
-        if (!playlist.songs.contains(song)) {
-          playlist.songs.add(song);
-        }
+        if (existing.add(song.id)) playlist.songs.add(song);
       }
       _markDirty();
     }
@@ -139,7 +138,7 @@ class PlaylistPersistenceService {
   void removeSongFromPlaylist(String playlistId, SongModel song) {
     final playlist = getPlaylist(playlistId);
     if (playlist != null) {
-      playlist.songs.remove(song);
+      playlist.songs.removeWhere((s) => s.id == song.id);
       _markDirty();
     }
   }
@@ -205,8 +204,7 @@ class PlaylistPersistenceService {
     }
   }
 
-  void _updateOrCreatePlaylist(
-      String id, String name, List<SongModel> songs) {
+  void _updateOrCreatePlaylist(String id, String name, List<SongModel> songs) {
     final existingIndex = _playlists.indexWhere((p) => p.id == id);
 
     if (existingIndex != -1) {

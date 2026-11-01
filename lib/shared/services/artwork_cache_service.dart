@@ -1,9 +1,11 @@
+import '../widgets/motion/musicfy_motion.dart';
 import 'dart:collection';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'dart:async';
+import 'device_performance_service.dart';
 import 'local_caching_service.dart';
 
 class ArtworkCacheService {
@@ -12,12 +14,35 @@ class ArtworkCacheService {
   ArtworkCacheService._internal();
 
   // Cache size limits to prevent memory issues
-  static const int _maxArtworkCacheSize = 80; // Reduced from 100
-  static const int _maxArtistCacheSize = 40; // Reduced from 50
+  // These defaults are tuned per device tier by [applyPerformanceLevel].
+  static int _maxArtworkCacheSize = 80;
+  static int _maxArtistCacheSize = 40;
 
   // Artwork quality settings
-  static const int _thumbnailQuality = 100; // Full quality everywhere
-  static const int _thumbnailSize = 600;    // High-res for crisp display
+  static int _thumbnailQuality = 100;
+  static int _thumbnailSize = 600; // High-res for crisp display
+
+  /// Smaller thumbnails and caches on weaker devices: less decode time, less
+  /// memory pressure and fewer GC pauses while scrolling.
+  static void applyPerformanceLevel(PerformanceLevel level) {
+    switch (level) {
+      case PerformanceLevel.high:
+        _maxArtworkCacheSize = 80;
+        _maxArtistCacheSize = 40;
+        _thumbnailQuality = 100;
+        _thumbnailSize = 600;
+      case PerformanceLevel.medium:
+        _maxArtworkCacheSize = 60;
+        _maxArtistCacheSize = 30;
+        _thumbnailQuality = 90;
+        _thumbnailSize = 480;
+      case PerformanceLevel.low:
+        _maxArtworkCacheSize = 36;
+        _maxArtistCacheSize = 20;
+        _thumbnailQuality = 85;
+        _thumbnailSize = 320;
+    }
+  }
 
   final Map<int, Uint8List?> _artworkCache = {};
   final Map<int, ImageProvider<Object>?> _imageProviderCache = {};
@@ -179,11 +204,15 @@ class ArtworkCacheService {
     if (!highQuality &&
         _artworkCache.containsKey(id) &&
         _artworkCache[id] != null) {
-      if (kDebugMode) debugPrint('🎨 [ART_CACHE] Cache hit (id: $id, ${highQuality ? 'HQ' : 'thumb'})');    
+      if (kDebugMode)
+        debugPrint(
+            '🎨 [ART_CACHE] Cache hit (id: $id, ${highQuality ? 'HQ' : 'thumb'})');
       return _artworkCache[id];
     }
 
-    if (kDebugMode) debugPrint('🎨 [ART_CACHE] Cache miss — querying MediaStore for id: $id (${highQuality ? 'HQ' : 'thumb'})');
+    if (kDebugMode)
+      debugPrint(
+          '🎨 [ART_CACHE] Cache miss — querying MediaStore for id: $id (${highQuality ? 'HQ' : 'thumb'})');
     try {
       final artwork = await _audioQuery.queryArtwork(
         id,
@@ -194,7 +223,9 @@ class ArtworkCacheService {
 
       // Only cache low-quality thumbnails to save memory
       if (!highQuality && artwork != null && artwork.isNotEmpty) {
-        if (kDebugMode) debugPrint('🎨 [ART_CACHE] Stored ${artwork.length} bytes for id: $id');
+        if (kDebugMode)
+          debugPrint(
+              '🎨 [ART_CACHE] Stored ${artwork.length} bytes for id: $id');
         _artworkCache[id] = artwork;
         _updateAccessOrder(id, false);
       }
@@ -562,7 +593,10 @@ class _AlbumArtworkWidgetState extends State<_AlbumArtworkWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      CoverFade(token: _imageProvider, child: _buildArtwork(context));
+
+  Widget _buildArtwork(BuildContext context) {
     if (_imageProvider != null && !_isLoading) {
       return Container(
         width: widget.size,
@@ -673,7 +707,10 @@ class _ArtworkWidgetState extends State<_ArtworkWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      CoverFade(token: _imageProvider, child: _buildArtwork(context));
+
+  Widget _buildArtwork(BuildContext context) {
     if (_imageProvider != null && !_isLoading) {
       return Container(
         width: widget.size,
@@ -761,7 +798,10 @@ class _ArtistArtworkWidgetState extends State<_ArtistArtworkWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      CoverFade(token: _imageProvider, child: _buildArtwork(context));
+
+  Widget _buildArtwork(BuildContext context) {
     final borderRadius = widget.circular
         ? BorderRadius.circular(widget.size / 2)
         : BorderRadius.circular(8);
@@ -791,7 +831,7 @@ class _ArtistArtworkWidgetState extends State<_ArtistArtworkWidget> {
       child: Icon(
         Icons.person,
         color: Colors.white.withValues(alpha: 0.6),
-        size  : widget.size * 0.5,
+        size: widget.size * 0.5,
       ),
     );
   }
@@ -888,7 +928,10 @@ class _ArtistNameImageWidgetState extends State<_ArtistNameImageWidget> {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      CoverFade(token: _imageProvider, child: _buildArtwork(context));
+
+  Widget _buildArtwork(BuildContext context) {
     final borderRadius = widget.circular
         ? BorderRadius.circular(widget.size / 2)
         : BorderRadius.circular(8);
@@ -933,7 +976,7 @@ class _ArtistNameImageWidgetState extends State<_ArtistNameImageWidget> {
       child: Icon(
         Icons.person,
         color: Colors.white.withValues(alpha: 0.6),
-        size  : widget.size * 0.5,
+        size: widget.size * 0.5,
       ),
     );
   }

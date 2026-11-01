@@ -1,4 +1,4 @@
-/// Aurora Music Shared Services
+/// Noxira Music Shared Services
 ///
 /// This library exports all application services:
 /// - Audio services (player, handler, constants)

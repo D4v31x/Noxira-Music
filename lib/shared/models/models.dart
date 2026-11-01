@@ -1,4 +1,4 @@
-/// Aurora Music Shared Models
+/// Noxira Music Shared Models
 ///
 /// This library exports all data models:
 /// - [Playlist] - Playlist model

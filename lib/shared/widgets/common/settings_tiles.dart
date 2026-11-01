@@ -66,7 +66,8 @@ class SettingsSwitchTile extends StatelessWidget {
           secondary: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
+              color:
+                  Theme.of(context).colorScheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -232,7 +233,8 @@ class SettingsSliderTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final displayValue = valueFormatter?.call(value) ?? value.toStringAsFixed(1);
+    final displayValue =
+        valueFormatter?.call(value) ?? value.toStringAsFixed(1);
 
     return Column(
       children: [

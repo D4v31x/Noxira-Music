@@ -1,3 +1,4 @@
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -191,99 +192,108 @@ class _ForYouSectionState extends State<ForYouSection> {
       return const SizedBox.shrink();
     }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              // First row - Favorite Songs (full width)
-              if (hasLiked)
-                _FavoriteSongsCard(
-                  playlist: likedPlaylist,
-                  artworkService: _artworkService,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => PlaylistDetailScreen(
-                          playlist: likedPlaylist,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              if (hasLiked && _cachedItems.isNotEmpty)
-                const SizedBox(height: 10),
-              // Second row (2 items)
-              if (_cachedItems.isNotEmpty)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _cachedItems.isNotEmpty
-                          ? _ForYouItemCard(
-                              key: const ValueKey('foryou_0'),
-                              item: _cachedItems[0],
-                              artworkService: _artworkService,
-                              onTap: () =>
-                                  _handleItemTap(_cachedItems[0], audioService),
-                              onLongPress: _cachedItems[0].type == _ForYouItemType.song && _cachedItems[0].song != null
-                                  ? () => showSongContextMenu(context, _cachedItems[0].song!)
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          // First row - Favorite Songs (full width)
+          if (hasLiked)
+            _FavoriteSongsCard(
+              playlist: likedPlaylist,
+              artworkService: _artworkService,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PlaylistDetailScreen(
+                      playlist: likedPlaylist,
+                    ),
+                  ),
+                );
+              },
+            ),
+          if (hasLiked && _cachedItems.isNotEmpty) const SizedBox(height: 10),
+          // Second row (2 items)
+          if (_cachedItems.isNotEmpty)
+            Row(
+              children: [
+                Expanded(
+                  child: _cachedItems.isNotEmpty
+                      ? _ForYouItemCard(
+                          key: const ValueKey('foryou_0'),
+                          item: _cachedItems[0],
+                          artworkService: _artworkService,
+                          onTap: () =>
+                              _handleItemTap(_cachedItems[0], audioService),
+                          onLongPress:
+                              _cachedItems[0].type == _ForYouItemType.song &&
+                                      _cachedItems[0].song != null
+                                  ? () => showSongContextMenu(
+                                      context, _cachedItems[0].song!)
                                   : null,
-                            )
-                          : const SizedBox(),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _cachedItems.length > 1
-                          ? _ForYouItemCard(
-                              key: const ValueKey('foryou_1'),
-                              item: _cachedItems[1],
-                              artworkService: _artworkService,
-                              onTap: () =>
-                                  _handleItemTap(_cachedItems[1], audioService),
-                              onLongPress: _cachedItems[1].type == _ForYouItemType.song && _cachedItems[1].song != null
-                                  ? () => showSongContextMenu(context, _cachedItems[1].song!)
-                                  : null,
-                            )
-                          : const SizedBox(),
-                    ),
-                  ],
+                        )
+                      : const SizedBox(),
                 ),
-              if (_cachedItems.length > 2) const SizedBox(height: 10),
-              // Third row (2 items)
-              if (_cachedItems.length > 2)
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ForYouItemCard(
-                        key: const ValueKey('foryou_2'),
-                        item: _cachedItems[2],
-                        artworkService: _artworkService,
-                        onTap: () =>
-                            _handleItemTap(_cachedItems[2], audioService),
-                        onLongPress: _cachedItems[2].type == _ForYouItemType.song && _cachedItems[2].song != null
-                            ? () => showSongContextMenu(context, _cachedItems[2].song!)
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _cachedItems.length > 3
-                          ? _ForYouItemCard(
-                              key: const ValueKey('foryou_3'),
-                              item: _cachedItems[3],
-                              artworkService: _artworkService,
-                              onTap: () =>
-                                  _handleItemTap(_cachedItems[3], audioService),
-                              onLongPress: _cachedItems[3].type == _ForYouItemType.song && _cachedItems[3].song != null
-                                  ? () => showSongContextMenu(context, _cachedItems[3].song!)
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _cachedItems.length > 1
+                      ? _ForYouItemCard(
+                          key: const ValueKey('foryou_1'),
+                          item: _cachedItems[1],
+                          artworkService: _artworkService,
+                          onTap: () =>
+                              _handleItemTap(_cachedItems[1], audioService),
+                          onLongPress:
+                              _cachedItems[1].type == _ForYouItemType.song &&
+                                      _cachedItems[1].song != null
+                                  ? () => showSongContextMenu(
+                                      context, _cachedItems[1].song!)
                                   : null,
-                            )
-                          : const SizedBox(),
-                    ),
-                  ],
+                        )
+                      : const SizedBox(),
                 ),
-            ],
-          ),
-        );
+              ],
+            ),
+          if (_cachedItems.length > 2) const SizedBox(height: 10),
+          // Third row (2 items)
+          if (_cachedItems.length > 2)
+            Row(
+              children: [
+                Expanded(
+                  child: _ForYouItemCard(
+                    key: const ValueKey('foryou_2'),
+                    item: _cachedItems[2],
+                    artworkService: _artworkService,
+                    onTap: () => _handleItemTap(_cachedItems[2], audioService),
+                    onLongPress: _cachedItems[2].type == _ForYouItemType.song &&
+                            _cachedItems[2].song != null
+                        ? () =>
+                            showSongContextMenu(context, _cachedItems[2].song!)
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _cachedItems.length > 3
+                      ? _ForYouItemCard(
+                          key: const ValueKey('foryou_3'),
+                          item: _cachedItems[3],
+                          artworkService: _artworkService,
+                          onTap: () =>
+                              _handleItemTap(_cachedItems[3], audioService),
+                          onLongPress:
+                              _cachedItems[3].type == _ForYouItemType.song &&
+                                      _cachedItems[3].song != null
+                                  ? () => showSongContextMenu(
+                                      context, _cachedItems[3].song!)
+                                  : null,
+                        )
+                      : const SizedBox(),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 
   void _handleItemTap(_ForYouItem item, AudioPlayerService audioService) {
@@ -348,18 +358,20 @@ class _FavoriteSongsCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final localizations = AppLocalizations.of(context);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        height: 64,
-        child: GlassmorphicContainer(
-          borderRadius: BorderRadius.circular(12),
-          blur: 15,
-          child: _buildFavoriteContent(
-              context, isDark, localizations, colorScheme),
-        ),
-      ),
-    );
+    return Press3D(
+        cornerRadius: 16,
+        child: GestureDetector(
+          onTap: onTap,
+          child: SizedBox(
+            height: 64,
+            child: GlassmorphicContainer(
+              borderRadius: BorderRadius.circular(12),
+              blur: 15,
+              child: _buildFavoriteContent(
+                  context, isDark, localizations, colorScheme),
+            ),
+          ),
+        ));
   }
 
   Widget _buildFavoriteContent(BuildContext context, bool isDark,
@@ -479,75 +491,77 @@ class _ForYouItemCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return GestureDetector(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: SizedBox(
-        height: 64,
-        child: GlassmorphicContainer(
-          borderRadius: BorderRadius.circular(12),
-          blur: 15,
-          child: Row(
-            children: [
-              // Artwork
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.horizontal(left: Radius.circular(12)),
-                child: SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: _buildArtwork(),
-                ),
-              ),
-              // Title & subtitle
-              Expanded(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          item.title,
-                          style: TextStyle(
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            fontFamily: FontConstants.fontFamily,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (item.subtitle != null) ...[
-                        const SizedBox(height: 2),
-                        Flexible(
-                          child: Text(
-                            item.subtitle!,
-                            style: TextStyle(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.6)
-                                  : Colors.black54,
-                              fontSize: 11,
-                              fontFamily: FontConstants.fontFamily,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ],
+    return Press3D(
+        cornerRadius: 16,
+        child: GestureDetector(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: SizedBox(
+            height: 64,
+            child: GlassmorphicContainer(
+              borderRadius: BorderRadius.circular(12),
+              blur: 15,
+              child: Row(
+                children: [
+                  // Artwork
+                  ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(12)),
+                    child: SizedBox(
+                      width: 64,
+                      height: 64,
+                      child: _buildArtwork(),
+                    ),
                   ),
-                ),
+                  // Title & subtitle
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              item.title,
+                              style: TextStyle(
+                                color: isDark ? Colors.white : Colors.black87,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: FontConstants.fontFamily,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (item.subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            Flexible(
+                              child: Text(
+                                item.subtitle!,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? Colors.white.withValues(alpha: 0.6)
+                                      : Colors.black54,
+                                  fontSize: 11,
+                                  fontFamily: FontConstants.fontFamily,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildArtwork() {

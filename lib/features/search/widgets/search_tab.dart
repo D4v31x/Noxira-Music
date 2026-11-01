@@ -1,3 +1,4 @@
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'dart:async';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'dart:io';
@@ -288,7 +289,9 @@ class _SearchTabState extends State<SearchTab> {
       );
     }
 
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
@@ -315,7 +318,9 @@ class _SearchTabState extends State<SearchTab> {
                     )
                   : null,
               filled: true,
-              fillColor: isLowEnd ? colorScheme.surfaceContainerHigh : Colors.white.withValues(alpha: 0.1),
+              fillColor: isLowEnd
+                  ? colorScheme.surfaceContainerHigh
+                  : Colors.white.withValues(alpha: 0.1),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide.none,
@@ -342,7 +347,8 @@ class _SearchTabState extends State<SearchTab> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.search, size: 64, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.search,
+                size: 64, color: Colors.white.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).startType,
@@ -387,8 +393,7 @@ class _SearchTabState extends State<SearchTab> {
       children: [
         // Top Result Card
         if (_topResultType.isNotEmpty) ...[
-          _buildSectionHeader(
-              AppLocalizations.of(context).topResult),
+          _buildSectionHeader(AppLocalizations.of(context).topResult),
           const SizedBox(height: 8),
           _buildTopResultCard(),
           const SizedBox(height: 24),
@@ -396,8 +401,7 @@ class _SearchTabState extends State<SearchTab> {
 
         // Artists section (horizontal scroll)
         if (_filteredArtists.isNotEmpty && _topResultType != 'artist') ...[
-          _buildSectionHeader(
-              AppLocalizations.of(context).artists),
+          _buildSectionHeader(AppLocalizations.of(context).artists),
           const SizedBox(height: 8),
           SizedBox(
             height: 140,
@@ -494,8 +498,7 @@ class _SearchTabState extends State<SearchTab> {
           ),
         );
       },
-      typeLabel:
-          AppLocalizations.of(context).artists.toUpperCase(),
+      typeLabel: AppLocalizations.of(context).artists.toUpperCase(),
     );
   }
 
@@ -517,9 +520,6 @@ class _SearchTabState extends State<SearchTab> {
       subtitle: album.artist ?? '',
       trailing: Icon(Icons.chevron_right,
           color: Colors.white.withValues(alpha: 0.5), size: 32),
-      // Unique tag: the album section below may render the same album with
-      // 'album_image_*'; duplicate hero tags abort every hero transition.
-      heroTag: 'search_top_album_${album.id}',
     );
   }
 
@@ -545,7 +545,8 @@ class _SearchTabState extends State<SearchTab> {
   }
 
   Widget _buildArtistChip(SeparatedArtist artist) {
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: () {
         Navigator.push(
           context,
@@ -561,8 +562,7 @@ class _SearchTabState extends State<SearchTab> {
         margin: const EdgeInsets.only(right: 12),
         child: Column(
           children: [
-            Hero(
-              tag: 'artist_image_${artist.name}',
+            ArtworkHero(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(40),
                 child: _artworkService.buildArtistImageByName(artist.name,
@@ -584,11 +584,12 @@ class _SearchTabState extends State<SearchTab> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildAlbumCard(AlbumModel album) {
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: () {
         Navigator.push(
           context,
@@ -604,8 +605,7 @@ class _SearchTabState extends State<SearchTab> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Hero(
-              tag: 'album_image_${album.album}',
+            ArtworkHero(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: _artworkService.buildCachedAlbumArtwork(album.id,
@@ -641,7 +641,7 @@ class _SearchTabState extends State<SearchTab> {
           ],
         ),
       ),
-    );
+    ));
   }
 }
 
@@ -658,51 +658,63 @@ class _SearchSongTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return RepaintBoundary(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 3),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: isLowEnd ? Border.all(color: colorScheme.outlineVariant) : null,
+          border:
+              isLowEnd ? Border.all(color: colorScheme.outlineVariant) : null,
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Material(
-            color: isLowEnd ? colorScheme.surfaceContainerHigh : Colors.white.withValues(alpha: 0.07),
+            color: isLowEnd
+                ? colorScheme.surfaceContainerHigh
+                : Colors.white.withValues(alpha: 0.07),
             child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-        leading: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: artworkService.buildCachedArtwork(song.id),
-        ),
-        title: Text(
-          song.title,
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          song.artist ?? '',
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            color:
-                Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: IconButton(
-          icon: Icon(Icons.more_vert,
-              color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5)),
-          onPressed: () => showSongContextMenu(context, song),
-        ),
-        onTap: onTap,
-        ),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: artworkService.buildCachedArtwork(song.id),
+              ),
+              title: Text(
+                song.title,
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                song.artist ?? '',
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.color
+                      ?.withValues(alpha: 0.7),
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                icon: Icon(Icons.more_vert,
+                    color: Theme.of(context)
+                        .iconTheme
+                        .color
+                        ?.withValues(alpha: 0.5)),
+                onPressed: () => showSongContextMenu(context, song),
+              ),
+              onTap: onTap,
+            ),
           ),
         ),
       ),
@@ -720,7 +732,6 @@ class _TopResultCardWithArtwork extends HookWidget {
   final String title;
   final String subtitle;
   final Widget trailing;
-  final String? heroTag;
   final bool isAlbum;
 
   const _TopResultCardWithArtwork({
@@ -731,7 +742,6 @@ class _TopResultCardWithArtwork extends HookWidget {
     required this.title,
     required this.subtitle,
     required this.trailing,
-    this.heroTag,
     this.isAlbum = false,
   });
 
@@ -755,7 +765,9 @@ class _TopResultCardWithArtwork extends HookWidget {
     final hasArtwork = colorState.value.hasArtwork;
     final dominantColor = colorState.value.dominant;
     final accentColor = colorState.value.accent;
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     final cardDecoration = BoxDecoration(
@@ -794,22 +806,14 @@ class _TopResultCardWithArtwork extends HookWidget {
       decoration: cardDecoration,
       child: Row(
         children: [
-          heroTag != null
-              ? Hero(
-                  tag: heroTag!,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: isAlbum
-                        ? artworkService.buildCachedAlbumArtwork(id, size: 100)
-                        : artworkService.buildCachedArtwork(id, size: 100),
-                  ),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: isAlbum
-                      ? artworkService.buildCachedAlbumArtwork(id, size: 100)
-                      : artworkService.buildCachedArtwork(id, size: 100),
-                ),
+          ArtworkHero(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: isAlbum
+                  ? artworkService.buildCachedAlbumArtwork(id, size: 100)
+                  : artworkService.buildCachedArtwork(id, size: 100),
+            ),
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -868,7 +872,8 @@ class _TopResultCardWithArtwork extends HookWidget {
       ),
     );
 
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: onTap,
       child: RepaintBoundary(
         child: ClipRRect(
@@ -876,7 +881,7 @@ class _TopResultCardWithArtwork extends HookWidget {
           child: cardContent,
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _extractColors(
@@ -983,10 +988,8 @@ class _TopArtistResultCard extends HookWidget {
       decoration: cardDecoration,
       child: Row(
         children: [
-          Hero(
-            // Unique tag: the artist chips below may render the same artist
-            // with 'artist_image_*'; duplicate hero tags abort transitions.
-            tag: 'search_top_artist_${artist.name}',
+          ArtworkHero(
+            radius: 50,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(50),
               child: artworkService.buildArtistImageByName(
@@ -1053,7 +1056,8 @@ class _TopArtistResultCard extends HookWidget {
       ),
     );
 
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: onTap,
       child: RepaintBoundary(
         child: ClipRRect(
@@ -1061,7 +1065,7 @@ class _TopArtistResultCard extends HookWidget {
           child: cardContent,
         ),
       ),
-    );
+    ));
   }
 
   Future<void> _extractColors(

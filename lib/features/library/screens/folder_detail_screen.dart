@@ -1,10 +1,10 @@
+import '../../../shared/widgets/motion/touch_and_reveal.dart';
 import 'dart:io';
 import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
-import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/models/models.dart';
@@ -59,7 +59,9 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
-    _fetchSongs();
+    whenRouteSettled(context).then((_) {
+      if (mounted) _fetchSongs();
+    });
   }
 
   AudioPlayerService? _audioServiceRef;
@@ -178,7 +180,6 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
                         ? '${_allSongs.length} ${localizations.songs} · ${formatDuration(totalDuration)}'
                         : null,
                     badge: localizations.folder,
-                    heroTag: 'folder_icon_${widget.folderPath}',
                     accentColor: Colors.amber,
                   ),
 
@@ -220,122 +221,115 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
           final durationString =
               '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
 
-          return AnimationConfiguration.staggeredList(
-            position: index < 12 ? index : 0,
-            duration: const Duration(milliseconds: 200),
-            child: SlideAnimation(
-              verticalOffset: 30.0,
-              child: FadeInAnimation(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 4.0),
-                  child: GestureDetector(
-                    onTap: () {
-                      final songIndex =
-                          _allSongs.indexWhere((s) => s.id == song.id);
-                      if (songIndex >= 0) {
-                        Provider.of<AudioPlayerService>(context, listen: false)
-                            .setPlaylist(
-                          _allSongs,
-                          songIndex,
-                          source: playbackSource,
-                        );
-                      }
-                    },
-                    onLongPress: () => showSongContextMenu(context, song),
-                    child: GlassmorphicContainer(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        child: Row(
-                          children: [
-                            // Track number
-                            SizedBox(
-                              width: 32,
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Artwork
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: SizedBox(
-                                width: 42,
-                                height: 42,
-                                child: _artworkService
-                                    .buildCachedArtwork(song.id, size: 42),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Song info
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    song.title,
-                                    style: const TextStyle(
-                                      fontFamily: FontConstants.fontFamily,
-                                      color: Colors.white,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    splitArtists(song.artist ??
-                                            AppLocalizations.of(context)
-                                                .unknownArtist)
-                                        .join(', '),
-                                    style: TextStyle(
-                                      fontFamily: FontConstants.fontFamily,
-                                      color: Colors.white.withValues(alpha: 0.5),
-                                      fontSize: 12,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Duration
-                            Text(
-                              durationString,
+          return RevealOnAppear(
+              revealKey: '${identityHashCode(ModalRoute.of(context))}_0_$index',
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                child: GestureDetector(
+                  onTap: () {
+                    final songIndex =
+                        _allSongs.indexWhere((s) => s.id == song.id);
+                    if (songIndex >= 0) {
+                      Provider.of<AudioPlayerService>(context, listen: false)
+                          .setPlaylist(
+                        _allSongs,
+                        songIndex,
+                        source: playbackSource,
+                      );
+                    }
+                  },
+                  onLongPress: () => showSongContextMenu(context, song),
+                  child: GlassmorphicContainer(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      child: Row(
+                        children: [
+                          // Track number
+                          SizedBox(
+                            width: 32,
+                            child: Text(
+                              '${index + 1}',
                               style: TextStyle(
                                 fontFamily: FontConstants.fontFamily,
-                                color: Colors.white.withValues(alpha: 0.5),
-                                fontSize: 13,
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
                               ),
+                              textAlign: TextAlign.center,
                             ),
-                            // More
-                            const SizedBox(width: 4),
-                            GestureDetector(
-                              onTap: () => showSongContextMenu(context, song),
-                              child: iconoir.MoreVert(
-                                color: Colors.white.withValues(alpha: 0.5),
-                                width: 20,
-                                height: 20,
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Artwork
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 42,
+                              height: 42,
+                              child: _artworkService.buildCachedArtwork(song.id,
+                                  size: 42),
                             ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Song info
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  song.title,
+                                  style: const TextStyle(
+                                    fontFamily: FontConstants.fontFamily,
+                                    color: Colors.white,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  splitArtists(song.artist ??
+                                          AppLocalizations.of(context)
+                                              .unknownArtist)
+                                      .join(', '),
+                                  style: TextStyle(
+                                    fontFamily: FontConstants.fontFamily,
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    fontSize: 12,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                          // Duration
+                          Text(
+                            durationString,
+                            style: TextStyle(
+                              fontFamily: FontConstants.fontFamily,
+                              color: Colors.white.withValues(alpha: 0.5),
+                              fontSize: 13,
+                            ),
+                          ),
+                          // More
+                          const SizedBox(width: 4),
+                          GestureDetector(
+                            onTap: () => showSongContextMenu(context, song),
+                            child: iconoir.MoreVert(
+                              color: Colors.white.withValues(alpha: 0.5),
+                              width: 20,
+                              height: 20,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          );
+              ));
         },
         childCount: _displayedSongs.length + (_hasMoreSongs ? 1 : 0),
       ),

@@ -1,4 +1,4 @@
-/// Aurora Music Search Feature
+/// Noxira Music Search Feature
 ///
 /// This library exports the search feature components:
 /// - Search widgets

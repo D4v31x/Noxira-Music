@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../core/constants/font_constants.dart';
 import './glassmorphic_container.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'adaptive_blur.dart';
 
 /// Model class representing a package dependency
 class PackageInfo {
@@ -24,7 +25,7 @@ class PackageInfo {
 class PackagesDialog extends StatelessWidget {
   const PackagesDialog({super.key});
 
-  /// List of all packages used in Aurora Music
+  /// List of all packages used in Noxira Music
   static const List<PackageInfo> packages = [
     PackageInfo(
       name: 'just_audio',
@@ -203,130 +204,132 @@ class PackagesDialog extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          child: BackdropFilter(
+          child: AdaptiveBackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: GlassmorphicContainer(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.15),
-                      Colors.white.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(15)),
-                ),
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.inventory_2_outlined,
-                      color: Colors.white,
-                      size: 40,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Open Source Packages',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: FontConstants.fontFamily,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.15),
+                          Colors.white.withValues(alpha: 0.05),
+                        ],
                       ),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(15)),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${packages.length} packages used',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
-                        fontFamily: FontConstants.fontFamily,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Package List
-              Flexible(
-                child: ListView.separated(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: packages.length,
-                  separatorBuilder: (context, index) => Divider(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    height: 1,
-                  ),
-                  itemBuilder: (context, index) {
-                    final package = packages[index];
-                    return _PackageTile(
-                      package: package,
-                      onTap: package.url != null
-                          ? () => _launchURL(package.url!)
-                          : null,
-                    );
-                  },
-                ),
-              ),
-
-              // Footer with acknowledgment
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Thank you to all the open source contributors!',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 12,
-                        fontFamily: FontConstants.fontFamily,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.1),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.inventory_2_outlined,
+                          color: Colors.white,
+                          size: 40,
                         ),
-                        child: const Text(
-                          'Close',
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Open Source Packages',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
                             fontFamily: FontConstants.fontFamily,
                           ),
                         ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${packages.length} packages used',
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.7),
+                            fontSize: 14,
+                            fontFamily: FontConstants.fontFamily,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Package List
+                  Flexible(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      itemCount: packages.length,
+                      separatorBuilder: (context, index) => Divider(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        height: 1,
+                      ),
+                      itemBuilder: (context, index) {
+                        final package = packages[index];
+                        return _PackageTile(
+                          package: package,
+                          onTap: package.url != null
+                              ? () => _launchURL(package.url!)
+                              : null,
+                        );
+                      },
+                    ),
+                  ),
+
+                  // Footer with acknowledgment
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.1)),
                       ),
                     ),
-                  ],
-                ),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Thank you to all the open source contributors!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 12,
+                            fontFamily: FontConstants.fontFamily,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: TextButton.styleFrom(
+                              backgroundColor:
+                                  Colors.white.withValues(alpha: 0.1),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Close',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                fontFamily: FontConstants.fontFamily,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
           ),
         ),
       ),

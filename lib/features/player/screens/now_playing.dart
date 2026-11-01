@@ -22,21 +22,40 @@ import '../../../shared/services/background_manager_service.dart';
 import '../../../shared/services/lyrics_service.dart';
 import '../../../shared/utils/responsive_utils.dart';
 import '../../../shared/widgets/app_background.dart';
+import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/common/scrolling_text.dart';
+import '../../../shared/widgets/motion/like_burst.dart';
 import '../../../shared/widgets/music_metadata_widget.dart';
 import '../../library/screens/artist_detail_screen.dart';
 import '../screens/track_tag_editor_screen.dart';
+import '../widgets/lyrics/mini_lyrics_ticker.dart';
+import '../widgets/lyrics_page_launcher.dart';
+import '../widgets/player_page_route.dart';
 import '../widgets/player_widgets.dart';
 import '../widgets/track_tags_section.dart';
 import 'fullscreen_artwork.dart';
 import 'music_visualizer_screen.dart';
-import 'fullscreen_lyrics.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
-
-
+import '../../../shared/widgets/adaptive_blur.dart';
 
 // MARK: - Now Playing Screen
+
+/// Clamping physics that refuse all movement while the page is being pulled
+/// down to the mini player; the blocked delta surfaces as overscroll instead.
+class _DismissAwareScrollPhysics extends ClampingScrollPhysics {
+  const _DismissAwareScrollPhysics({super.parent});
+
+  @override
+  _DismissAwareScrollPhysics applyTo(ScrollPhysics? ancestor) =>
+      _DismissAwareScrollPhysics(parent: buildParent(ancestor));
+
+  @override
+  double applyBoundaryConditions(ScrollMetrics position, double value) {
+    if (ExpandingPlayer.isDismissDragging) return value - position.pixels;
+    return super.applyBoundaryConditions(position, value);
+  }
+}
 
 /// The main Now Playing screen widget.
 ///
@@ -46,13 +65,44 @@ class NowPlayingScreen extends StatefulWidget {
   /// Optional callback for when the down arrow is pressed.
   final VoidCallback? onClose;
 
-  const NowPlayingScreen({super.key, this.onClose});
+  /// Key placed on the artwork so the expand transition can fly the mini
+  /// player thumbnail to it.
+  final GlobalKey? artworkKey;
+
+  /// Keys on the title and artist text for the same transition.
+  final GlobalKey? titleKey;
+  final GlobalKey? artistKey;
+
+  /// Route animation; while it is below 1 the artwork is hidden because the
+  /// transition's shuttle is drawing it instead.
+  final Animation<double>? entryAnimation;
+
+  const NowPlayingScreen({
+    super.key,
+    this.onClose,
+    this.artworkKey,
+    this.titleKey,
+    this.artistKey,
+    this.entryAnimation,
+  });
 
   @override
   State<NowPlayingScreen> createState() => _NowPlayingScreenState();
 }
 
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
+  Offset _doubleTapPosition = Offset.zero;
+
+  /// Double tap on the cover always flies a heart; it only likes if not liked yet.
+  void _likeFromDoubleTap() {
+    final service = Provider.of<AudioPlayerService>(context, listen: false);
+    final song = service.currentSong;
+    if (song == null) return;
+    final liked = service.likedSongsNotifier.value.contains(song.id.toString());
+    LikeBurst.play(context, origin: _doubleTapPosition);
+    if (!liked) service.toggleLike(song);
+  }
+
   // MARK: - Private Fields
 
   static final _artworkService = ArtworkCacheService();
@@ -67,7 +117,36 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   // True while the outer page ListView is being actively dragged by the
   // user — lets the compact lyrics preview pause its own auto re-center so
   // the two don't visually fight each other mid-scroll.
-  final ValueNotifier<bool> _outerScrollingNotifier = ValueNotifier<bool>(false);
+  final ValueNotifier<bool> _outerScrollingNotifier =
+      ValueNotifier<bool>(false);
+
+  // Everything except the shared artwork/title/artist appears only over the
+  // last stretch of the expand, once those have almost landed, so they fly
+  // over a clean background and no empty slots show. It is a pure function of
+  // the animation value, so there is no state to get out of step with a drag.
+  late final CurvedAnimation? _foregroundFade = widget.entryAnimation == null
+      ? null
+      : CurvedAnimation(
+          parent: widget.entryAnimation!,
+          curve: const Interval(0.78, 1.0, curve: Curves.easeOut),
+        );
+
+  // The sections below the fold are costly to build; building them in the
+  // first frame stalls the start of the expand, so they wait until it is
+  // nearly done.
+  late bool _showHeavySections =
+      widget.entryAnimation == null || widget.entryAnimation!.value >= 0.9;
+
+  void _onEntryTick() {
+    if (!_showHeavySections && widget.entryAnimation!.value >= 0.9) {
+      setState(() => _showHeavySections = true);
+    }
+  }
+
+  // Resolved once in initState: stream and async callbacks can fire while this
+  // element is deactivated, when a Provider lookup would throw.
+  late final AudioPlayerService _audioService;
+  late final BackgroundManagerService _backgroundManager;
 
   StreamSubscription<Duration>? _positionSub;
   int? _pendingSongLoadId;
@@ -78,6 +157,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   @override
   void initState() {
     super.initState();
+    _audioService = Provider.of<AudioPlayerService>(context, listen: false);
+    _backgroundManager =
+        Provider.of<BackgroundManagerService>(context, listen: false);
+    if (!_showHeavySections) widget.entryAnimation!.addListener(_onEntryTick);
     _initializeScreen();
   }
 
@@ -87,10 +170,15 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     _lyricsNotifier.dispose();
     _currentLyricIndexNotifier.dispose();
     _outerScrollingNotifier.dispose();
+    widget.entryAnimation?.removeListener(_onEntryTick);
+    _foregroundFade?.dispose();
     _positionSub?.cancel();
     _songChangeSubscription?.cancel();
-    _artworkService.artworkRevisionNotifier.removeListener(_onArtworkRevisionChanged);
-    TimedLyricsService().lyricsRevisionNotifier.removeListener(_onLyricsRevisionChanged);
+    _artworkService.artworkRevisionNotifier
+        .removeListener(_onArtworkRevisionChanged);
+    TimedLyricsService()
+        .lyricsRevisionNotifier
+        .removeListener(_onLyricsRevisionChanged);
     _pendingSongLoadId = null;
     super.dispose();
   }
@@ -98,8 +186,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   // MARK: - Initialization
 
   void _initializeScreen() {
-    final audioPlayerService =
-        Provider.of<AudioPlayerService>(context, listen: false);
+    final audioPlayerService = _audioService;
 
     // Initialize with current song
     final currentSong = audioPlayerService.currentSong;
@@ -134,37 +221,30 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
 
     // Reload artwork/lyrics for the current song if either was edited
     // while this screen is already open, without waiting for a song change.
-    _artworkService.artworkRevisionNotifier.addListener(_onArtworkRevisionChanged);
-    TimedLyricsService().lyricsRevisionNotifier.addListener(_onLyricsRevisionChanged);
+    _artworkService.artworkRevisionNotifier
+        .addListener(_onArtworkRevisionChanged);
+    TimedLyricsService()
+        .lyricsRevisionNotifier
+        .addListener(_onLyricsRevisionChanged);
   }
 
   void _onArtworkRevisionChanged() {
     if (!mounted) return;
-    final audioPlayerService =
-        Provider.of<AudioPlayerService>(context, listen: false);
-    final song = audioPlayerService.currentSong;
+    final song = _audioService.currentSong;
     if (song != null) _updateArtwork(song);
   }
 
   void _onLyricsRevisionChanged() {
     if (!mounted) return;
-    final audioPlayerService =
-        Provider.of<AudioPlayerService>(context, listen: false);
-    if (audioPlayerService.currentSong != null) {
-      _initializeTimedLyrics(audioPlayerService);
+    if (_audioService.currentSong != null) {
+      _initializeTimedLyrics(_audioService);
     }
   }
 
   Future<void> _ensureBackgroundArtwork() async {
-    final backgroundManager =
-        Provider.of<BackgroundManagerService>(context, listen: false);
-    final audioPlayerService =
-        Provider.of<AudioPlayerService>(context, listen: false);
-
-    if (audioPlayerService.currentSong != null &&
-        !backgroundManager.hasArtwork) {
-      await backgroundManager
-          .updateColorsFromSong(audioPlayerService.currentSong);
+    final song = _audioService.currentSong;
+    if (song != null && !_backgroundManager.hasArtwork) {
+      await _backgroundManager.updateColorsFromSong(song);
     }
   }
 
@@ -184,14 +264,21 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     final title = titleRaw.trim().isEmpty ? 'Unknown' : titleRaw.trim();
 
     // Load cached first
-    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title);
+    final songDuration = audioPlayerService.audioPlayer.duration ??
+        ((song.duration ?? 0) > 0
+            ? Duration(milliseconds: song.duration!)
+            : null);
+    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title,
+        songDuration: songDuration);
     if (!mounted || song.id != _pendingSongLoadId) return;
 
     lyrics ??= await timedLyricsService.fetchTimedLyrics(
-        artist,
-        title,
-        songDuration: audioPlayerService.audioPlayer.duration,
-      );
+      artist,
+      title,
+      songDuration: songDuration,
+      audioPath: song.data,
+      album: song.album,
+    );
     if (!mounted || song.id != _pendingSongLoadId) return;
 
     _lyricsNotifier.value = lyrics;
@@ -248,10 +335,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         Provider.of<AudioPlayerService>(context, listen: false);
 
     return PopScope(
+      // Route the system back gesture through the animated collapse.
+      canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (didPop && widget.onClose != null) {
-          // Pop happened, callback for cleanup
-        }
+        if (!didPop) _handleClose();
       },
       child: AppBackground(
         child: Stack(
@@ -259,7 +346,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             Scaffold(
               backgroundColor: Colors.transparent,
               extendBodyBehindAppBar: true,
-              appBar: _buildAppBar(audioPlayerService),
+              appBar: _fadeAppBar(_buildAppBar(audioPlayerService)),
               body: _buildBody(audioPlayerService),
             ),
             // Sleep timer indicator floats in the toolbar area without
@@ -277,6 +364,23 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   }
 
   // MARK: - App Bar
+
+  Widget _fadeForeground(Widget child) {
+    final fade = _foregroundFade;
+    return fade == null ? child : FadeTransition(opacity: fade, child: child);
+  }
+
+  List<Widget> _fadeAll(List<Widget> items) =>
+      items.map(_fadeForeground).toList();
+
+  PreferredSizeWidget _fadeAppBar(AppBar bar) {
+    final fade = _foregroundFade;
+    if (fade == null) return bar;
+    return PreferredSize(
+      preferredSize: bar.preferredSize,
+      child: FadeTransition(opacity: fade, child: bar),
+    );
+  }
 
   AppBar _buildAppBar(AudioPlayerService audioPlayerService) {
     return AppBar(
@@ -305,10 +409,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     Navigator.push(
       context,
       PageRouteBuilder<void>(
-        transitionDuration:        const Duration(milliseconds: 400),
+        transitionDuration: const Duration(milliseconds: 400),
         pageBuilder: (ctx, animation, _) => FadeTransition(
           opacity: animation,
-          child:   const MusicVisualizerScreen(),
+          child: const MusicVisualizerScreen(),
         ),
       ),
     );
@@ -369,17 +473,15 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     );
   }
 
-  void _openFullscreenLyrics(AudioPlayerService audioPlayerService) {
+  void _openFullscreenLyrics(AudioPlayerService audioPlayerService,
+      {GlobalKey? sourceKey}) {
     if (audioPlayerService.currentSong == null) return;
-    Navigator.push(
+    openLyricsPage(
       context,
-      MaterialPageRoute(
-        builder: (context) => FullscreenLyricsScreen(
-          onLyricsChanged: (lyrics) {
-            if (mounted) _lyricsNotifier.value = lyrics;
-          },
-        ),
-      ),
+      sourceKey: sourceKey,
+      onLyricsChanged: (lyrics) {
+        if (mounted) _lyricsNotifier.value = lyrics;
+      },
     );
   }
 
@@ -408,7 +510,9 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     final horizontalPadding = isTablet ? 32.0 : 20.0;
     final verticalPadding = isTablet ? 50.0 : 40.0;
     final maxContentWidth = isTablet ? 900.0 : double.infinity;
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
@@ -417,6 +521,19 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           constraints: BoxConstraints(maxWidth: maxContentWidth),
           child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
+              if (notification.depth == 0) {
+                // Pulling down at the top of the page collapses it to the mini
+                // player. While that is happening the list is frozen, so any
+                // overscroll (up or down) only moves the collapse.
+                if (notification is OverscrollNotification) {
+                  if (notification.dragDetails != null) {
+                    ExpandingPlayer.dismissDragUpdate(-notification.overscroll);
+                  }
+                } else if (notification is ScrollEndNotification) {
+                  ExpandingPlayer.dismissDragEnd(
+                      notification.dragDetails?.primaryVelocity ?? 0);
+                }
+              }
               if (notification is ScrollStartNotification &&
                   notification.dragDetails != null) {
                 _outerScrollingNotifier.value = true;
@@ -427,7 +544,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             },
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
+                parent: _DismissAwareScrollPhysics(),
               ),
               padding: EdgeInsets.symmetric(
                 horizontal: horizontalPadding,
@@ -435,64 +552,75 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
               ),
               children: [
                 SizedBox(height: isTablet ? 40 : 30),
-              _buildArtworkWithInfo(audioPlayerService, isTablet, isLandscape),
-              SizedBox(height: isTablet && isLandscape ? 40 : 24),
-              PlayerProgressBar(
-                audioService: audioPlayerService,
-                isTablet: isTablet,
-              ),
-              SizedBox(height: isTablet ? 28 : 20),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: isTablet ? 60.0 : 32.0),
-                child: Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(vertical: isTablet ? 12 : 8),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(100),
-                    color: isLowEnd
-                        ? colorScheme.surfaceContainerHigh
-                        : Colors.white.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: isLowEnd
-                          ? colorScheme.outlineVariant
-                          : Colors.white.withValues(alpha: 0.15),
-                    ),
-                  ),
-                  child: PlayerControls(
-                    audioPlayerService: audioPlayerService,
+                _buildArtworkWithInfo(
+                    audioPlayerService, isTablet, isLandscape),
+                ..._fadeAll([
+                  SizedBox(height: isTablet && isLandscape ? 40 : 24),
+                  PlayerProgressBar(
+                    audioService: audioPlayerService,
                     isTablet: isTablet,
                   ),
-                ),
-              ),
-              SizedBox(height: isTablet ? 28 : 20),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SongLikeButton(
-                      audioPlayerService: audioPlayerService,
-                      size: isTablet ? 34 : 30,
+                  SizedBox(height: isTablet ? 28 : 20),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                        horizontal: isTablet ? 60.0 : 32.0),
+                    child: Container(
+                      width: double.infinity,
+                      padding:
+                          EdgeInsets.symmetric(vertical: isTablet ? 12 : 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(100),
+                        color: isLowEnd
+                            ? colorScheme.surfaceContainerHigh
+                            : Colors.white.withValues(alpha: 0.1),
+                        border: Border.all(
+                          color: isLowEnd
+                              ? colorScheme.outlineVariant
+                              : Colors.white.withValues(alpha: 0.15),
+                        ),
+                      ),
+                      child: PlayerControls(
+                        audioPlayerService: audioPlayerService,
+                        isTablet: isTablet,
+                      ),
                     ),
+                  ),
+                  SizedBox(height: isTablet ? 28 : 20),
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SongLikeButton(
+                          audioPlayerService: audioPlayerService,
+                          size: isTablet ? 34 : 30,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (_showHeavySections) ...[
+                    TrackTagsSection(
+                      audioPlayerService: audioPlayerService,
+                      isTablet: isTablet,
+                    ),
+                    _buildLyricsSection(audioPlayerService, isTablet),
+                    SizedBox(height: isTablet ? 40 : 30),
+                    if (audioPlayerService.currentSong != null)
+                      AlbumSection(audioPlayerService: audioPlayerService),
+                    SizedBox(height: isTablet ? 40 : 30),
+                    ArtistSection(audioPlayerService: audioPlayerService),
+                    SizedBox(height: isTablet ? 40 : 30),
+                    if (audioPlayerService.currentSong != null)
+                      MusicMetadataWidget(
+                          song: audioPlayerService.currentSong!),
+                    SizedBox(height: isTablet ? 40 : 30),
+                    SimilarArtistsSection(
+                        audioPlayerService: audioPlayerService),
+                    SizedBox(height: isTablet ? 40 : 30),
                   ],
-                ),
-              ),
-              TrackTagsSection(
-                audioPlayerService: audioPlayerService,
-                isTablet: isTablet,
-              ),
-              _buildLyricsSection(audioPlayerService, isTablet),
-              SizedBox(height: isTablet ? 40 : 30),
-              if (audioPlayerService.currentSong != null)
-                AlbumSection(audioPlayerService: audioPlayerService),
-              SizedBox(height: isTablet ? 40 : 30),
-              ArtistSection(audioPlayerService: audioPlayerService),
-              SizedBox(height: isTablet ? 40 : 30),
-              if (audioPlayerService.currentSong != null)
-                MusicMetadataWidget(song: audioPlayerService.currentSong!),
-              SizedBox(height: isTablet ? 40 : 30),
-            ],
-          ),
+                ]),
+              ],
+            ),
           ),
         ),
       ),
@@ -522,7 +650,9 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     double artworkSize,
     bool isTablet,
   ) {
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       clipBehavior: Clip.none,
@@ -532,31 +662,56 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         // height, guaranteeing a fixed gap between the card and the progress bar.
         Padding(
           padding: EdgeInsets.only(top: artworkSize - 25),
-          child: Container(
-            width: artworkSize,
-            decoration: BoxDecoration(
-              color: isLowEnd ? colorScheme.surfaceContainerHigh : Colors.white.withValues(alpha: 0.1),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(2),
-                bottom: Radius.circular(16),
-              ),
-              border: Border.all(
-                color: isLowEnd
-                    ? colorScheme.outlineVariant
-                    : Colors.white.withValues(alpha: 0.15),
-              ),
-            ),
-            padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+          child: AnimatedBuilder(
+            animation:
+                _foregroundFade ?? const AlwaysStoppedAnimation<double>(1),
             child: _buildTrackInfo(audioPlayerService, isTablet),
+            builder: (context, info) {
+              // Only the card chrome fades; the text inside is a shared element.
+              final fade = _foregroundFade?.value ?? 1.0;
+              final fill = isLowEnd
+                  ? colorScheme.surfaceContainerHigh
+                  : Colors.white.withValues(alpha: 0.1);
+              final outline = isLowEnd
+                  ? colorScheme.outlineVariant
+                  : Colors.white.withValues(alpha: 0.15);
+              return Container(
+                width: artworkSize,
+                decoration: BoxDecoration(
+                  color: fill.withValues(alpha: fill.a * fade),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(2),
+                    bottom: Radius.circular(16),
+                  ),
+                  border: Border.all(
+                    color: outline.withValues(alpha: outline.a * fade),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+                child: info,
+              );
+            },
           ),
         ),
         // Artwork (last = on top in Z order)
         SizedBox(
+          key: widget.artworkKey,
           width: artworkSize,
           height: artworkSize,
-          child: _buildHeroArtwork(),
+          child: _hideDuringEntry(_buildHeroArtwork()),
         ),
       ],
+    );
+  }
+
+  Widget _hideDuringEntry(Widget child) {
+    final animation = widget.entryAnimation;
+    if (animation == null) return child;
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) =>
+          Opacity(opacity: animation.value >= 1.0 ? 1.0 : 0.0, child: child),
     );
   }
 
@@ -571,27 +726,31 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         children: [
           // Artwork
           SizedBox(
+            key: widget.artworkKey,
             width: artworkSize,
             height: artworkSize,
-            child: GestureDetector(
-              onTap: _openFullscreenArtwork,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
+            child: _hideDuringEntry(KeyedSubtree(
+              key: PlayerPageSources.art,
+              child: _hideForShuttle(GestureDetector(
+                onTap: _openFullscreenArtwork,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildArtworkImage(),
+                  ),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: _buildArtworkImage(),
-                ),
-              ),
-            ),
+              )),
+            )),
           ),
           const SizedBox(width: 40),
           // Song info
@@ -625,9 +784,28 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     );
   }
 
+  /// Hides [child] while the lyrics page's shuttle draws its own copy.
+  Widget _hideForShuttle(Widget child) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: PlayerPageSources.hidden,
+      child: child,
+      builder: (context, hidden, child) =>
+          Opacity(opacity: hidden ? 0 : 1, child: child),
+    );
+  }
+
   Widget _buildHeroArtwork() {
+    return KeyedSubtree(
+      key: PlayerPageSources.art,
+      child: _hideForShuttle(_buildSquareArtwork()),
+    );
+  }
+
+  Widget _buildSquareArtwork() {
     return GestureDetector(
       onTap: _openFullscreenArtwork,
+      onDoubleTapDown: (d) => _doubleTapPosition = d.globalPosition,
+      onDoubleTap: _likeFromDoubleTap,
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
@@ -699,20 +877,60 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         _buildTitleText(audioPlayerService, isTablet: isTablet),
         const SizedBox(height: 4),
         _buildArtistText(audioPlayerService, isTablet: isTablet),
+        _buildLyricsTicker(audioPlayerService),
       ],
+    );
+  }
+
+  final GlobalKey _tickerKey = GlobalKey(debugLabel: 'miniLyricsTicker');
+
+  /// The current lyric line under the artist; tapping it opens the lyrics
+  /// page, which grows out of the ticker.
+  Widget _buildLyricsTicker(AudioPlayerService audioPlayerService) {
+    return ValueListenableBuilder<List<TimedLyric>?>(
+      valueListenable: _lyricsNotifier,
+      builder: (context, lyrics, _) {
+        final has = lyrics != null && lyrics.isNotEmpty;
+        return _fadeForeground(AnimatedSize(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: !has
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  key: _tickerKey,
+                  padding: const EdgeInsets.only(top: 12),
+                  child: MiniLyricsTicker(
+                    lyrics: lyrics,
+                    player: audioPlayerService.audioPlayer,
+                    onTap: () => _openFullscreenLyrics(
+                      audioPlayerService,
+                      sourceKey: _tickerKey,
+                    ),
+                  ),
+                ),
+        ));
+      },
     );
   }
 
   Widget _buildTitleText(AudioPlayerService audioPlayerService,
       {required bool isTablet}) {
-    return ScrollingText(
-      text: audioPlayerService.currentSong?.title ?? 'No song playing',
-      style: TextStyle(
-        fontSize: isTablet ? 22 : 18,
-        fontWeight: FontWeight.w600,
-        color: Colors.white,
-        fontFamily: FontConstants.fontFamily,
-      ),
+    final style = TextStyle(
+      fontSize: isTablet ? 22 : 18,
+      fontWeight: FontWeight.w600,
+      color: Colors.white,
+      fontFamily: FontConstants.fontFamily,
+    );
+    PlayerPageSources.titleStyle = style;
+    PlayerPageSources.centered = !isTablet;
+    return KeyedSubtree(
+      key: PlayerPageSources.title,
+      child: _hideForShuttle(_hideDuringEntry(ScrollingText(
+        textKey: widget.titleKey,
+        text: audioPlayerService.currentSong?.title ?? 'No song playing',
+        style: style,
+      ))),
     );
   }
 
@@ -722,16 +940,22 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         audioPlayerService.currentSong?.artist ?? 'Unknown artist';
     final artists = ArtistSeparatorService().splitArtists(artistString);
 
-    return Text(
-      artists.join(', '),
-      style: TextStyle(
-        fontSize: isTablet ? 16 : 14,
-        color: Colors.white.withValues(alpha: 0.7),
-        fontFamily: FontConstants.fontFamily,
-      ),
-      textAlign: TextAlign.center,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
+    final style = TextStyle(
+      fontSize: isTablet ? 16 : 14,
+      color: Colors.white.withValues(alpha: 0.7),
+      fontFamily: FontConstants.fontFamily,
+    );
+    PlayerPageSources.artistStyle = style;
+    return KeyedSubtree(
+      key: PlayerPageSources.artist,
+      child: _hideForShuttle(_hideDuringEntry(Text(
+        artists.join(', '),
+        key: widget.artistKey,
+        style: style,
+        textAlign: isTablet ? TextAlign.start : TextAlign.center,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ))),
     );
   }
 
@@ -872,11 +1096,15 @@ class _ArtistSelectionSheetState extends State<_ArtistSelectionSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     final sheetBody = DecoratedBox(
       decoration: BoxDecoration(
-        color: isLowEnd ? colorScheme.surfaceContainerHigh : Colors.white.withValues(alpha: 0.08),
+        color: isLowEnd
+            ? colorScheme.surfaceContainerHigh
+            : Colors.white.withValues(alpha: 0.08),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: isLowEnd
             ? Border.all(color: colorScheme.outlineVariant)
@@ -886,96 +1114,96 @@ class _ArtistSelectionSheetState extends State<_ArtistSelectionSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Drag handle
-              Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(top: 12, bottom: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
+          Container(
+            width: 36,
+            height: 4,
+            margin: const EdgeInsets.only(top: 12, bottom: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+            child: Text(
+              AppLocalizations.of(context).selectArtist,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.3,
               ),
-              // Header
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                child: Text(
-                  AppLocalizations.of(context).selectArtist,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.3,
+            ),
+          ),
+          Divider(
+            color: Colors.white.withValues(alpha: 0.1),
+            height: 1,
+          ),
+          // Artist rows
+          ...widget.artists.map(
+            (artist) {
+              final imagePath = _imageCache[artist];
+              return Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => widget.onArtistSelected(artist),
+                  splashColor: Colors.white.withValues(alpha: 0.08),
+                  highlightColor: Colors.white.withValues(alpha: 0.05),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        // Artist avatar — image if cached, else initials
+                        ClipOval(
+                          child: SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: imagePath != null
+                                ? Image.file(
+                                    File(imagePath),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _ArtistInitialAvatar(name: artist),
+                                  )
+                                : _ArtistInitialAvatar(name: artist),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            artist,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        iconoir.NavArrowRight(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 20,
+                          height: 20,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Divider(
-                color: Colors.white.withValues(alpha: 0.1),
-                height: 1,
-              ),
-              // Artist rows
-              ...widget.artists.map(
-                (artist) {
-                  final imagePath = _imageCache[artist];
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () => widget.onArtistSelected(artist),
-                      splashColor: Colors.white.withValues(alpha: 0.08),
-                      highlightColor: Colors.white.withValues(alpha: 0.05),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        child: Row(
-                          children: [
-                            // Artist avatar — image if cached, else initials
-                            ClipOval(
-                              child: SizedBox(
-                                width: 36,
-                                height: 36,
-                                child: imagePath != null
-                                    ? Image.file(
-                                        File(imagePath),
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            _ArtistInitialAvatar(name: artist),
-                                      )
-                                    : _ArtistInitialAvatar(name: artist),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                artist,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            iconoir.NavArrowRight(
-                              color: Colors.white.withValues(alpha: 0.4),
-                              width: 20,
-                              height: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              SizedBox(height: 12 + bottomInset),
-            ],
+              );
+            },
           ),
+          SizedBox(height: 12 + bottomInset),
+        ],
+      ),
     );
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: isLowEnd
           ? sheetBody
-          : BackdropFilter(
+          : AdaptiveBackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: sheetBody,
             ),

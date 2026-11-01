@@ -8,6 +8,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../providers/performance_mode_provider.dart';
 import '../services/donation_service.dart';
 import '../utils/changelog_content.dart';
+import 'adaptive_blur.dart';
 
 /// Popup shown after an app update: logo, version, key highlights and a donation reminder.
 class UpdatePopupDialog extends StatelessWidget {
@@ -172,7 +173,7 @@ class UpdatePopupDialog extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: shouldBlur
-              ? BackdropFilter(
+              ? AdaptiveBackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: content,
                 )

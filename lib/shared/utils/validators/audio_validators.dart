@@ -143,9 +143,9 @@ String sanitizeSearchInput(String input) {
 
 /// Sanitizes metadata strings (track names, artist names, etc.).
 ///
-/// Removes control characters, normalizes newlines to spaces, and trims 
+/// Removes control characters, normalizes newlines to spaces, and trims
 /// whitespace while preserving valid Unicode characters for international names.
-/// 
+///
 /// Note: Newlines are normalized to spaces to prevent log injection
 /// and display issues in single-line contexts.
 String sanitizeMetadata(String? metadata) {

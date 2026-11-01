@@ -1,4 +1,4 @@
-/// Aurora Music Home Feature
+/// Noxira Music Home Feature
 ///
 /// This library exports the home feature components:
 /// - Home screens

@@ -103,8 +103,10 @@ class _RecentlyPlayedSectionState extends State<RecentlyPlayedSection> {
           child: Text(
             AppLocalizations.of(context).noData,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.6),
                 ),
           ),
         ),
@@ -114,7 +116,9 @@ class _RecentlyPlayedSectionState extends State<RecentlyPlayedSection> {
     return SizedBox(
       height: 190,
       child: ListView.builder(
-        scrollCacheExtent: const ScrollCacheExtent.pixels(AppConfig.horizontalListCacheExtent), scrollDirection: Axis.horizontal,
+        scrollCacheExtent:
+            const ScrollCacheExtent.pixels(AppConfig.horizontalListCacheExtent),
+        scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         itemCount: displaySongs.length,
         itemBuilder: (context, index) {
@@ -127,7 +131,8 @@ class _RecentlyPlayedSectionState extends State<RecentlyPlayedSection> {
               key: ValueKey(song.id),
               songId: song.id,
               title: song.title,
-              artist: splitArtists(song.artist ?? '').firstOrNull ?? AppLocalizations.of(context).unknownArtist,
+              artist: splitArtists(song.artist ?? '').firstOrNull ??
+                  AppLocalizations.of(context).unknownArtist,
               artworkService: _artworkService,
               onTap: () {
                 final audioPlayerService =

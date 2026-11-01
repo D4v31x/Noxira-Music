@@ -1,157 +1,144 @@
-import 'package:flutter/material.dart';
-import 'package:aurora_music_v01/core/constants/font_constants.dart';
-import 'package:provider/provider.dart';
-import '../../../shared/providers/providers.dart';
-import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/widgets/pill_button.dart';
-import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../l10n/generated/app_localizations.dart';
+import '../../../l10n/supported_languages.dart';
+import '../../../shared/providers/theme_provider.dart';
+import '../widgets/onboarding_kit.dart';
+
+/// Last step: a summary of what was set up, and the way into the app.
 class CompletionPage extends StatefulWidget {
   final VoidCallback onComplete;
 
-  const CompletionPage({
-    super.key,
-    required this.onComplete,
-  });
+  const CompletionPage({super.key, required this.onComplete});
 
   @override
   State<CompletionPage> createState() => _CompletionPageState();
 }
 
-class _CompletionPageState extends State<CompletionPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+class _CompletionPageState extends State<CompletionPage> {
+  String? _language;
+  bool? _libraryAllowed;
 
   @override
   void initState() {
     super.initState();
-
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-      ),
-    );
-
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOutCubic),
-      ),
-    );
-
-    _controller.forward();
+    unawaited(_load());
   }
 
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString('languageCode') ?? 'en';
+    final language = SupportedLanguages.all
+        .where((l) => l.code == code)
+        .map((l) => l.nativeName)
+        .firstOrNull;
+    var allowed = false;
+    try {
+      allowed = await Permission.audio.isGranted ||
+          await Permission.storage.isGranted;
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _language = language ?? code;
+      _libraryAllowed = allowed;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.isDarkMode;
-    final textColor = isDark ? Colors.white : Colors.black;
-    final subtitleColor =
-        isDark ? Colors.white.withValues(alpha: 0.7) : Colors.black.withValues(alpha: 0.7);
+    final l10n = AppLocalizations.of(context);
+    final theme = Provider.of<ThemeProvider>(context);
+    final look = theme.useDynamicColor
+        ? l10n.onboardingDynamicColors
+        : (theme.selectedPresetIndex >= 0 &&
+                theme.selectedPresetIndex < AppThemePreset.presets.length
+            ? AppThemePreset.presets[theme.selectedPresetIndex].name
+            : l10n.accentColor);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-
-              // Page icon
-              SlideTransition(
-                position: _slideAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: iconoir.Check(
-                    color: Theme.of(context).colorScheme.primary,
-                    height: 56,
-                    width: 56,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
-
-              // Title
-              SlideTransition(
-                position: _slideAnimation,
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: Text(
-                    AppLocalizations.of(context)
-                        .onboardingCompletionTitle,
-                    style: TextStyle(
-                      fontFamily: FontConstants.fontFamily,
-                      fontSize: 36,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                      letterSpacing: -0.8,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Description
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: Text(
-                  AppLocalizations.of(context)
-                      .onboardingCompletionSubtitle,
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w400,
-                    color: subtitleColor,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-
-              const Spacer(),
-
-              // Get started button
-              FadeTransition(
-                opacity: _fadeAnimation,
-                child: PillButton(
-                  text: AppLocalizations.of(context)
-                      .onboardingStartListening,
-                  onPressed: widget.onComplete,
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                ),
-              ),
-
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
+    final rows = <({String label, String value, bool good})>[
+      (
+        label: l10n.onboardingSummaryLanguage,
+        value: _language ?? '…',
+        good: true,
       ),
+      (label: l10n.onboardingSummaryTheme, value: look, good: true),
+      (
+        label: l10n.onboardingSummaryLibrary,
+        value: _libraryAllowed == null
+            ? '…'
+            : (_libraryAllowed!
+                ? l10n.onboardingAllowed
+                : l10n.onboardingNotAllowed),
+        good: _libraryAllowed ?? true,
+      ),
+    ];
+
+    return StepScaffold(
+      title: l10n.onboardingCompletionTitle,
+      lead: l10n.onboardingCompletionSubtitle,
+      primaryLabel: l10n.onboardingStartListening,
+      onPrimary: widget.onComplete,
+      children: [
+        Column(
+          spacing: 12,
+          children: [
+            for (var i = 0; i < rows.length; i++)
+              GlassRow(
+                order: 2 + i,
+                title: rows[i].value,
+                body: rows[i].label,
+                trailing: _PopIn(
+                  delay: Duration(milliseconds: 650 + i * 160),
+                  child: Icon(
+                    rows[i].good
+                        ? Icons.check_circle_rounded
+                        : Icons.remove_circle_outline_rounded,
+                    color: rows[i].good ? Colors.white : Colors.white54,
+                    size: 24,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Pops its child in (scale with a little overshoot) after [delay].
+class _PopIn extends StatefulWidget {
+  const _PopIn({required this.delay, required this.child});
+
+  final Duration delay;
+  final Widget child;
+
+  @override
+  State<_PopIn> createState() => _PopInState();
+}
+
+class _PopInState extends State<_PopIn> {
+  bool _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(widget.delay, () {
+      if (mounted) setState(() => _shown = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedScale(
+      scale: _shown ? 1 : 0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOutBack,
+      child: widget.child,
     );
   }
 }

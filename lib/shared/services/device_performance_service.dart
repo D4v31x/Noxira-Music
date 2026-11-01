@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 /// Performance levels for different device capabilities
 enum PerformanceLevel {
@@ -32,7 +33,14 @@ class DevicePerformanceService {
 
   DevicePerformanceService._();
 
+  static const MethodChannel _probeChannel =
+      MethodChannel('aurora/device_probe');
+
   PerformanceLevel? _cachedLevel;
+  HardwareProbe? _lastProbe;
+
+  /// The raw hardware facts the last classification was based on (Android).
+  HardwareProbe? get lastProbe => _lastProbe;
 
   /// Get the recommended performance level for the current device.
   Future<PerformanceLevel> getPerformanceLevel() async {
@@ -47,8 +55,16 @@ class DevicePerformanceService {
     try {
       final deviceInfo = DeviceInfoPlugin();
       if (Platform.isAndroid) {
-        final info = await deviceInfo.androidInfo;
-        _cachedLevel = _evaluateAndroid(info);
+        // Real hardware facts first: Build.MODEL / BRAND can be spoofed by
+        // custom ROMs (a budget phone can report itself as a flagship).
+        final probe = await _probeAndroidHardware();
+        if (probe != null) {
+          _lastProbe = probe;
+          _cachedLevel = _evaluateHardware(probe);
+        } else {
+          final info = await deviceInfo.androidInfo;
+          _cachedLevel = _evaluateAndroid(info);
+        }
       } else if (Platform.isIOS) {
         final info = await deviceInfo.iosInfo;
         _cachedLevel = _evaluateIOS(info);
@@ -64,6 +80,72 @@ class DevicePerformanceService {
   }
 
   // ─────────────────────────────────────────────────────────────────── Android
+
+  Future<HardwareProbe?> _probeAndroidHardware() async {
+    try {
+      final map = await _probeChannel
+          .invokeMapMethod<String, dynamic>('probe')
+          .timeout(const Duration(seconds: 2));
+      if (map == null) return null;
+      return HardwareProbe.fromMap(map);
+    } catch (e) {
+      debugPrint('[DevicePerformance] Hardware probe unavailable: $e');
+      return null;
+    }
+  }
+
+  /// SoCs that are slow regardless of how much RAM a ROM/vendor pairs them
+  /// with (matched against Build.HARDWARE / BOARD / SOC_MODEL).
+  static final RegExp _weakSoc = RegExp(
+    r'exynos\s*(7570|7578|7580|7870|7880|7884|7885)|'
+    r'mt(6580|6582|6735|6737|6739|6750|6753|6755|6757|6761|6762|6763|6765)|'
+    r'sc(7731|9820|9832|9863)|'
+    r'msm(8909|8916|8917|8937|8940|8952|8953)|qm215|sdm(429|430|439)',
+  );
+
+  /// Scores real hardware: RAM (0-3) + peak CPU clock (0-3).
+  ///   high   >= 5  (e.g. 8 GB / 2.7 GHz+ flagships)
+  ///   medium >= 2  (e.g. 4-6 GB mid-range)
+  ///   low    <  2  (e.g. 3 GB / 1.6 GHz budget phones)
+  PerformanceLevel _evaluateHardware(HardwareProbe p) {
+    if (p.sdk < 21 || p.isLowRamDevice) return PerformanceLevel.low;
+
+    final ramPts = p.totalRamMb < 3400
+        ? 0
+        : p.totalRamMb < 5000
+            ? 1
+            : p.totalRamMb < 7000
+                ? 2
+                : 3;
+
+    final freq = p.maxCpuFreqMhz;
+    var score = freq == null
+        ? ramPts * 2
+        : ramPts +
+            (freq < 1900
+                ? 0
+                : freq < 2300
+                    ? 1
+                    : freq < 2700
+                        ? 2
+                        : 3);
+    if (p.cpuCores <= 4) score -= 1;
+    if (p.sdk < 26) score -= 1;
+
+    var level = score >= 5
+        ? PerformanceLevel.high
+        : score >= 2
+            ? PerformanceLevel.medium
+            : PerformanceLevel.low;
+
+    final soc = '${p.hardware} ${p.board} ${p.socModel}'.toLowerCase();
+    if (_weakSoc.hasMatch(soc)) level = PerformanceLevel.low;
+
+    debugPrint('[DevicePerformance] ram=${p.totalRamMb}MB '
+        'freq=${freq}MHz cores=${p.cpuCores} soc="$soc" '
+        'score=$score -> $level');
+    return level;
+  }
 
   PerformanceLevel _evaluateAndroid(AndroidDeviceInfo info) {
     final sdk = info.version.sdkInt;
@@ -246,8 +328,7 @@ class DevicePerformanceService {
     }
 
     // Fallback: iOS version as a rough proxy when machine string is unexpected.
-    final iosMajor =
-        int.tryParse(info.systemVersion.split('.').first) ?? 0;
+    final iosMajor = int.tryParse(info.systemVersion.split('.').first) ?? 0;
     if (iosMajor >= 17) return PerformanceLevel.high;
     if (iosMajor >= 15) return PerformanceLevel.medium;
     return PerformanceLevel.low;
@@ -306,4 +387,44 @@ class AnimationSettings {
     required this.frameRate,
     required this.enableBlur,
   });
+}
+
+/// Hardware facts read natively on Android.
+class HardwareProbe {
+  final int totalRamMb;
+  final bool isLowRamDevice;
+  final int cpuCores;
+  final int? maxCpuFreqMhz;
+  final String hardware;
+  final String board;
+  final String socModel;
+  final int sdk;
+  final bool hasVulkan;
+  final double refreshRate;
+
+  const HardwareProbe({
+    required this.totalRamMb,
+    required this.isLowRamDevice,
+    required this.cpuCores,
+    required this.maxCpuFreqMhz,
+    required this.hardware,
+    required this.board,
+    required this.socModel,
+    required this.sdk,
+    required this.hasVulkan,
+    required this.refreshRate,
+  });
+
+  factory HardwareProbe.fromMap(Map<String, dynamic> m) => HardwareProbe(
+        totalRamMb: (m['totalRamMb'] as num?)?.toInt() ?? 0,
+        isLowRamDevice: m['isLowRamDevice'] as bool? ?? false,
+        cpuCores: (m['cpuCores'] as num?)?.toInt() ?? 1,
+        maxCpuFreqMhz: (m['maxCpuFreqMhz'] as num?)?.toInt(),
+        hardware: m['hardware'] as String? ?? '',
+        board: m['board'] as String? ?? '',
+        socModel: m['socModel'] as String? ?? '',
+        sdk: (m['sdk'] as num?)?.toInt() ?? 0,
+        hasVulkan: m['hasVulkan'] as bool? ?? false,
+        refreshRate: (m['refreshRate'] as num?)?.toDouble() ?? 60,
+      );
 }

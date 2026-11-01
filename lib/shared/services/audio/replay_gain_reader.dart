@@ -111,7 +111,8 @@ class ReplayGainReader {
         // after large embedded artwork are not missed.
         final tagSize = _synchsafe(magic, 6);
         // Cap at 20 MB to guard against corrupt headers.
-        final readLen = math.min(10 + tagSize, math.min(20 * 1024 * 1024, fileLen));
+        final readLen =
+            math.min(10 + tagSize, math.min(20 * 1024 * 1024, fileLen));
         await raf.setPosition(0);
         final bytes = await raf.read(readLen);
         final gain = _parseId3v2(bytes);
@@ -209,8 +210,9 @@ class ReplayGainReader {
       } else {
         // 4-char frame ID + 4-byte size + 2-byte flags
         frameId = String.fromCharCodes(bytes.sublist(pos, pos + 4));
-        frameSize =
-            version == 4 ? _synchsafe(bytes, pos + 4) : _uint32be(bytes, pos + 4);
+        frameSize = version == 4
+            ? _synchsafe(bytes, pos + 4)
+            : _uint32be(bytes, pos + 4);
         pos += 10;
       }
 
@@ -346,8 +348,7 @@ class ReplayGainReader {
         valueEnd++;
       }
 
-      value =
-          String.fromCharCodes(bytes.sublist(valueStart, valueEnd)).trim();
+      value = String.fromCharCodes(bytes.sublist(valueStart, valueEnd)).trim();
     }
 
     final db = _parseDb(value);
@@ -386,8 +387,7 @@ class ReplayGainReader {
   // Vorbis comment block (shared by FLAC; also used via byte-scan for OGG)
   // ---------------------------------------------------------------------------
 
-  static double? _parseVorbisCommentBlock(
-      Uint8List bytes, int start, int end) {
+  static double? _parseVorbisCommentBlock(Uint8List bytes, int start, int end) {
     if (start + 4 > end) return null;
 
     // Vendor string length (little-endian uint32)
@@ -590,8 +590,7 @@ class ReplayGainReader {
             .trim();
       } else if (type == 'data' && pos + 16 <= pos + size) {
         // 4-byte data-type, 4-byte locale, then the UTF-8 value.
-        value =
-            String.fromCharCodes(b.sublist(pos + 16, pos + size)).trim();
+        value = String.fromCharCodes(b.sublist(pos + 16, pos + size)).trim();
       }
       pos += size;
     }
@@ -688,8 +687,7 @@ class ReplayGainReader {
 
   /// Parses a ReplayGain dB string such as "-6.50 dB", "+1.23 dB", or "-6.50".
   static double? _parseDb(String value) {
-    final match =
-        RegExp(r'^([+-]?\d+(?:\.\d+)?)').firstMatch(value.trim());
+    final match = RegExp(r'^([+-]?\d+(?:\.\d+)?)').firstMatch(value.trim());
     if (match == null) return null;
     return double.tryParse(match.group(1)!);
   }

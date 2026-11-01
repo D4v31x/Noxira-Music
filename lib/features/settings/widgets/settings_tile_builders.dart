@@ -46,9 +46,8 @@ class SettingsTiles {
     final bgColor = isLowEnd
         ? cs.surfaceContainerHigh
         : Colors.white.withValues(alpha: 0.08);
-    final borderColor = isLowEnd
-        ? cs.outlineVariant
-        : Colors.white.withValues(alpha: 0.12);
+    final borderColor =
+        isLowEnd ? cs.outlineVariant : Colors.white.withValues(alpha: 0.12);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -118,8 +117,7 @@ class SettingsTiles {
     Color? iconColor,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveColor =
-        iconColor ?? Theme.of(context).colorScheme.primary;
+    final effectiveColor = iconColor ?? Theme.of(context).colorScheme.primary;
     return Column(
       children: [
         if (!isFirst) _divider(context),
@@ -222,15 +220,14 @@ class SettingsTiles {
     double arrowStep = 0.05,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final display =
-        valueFormatter?.call(draft ?? value) ?? (draft ?? value).toStringAsFixed(1);
+    final display = valueFormatter?.call(draft ?? value) ??
+        (draft ?? value).toStringAsFixed(1);
     final snap = defaultValue != null ? (max - min) * 0.025 : 0.0;
 
     ValueChanged<double> wrapChange(ValueChanged<double> fn) =>
         defaultValue == null
             ? fn
-            : (v) =>
-                fn((v - defaultValue).abs() <= snap ? defaultValue : v);
+            : (v) => fn((v - defaultValue).abs() <= snap ? defaultValue : v);
 
     final wrappedOnChanged = wrapChange(onChanged);
     final wrappedOnChangeEnd =
@@ -240,12 +237,10 @@ class SettingsTiles {
       children: [
         if (!isFirst) _divider(context),
         Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              _iconChip(context, icon,
-                  Theme.of(context).colorScheme.primary),
+              _iconChip(context, icon, Theme.of(context).colorScheme.primary),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -287,8 +282,7 @@ class SettingsTiles {
                     const SizedBox(height: 8),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor:
-                            Theme.of(context).colorScheme.primary,
+                        activeTrackColor: Theme.of(context).colorScheme.primary,
                         inactiveTrackColor: isDark
                             ? Colors.white.withValues(alpha: 0.1)
                             : Colors.black.withValues(alpha: 0.1),
@@ -298,8 +292,8 @@ class SettingsTiles {
                             .primary
                             .withValues(alpha: 0.2),
                         trackHeight: 4,
-                        thumbShape: const RoundSliderThumbShape(
-                            enabledThumbRadius: 8),
+                        thumbShape:
+                            const RoundSliderThumbShape(enabledThumbRadius: 8),
                       ),
                       child: _buildSliderWidget(
                         context,
@@ -397,8 +391,8 @@ class SettingsTiles {
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: iconoir.NavArrowLeft(
-                color: arrowColor, width: 20, height: 20),
+            child:
+                iconoir.NavArrowLeft(color: arrowColor, width: 20, height: 20),
           ),
         ),
         Expanded(child: slider),
@@ -410,8 +404,8 @@ class SettingsTiles {
           },
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: iconoir.NavArrowRight(
-                color: arrowColor, width: 20, height: 20),
+            child:
+                iconoir.NavArrowRight(color: arrowColor, width: 20, height: 20),
           ),
         ),
       ],
@@ -435,8 +429,7 @@ class SettingsTiles {
       children: [
         if (!isFirst) _divider(context),
         Padding(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 /// Centralized logging service for the application
 /// Provides different log levels and proper output formatting
 class LoggingService {
-  static const String _appName = 'Aurora Music';
+  static const String _appName = 'Noxira Music';
 
   /// Logs debug information (only in debug mode)
   static void debug(String message, [String? tag]) {

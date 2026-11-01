@@ -1,4 +1,4 @@
-/// Aurora Music Library Category Screens
+/// Noxira Music Library Category Screens
 ///
 /// This library exports all category screens for the library:
 /// - AlbumsScreen: Browse and search albums

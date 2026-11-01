@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/providers.dart';
+import 'adaptive_blur.dart';
 
 /// An aurora-lights banner shown at the top of the home scroll view when
 /// there is a Listening Insights notification to surface.
@@ -107,7 +108,7 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
                     painter: _AuroraPainter(t: _auroraCtrl.value),
                   );
                   if (isLowEnd) return blobPaint;
-                  return ImageFiltered(
+                  return AdaptiveImageFiltered(
                     imageFilter: ImageFilter.blur(
                       sigmaX: 48,
                       sigmaY: 48,
@@ -189,7 +190,11 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFF7B2FBE), Color(0xFF0288D1), Color(0xFF00E5FF)],
+                    colors: [
+                      Color(0xFF7B2FBE),
+                      Color(0xFF0288D1),
+                      Color(0xFF00E5FF)
+                    ],
                     stops: [0.0, 0.55, 1.0],
                   ),
                   borderRadius: BorderRadius.circular(50),

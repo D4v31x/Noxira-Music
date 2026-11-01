@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../main.dart' show equalizer;
 import '../../../shared/services/equalizer_service.dart';
 import '../../../shared/widgets/app_background.dart';
@@ -36,7 +37,9 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
   Future<void> _maybeInit() async {
     if (!mounted) return;
     final svc = context.read<EqualizerService>();
-    if (!svc.initialized) await svc.init(equalizer);
+    if (!svc.initialized || svc.params == null) {
+      await svc.init(equalizer, retry: svc.initialized);
+    }
   }
 
   Future<void> _showSaveDialog(EqualizerService svc) async {
@@ -64,10 +67,11 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
           }
 
           return Dialog(
-            backgroundColor: const Color(0xFF16162A),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20)),
-            child: Padding(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: const RoundedRectangleBorder(),
+            child: GlassDialogSurface(
+              alwaysDark: true,
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -92,8 +96,8 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                     ),
                     decoration: InputDecoration(
                       hintText: l10n.eqPresetNameHint,
-                      hintStyle:
-                          TextStyle(color: Colors.white.withValues(alpha: 0.35)),
+                      hintStyle: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.35)),
                       filled: true,
                       fillColor: Colors.white.withValues(alpha: 0.07),
                       border: OutlineInputBorder(
@@ -169,156 +173,169 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final cs = Theme.of(context).colorScheme;
 
-    return AppBackground(child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return AppBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: iconoir.NavArrowLeft(
-            color: isDark ? Colors.white : Colors.black,
-            width: 28,
-            height: 28,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: iconoir.NavArrowLeft(
+              color: isDark ? Colors.white : Colors.black,
+              width: 28,
+              height: 28,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          AppLocalizations.of(context).eqTitle,
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
+          title: Text(
+            AppLocalizations.of(context).eqTitle,
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
           ),
-        ),
-        actions: [
-          Consumer<EqualizerService>(
-            builder: (_, svc, __) => Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: GestureDetector(
-                onTap: svc.initialized
-                    ? () => svc.setEnabled(equalizer, !svc.enabled)
-                    : null,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: svc.enabled
-                        ? cs.primary
-                        : (isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.black.withValues(alpha: 0.08)),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    svc.enabled ? AppLocalizations.of(context).eqOn : AppLocalizations.of(context).eqOff,
-                    style: TextStyle(
-                      fontFamily: FontConstants.fontFamily,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      letterSpacing: 0.5,
+          actions: [
+            Consumer<EqualizerService>(
+              builder: (_, svc, __) => Padding(
+                padding: const EdgeInsets.only(right: 16),
+                child: GestureDetector(
+                  onTap: svc.initialized
+                      ? () => svc.setEnabled(equalizer, !svc.enabled)
+                      : null,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                    decoration: BoxDecoration(
                       color: svc.enabled
-                          ? cs.onPrimary
-                          : (isDark ? Colors.white38 : Colors.black38),
+                          ? cs.primary
+                          : (isDark
+                              ? Colors.white.withValues(alpha: 0.1)
+                              : Colors.black.withValues(alpha: 0.08)),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      svc.enabled
+                          ? AppLocalizations.of(context).eqOn
+                          : AppLocalizations.of(context).eqOff,
+                      style: TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                        letterSpacing: 0.5,
+                        color: svc.enabled
+                            ? cs.onPrimary
+                            : (isDark ? Colors.white38 : Colors.black38),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-      body: Consumer<EqualizerService>(
-        builder: (context, svc, _) {
-          if (!svc.initialized) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final params = svc.params;
-          if (params == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context).eqNotAvailable,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontFamily: FontConstants.fontFamily,
-                        fontSize: 15,
+          ],
+        ),
+        body: Consumer<EqualizerService>(
+          builder: (context, svc, _) {
+            if (!svc.initialized) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            final params = svc.params;
+            if (params == null) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        AppLocalizations.of(context).eqNotAvailable,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontFamily: FontConstants.fontFamily,
+                          fontSize: 15,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    FilledButton.tonal(
-                      onPressed: () => svc.openSystemEqualizer(),
-                      child: Text(
-                        AppLocalizations.of(context).eqOpenSystem,
-                        style: const TextStyle(fontFamily: FontConstants.fontFamily),
+                      const SizedBox(height: 20),
+                      FilledButton.tonal(
+                        onPressed: () => svc.init(equalizer, retry: true),
+                        child: const Text(
+                          'Retry',
+                          style:
+                              TextStyle(fontFamily: FontConstants.fontFamily),
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+                      TextButton(
+                        onPressed: () => svc.openSystemEqualizer(),
+                        child: Text(
+                          AppLocalizations.of(context).eqOpenSystem,
+                          style: const TextStyle(
+                              fontFamily: FontConstants.fontFamily),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          final gains = params.bands.map((b) => b.gain).toList();
-          return ListView(
-            padding: EdgeInsets.zero,
-            // Lock scroll while the user is dragging a band on the EQ curve.
-            // Without this, the ListView's VerticalDragRecognizer wins the
-            // gesture arena and the page scrolls instead of the band moving.
-            physics: _curveDragging
-                ? const NeverScrollableScrollPhysics()
-                : const ClampingScrollPhysics(),
-            children: [
-              const SizedBox(height: 8),
-              // ── Interactive EQ curve ─────────────────────────────────────
-              _InteractiveCurve(
-                params: params,
-                gains: gains,
-                enabled: svc.enabled,
-                onBandChanged: (i, v) => svc.setBandGain(i, v),
-                onDragActiveChanged: (active) {
-                  setState(() => _curveDragging = active);
-                },
-              ),
-              const SizedBox(height: 10),
-              // ── Band value read-out ───────────────────────────────────────
-              _BandValueRow(
-                params: params,
-                gains: gains,
-                enabled: svc.enabled,
-                onResetBand: (i) => svc.setBandGain(i, 0.0),
-                onResetAll: () {
-                  for (int i = 0; i < params.bands.length; i++) {
-                    svc.setBandGain(i, 0.0);
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
-              // ── Presets ──────────────────────────────────────────────────
-              _PresetsSection(
-                svc: svc,
-                onSavePressed: () => _showSaveDialog(svc),
-              ),
-              // ── Bottom padding ───────────────────────────────────────────
-              Builder(builder: (context) {
-                final miniH =
-                    ExpandingPlayer.getMiniPlayerPaddingHeight(context);
-                return SizedBox(
-                  height: miniH > 0
-                      ? miniH
-                      : MediaQuery.of(context).padding.bottom + 16,
-                );
-              }),
-            ],
-          );
-        },
+            final gains = params.bands.map((b) => b.gain).toList();
+            return ListView(
+              padding: EdgeInsets.zero,
+              // Lock scroll while the user is dragging a band on the EQ curve.
+              // Without this, the ListView's VerticalDragRecognizer wins the
+              // gesture arena and the page scrolls instead of the band moving.
+              physics: _curveDragging
+                  ? const NeverScrollableScrollPhysics()
+                  : const ClampingScrollPhysics(),
+              children: [
+                const SizedBox(height: 8),
+                // ── Interactive EQ curve ─────────────────────────────────────
+                _InteractiveCurve(
+                  params: params,
+                  gains: gains,
+                  enabled: svc.enabled,
+                  onBandChanged: (i, v) => svc.setBandGain(i, v),
+                  onDragActiveChanged: (active) {
+                    setState(() => _curveDragging = active);
+                  },
+                ),
+                const SizedBox(height: 10),
+                // ── Band value read-out ───────────────────────────────────────
+                _BandValueRow(
+                  params: params,
+                  gains: gains,
+                  enabled: svc.enabled,
+                  onResetBand: (i) => svc.setBandGain(i, 0.0),
+                  onResetAll: () {
+                    for (int i = 0; i < params.bands.length; i++) {
+                      svc.setBandGain(i, 0.0);
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
+                // ── Presets ──────────────────────────────────────────────────
+                _PresetsSection(
+                  svc: svc,
+                  onSavePressed: () => _showSaveDialog(svc),
+                ),
+                // ── Bottom padding ───────────────────────────────────────────
+                Builder(builder: (context) {
+                  final miniH =
+                      ExpandingPlayer.getMiniPlayerPaddingHeight(context);
+                  return SizedBox(
+                    height: miniH > 0
+                        ? miniH
+                        : MediaQuery.of(context).padding.bottom + 16,
+                  );
+                }),
+              ],
+            );
+          },
+        ),
       ),
-    ),
     );
   }
 }
@@ -349,9 +366,9 @@ class _InteractiveCurve extends StatefulWidget {
 class _InteractiveCurveState extends State<_InteractiveCurve> {
   int? _activeBand;
 
-  static const double _kH       = 260.0;
-  static const double _kTopPad  = 20.0;
-  static const double _kBotPad  = 28.0; // frequency label space
+  static const double _kH = 260.0;
+  static const double _kTopPad = 20.0;
+  static const double _kBotPad = 28.0; // frequency label space
   static const double _kLeftPad = 40.0; // dB label space
   static const double _kRightPad = 16.0;
   static const double _kBandInset = 20.0; // extra inset for outermost dots
@@ -360,12 +377,14 @@ class _InteractiveCurveState extends State<_InteractiveCurve> {
     final bands = widget.params.bands;
     const usableLeft = _kLeftPad + _kBandInset;
     const usableRight = _kRightPad + _kBandInset;
-    if (bands.length < 2) return (w - usableLeft - usableRight) / 2 + usableLeft;
+    if (bands.length < 2) {
+      return (w - usableLeft - usableRight) / 2 + usableLeft;
+    }
     final minHz = bands.first.centerFrequency.toDouble();
     final maxHz = bands.last.centerFrequency.toDouble();
     if (minHz == maxHz) return (w - usableLeft - usableRight) / 2 + usableLeft;
-    final t = (math.log(hz) - math.log(minHz)) /
-        (math.log(maxHz) - math.log(minHz));
+    final t =
+        (math.log(hz) - math.log(minHz)) / (math.log(maxHz) - math.log(minHz));
     return usableLeft + t * (w - usableLeft - usableRight);
   }
 
@@ -394,8 +413,7 @@ class _InteractiveCurveState extends State<_InteractiveCurve> {
     double nearestDist = double.infinity;
     for (int i = 0; i < bands.length; i++) {
       final bx = _freqToX(bands[i].centerFrequency.toDouble(), w);
-      final by = _gainToY(
-          i < widget.gains.length ? widget.gains[i] : 0.0);
+      final by = _gainToY(i < widget.gains.length ? widget.gains[i] : 0.0);
       final dist = (pos - Offset(bx, by)).distance;
       if (dist < nearestDist) {
         nearestDist = dist;
@@ -643,10 +661,8 @@ class _CurvePainter extends CustomPainter {
       final pt = pts[i];
       final isActive = activeBand == i;
       if (isActive) {
-        canvas.drawCircle(
-            pt, 22, Paint()..color = ec.withValues(alpha: 0.08));
-        canvas.drawCircle(
-            pt, 14, Paint()..color = ec.withValues(alpha: 0.2));
+        canvas.drawCircle(pt, 22, Paint()..color = ec.withValues(alpha: 0.08));
+        canvas.drawCircle(pt, 14, Paint()..color = ec.withValues(alpha: 0.2));
       }
       canvas.drawCircle(pt, isActive ? 7.5 : 5.5, Paint()..color = ec);
       canvas.drawCircle(
@@ -802,8 +818,7 @@ class _BandValueRow extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                _fmtFreq(
-                                    bands[i].centerFrequency.toDouble()),
+                                _fmtFreq(bands[i].centerFrequency.toDouble()),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: FontConstants.fontFamily,
@@ -838,8 +853,8 @@ class _BandValueRow extends StatelessWidget {
                   minimumSize: const Size(double.infinity, 38),
                   padding: EdgeInsets.zero,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(16)),
+                    borderRadius:
+                        BorderRadius.vertical(bottom: Radius.circular(16)),
                   ),
                 ),
                 child: Text(
@@ -893,7 +908,8 @@ class _PresetsSection extends StatelessWidget {
         // ── Built-in presets ──────────────────────────────────────────────
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-          child: Text(AppLocalizations.of(context).eqPresetsLabel, style: _labelStyle(isDark)),
+          child: Text(AppLocalizations.of(context).eqPresetsLabel,
+              style: _labelStyle(isDark)),
         ),
         SizedBox(
           height: 40,
@@ -924,7 +940,8 @@ class _PresetsSection extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 0, 16, 10),
           child: Row(
             children: [
-              Text(AppLocalizations.of(context).eqYourPresetsLabel, style: _labelStyle(isDark)),
+              Text(AppLocalizations.of(context).eqYourPresetsLabel,
+                  style: _labelStyle(isDark)),
               const Spacer(),
               TextButton.icon(
                 onPressed: onSavePressed,

@@ -1,4 +1,4 @@
-/// Aurora Music Onboarding Feature
+/// Noxira Music Onboarding Feature
 ///
 /// This library exports the onboarding feature components:
 /// - Onboarding screen

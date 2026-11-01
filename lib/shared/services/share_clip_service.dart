@@ -1,6 +1,6 @@
 /// Generates a shareable vertical video "clip" for a song: a short trimmed
 /// audio segment muxed with a stylized, animated artwork card ("LISTENING
-/// TO" label → artwork → title/artist → "NOW ON Aurora Music" branding),
+/// TO" label → artwork → title/artist → "NOW ON Noxira Music" branding),
 /// suitable for sharing to Instagram/TikTok/WhatsApp-style vertical video
 /// surfaces. The card elements animate in at the start of the clip and
 /// animate back out at the end.
@@ -10,8 +10,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
-import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min_gpl/return_code.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:on_audio_query/on_audio_query.dart';
@@ -41,8 +41,7 @@ class ShareClipService {
   static const double _introSeconds = 0.7;
   static const double _outroSeconds = 0.6;
 
-  static const String _logoAssetPath =
-      'assets/images/logo/Music_full_logo.png';
+  static const String _logoAssetPath = 'assets/images/logo/Music_full_logo.png';
 
   final OnAudioQuery _audioQuery = OnAudioQuery();
 
@@ -154,10 +153,9 @@ class ShareClipService {
 
     final introCount = (introSeconds * _frameFps).round().clamp(1, 999);
     final outroCount = (outroSeconds * _frameFps).round().clamp(1, 999);
-    final heldSeconds = (totalSeconds -
-            (introCount / _frameFps) -
-            (outroCount / _frameFps))
-        .clamp(0.05, totalSeconds);
+    final heldSeconds =
+        (totalSeconds - (introCount / _frameFps) - (outroCount / _frameFps))
+            .clamp(0.05, totalSeconds);
 
     final totalFrames = introCount + 1 + outroCount;
     var rendered = 0;
@@ -170,8 +168,7 @@ class ShareClipService {
         logoImage: logoImage,
         glowColor: glowColor,
         revealT: t,
-        outPath:
-            '${workDir.path}/intro_${i.toString().padLeft(3, '0')}.png',
+        outPath: '${workDir.path}/intro_${i.toString().padLeft(3, '0')}.png',
       );
       rendered++;
       onFramesProgress(rendered / totalFrames);
@@ -196,8 +193,7 @@ class ShareClipService {
         logoImage: logoImage,
         glowColor: glowColor,
         revealT: t,
-        outPath:
-            '${workDir.path}/outro_${i.toString().padLeft(3, '0')}.png',
+        outPath: '${workDir.path}/outro_${i.toString().padLeft(3, '0')}.png',
       );
       rendered++;
       onFramesProgress(rendered / totalFrames);
@@ -232,7 +228,10 @@ class ShareClipService {
       paint(canvas);
       return;
     }
-    canvas.saveLayer(bounds, Paint()..color = Colors.white.withValues(alpha: opacity.clamp(0.0, 1.0)));
+    canvas.saveLayer(
+        bounds,
+        Paint()
+          ..color = Colors.white.withValues(alpha: opacity.clamp(0.0, 1.0)));
     paint(canvas);
     canvas.restore();
   }
@@ -399,7 +398,7 @@ class ShareClipService {
       );
     }
 
-    // ── Footer: "NOW ON" + Aurora Music logo ────────────────────────────
+    // ── Footer: "NOW ON" + Noxira Music logo ────────────────────────────
     final footerOpacity = _reveal(revealT, 0.5, 1.0);
     if (footerOpacity > 0.001) {
       const logoWidth = 260.0;
@@ -506,7 +505,8 @@ class ShareClipService {
       final y = (srcH - cropHeight) / 2;
       src = Rect.fromLTWH(0, y, srcW, cropHeight);
     }
-    canvas.drawImageRect(image, src, dest, Paint()..filterQuality = FilterQuality.high);
+    canvas.drawImageRect(
+        image, src, dest, Paint()..filterQuality = FilterQuality.high);
   }
 
   void _drawCenteredIcon(
@@ -589,12 +589,12 @@ class ShareClipService {
         '-c:v libx264 -tune stillimage -preset veryfast -pix_fmt yuv420p '
         '-c:a aac -b:a 192k -t $totalSec -shortest "$outPath"';
 
-
     final session = await FFmpegKit.execute(command);
     final returnCode = await session.getReturnCode();
     if (!ReturnCode.isSuccess(returnCode)) {
       final logs = await session.getAllLogsAsString();
-      throw ShareClipException('Failed to render clip video: ${logs ?? returnCode}');
+      throw ShareClipException(
+          'Failed to render clip video: ${logs ?? returnCode}');
     }
     return File(outPath);
   }

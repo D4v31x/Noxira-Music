@@ -199,8 +199,7 @@ class SmartPlaylistRule {
         final addedMs = song.dateAdded;
         if (addedMs == null) return double.infinity;
         // on_audio_query stores dateAdded as epoch seconds on Android.
-        final addedDate =
-            DateTime.fromMillisecondsSinceEpoch(addedMs * 1000);
+        final addedDate = DateTime.fromMillisecondsSinceEpoch(addedMs * 1000);
         return DateTime.now().difference(addedDate).inHours / 24.0;
       default:
         return 0;
@@ -274,8 +273,7 @@ class SmartPlaylist {
         orElse: () => SmartPlaylistSortBy.titleAZ,
       ),
       limit: json['limit'] as int?,
-      createdAt:
-          DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
+import 'adaptive_blur.dart';
 
 /// A rich [SliverAppBar] header for library list screens (Tracks, Albums,
 /// Artists, Playlists, Folders).
@@ -167,7 +168,8 @@ class LibraryScreenHeader extends StatelessWidget {
                                     subtitle!,
                                     style: TextStyle(
                                       fontFamily: FontConstants.fontFamily,
-                                      color: Colors.white.withValues(alpha: 0.55),
+                                      color:
+                                          Colors.white.withValues(alpha: 0.55),
                                       fontSize: 14,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -293,7 +295,7 @@ class LibraryScreenHeader extends StatelessWidget {
     // Sigma reduced from the original 40 to 25: still a convincing soft
     // glow but 2.56× cheaper (Gaussian kernel area scales as σ²).
     return RepaintBoundary(
-      child: ImageFiltered(
+      child: AdaptiveImageFiltered(
         imageFilter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
         child: Container(
           width: size,

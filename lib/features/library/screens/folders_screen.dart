@@ -119,9 +119,8 @@ class _FoldersScreenState extends State<FoldersScreen> {
     try {
       final folders = await OnAudioQuery().queryAllPath();
       // Hide excluded folders from the list.
-      final visible = folders
-          .where((f) => !FolderFilterService().isExcluded(f))
-          .toList();
+      final visible =
+          folders.where((f) => !FolderFilterService().isExcluded(f)).toList();
       setState(() {
         _allFolders = visible;
         _filteredFolders = visible;

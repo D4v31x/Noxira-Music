@@ -16,6 +16,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/share_clip_service.dart';
+import '../../../shared/widgets/adaptive_blur.dart';
 
 /// Shows the "Share as clip" bottom sheet for [song].
 ///
@@ -34,7 +35,8 @@ Future<void> showShareClipSheet(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.75),
-    builder: (_) => _ShareClipSheet(song: song, initialPosition: initialPosition),
+    builder: (_) =>
+        _ShareClipSheet(song: song, initialPosition: initialPosition),
   );
 }
 
@@ -60,8 +62,7 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
   double _progress = 0;
   String? _error;
 
-  double get _songDurationSeconds =>
-      (widget.song.duration ?? 0) / 1000.0;
+  double get _songDurationSeconds => (widget.song.duration ?? 0) / 1000.0;
 
   double get _maxStartSeconds =>
       (_songDurationSeconds - _durationSeconds).clamp(0, double.infinity);
@@ -108,9 +109,8 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
       workDir = file.parent;
 
       if (!mounted) return;
-      final safeTitle = widget.song.title
-          .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
-          .trim();
+      final safeTitle =
+          widget.song.title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_').trim();
       final savedPath = await FilePicker.saveFile(
         fileName: '${safeTitle.isEmpty ? 'clip' : safeTitle}.mp4',
         type: FileType.video,
@@ -147,13 +147,12 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
+      child: AdaptiveBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: DecoratedBox(
           decoration: BoxDecoration(
             color: Colors.grey[900]!.withValues(alpha: 0.92),
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
             ),
@@ -180,9 +179,8 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(10),
-                        child: _artworkService.buildCachedArtwork(
-                            widget.song.id,
-                            size: 48),
+                        child: _artworkService
+                            .buildCachedArtwork(widget.song.id, size: 48),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -267,9 +265,11 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(_formatSeconds(_startSeconds),
-                            style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                            style: const TextStyle(
+                                color: Colors.white54, fontSize: 12)),
                         Text(_formatSeconds(_startSeconds + _durationSeconds),
-                            style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                            style: const TextStyle(
+                                color: Colors.white54, fontSize: 12)),
                       ],
                     ),
                   ),
@@ -279,7 +279,8 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Text(
                         _error!,
-                        style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                        style: const TextStyle(
+                            color: Colors.redAccent, fontSize: 13),
                       ),
                     ),
                   if (_generating)
@@ -308,9 +309,8 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
                                   strokeWidth: 2, color: Colors.black),
                             )
                           : const iconoir.Download(color: Colors.black),
-                      label: Text(_generating
-                          ? l10n.generatingClip
-                          : l10n.saveClip),
+                      label: Text(
+                          _generating ? l10n.generatingClip : l10n.saveClip),
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,

@@ -91,7 +91,8 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
-              counterStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
+              counterStyle:
+                  TextStyle(color: Colors.white.withValues(alpha: 0.4)),
             ),
           ),
         ],

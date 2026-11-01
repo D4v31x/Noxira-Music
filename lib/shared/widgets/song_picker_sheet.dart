@@ -10,6 +10,7 @@ import '../services/audio_player_service.dart';
 import '../services/artwork_cache_service.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../models/artist_utils.dart';
+import 'adaptive_blur.dart';
 
 /// Glassmorphic song picker bottom sheet for adding songs to playlists
 class SongPickerSheet extends HookWidget {
@@ -135,7 +136,7 @@ class SongPickerSheet extends HookWidget {
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
+      child: AdaptiveBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           height: screenHeight * 0.85,
@@ -278,16 +279,13 @@ class SongPickerSheet extends HookWidget {
                               },
                               child: Icon(
                                 Icons.clear_rounded,
-                                color: isDark
-                                    ? Colors.white38
-                                    : Colors.black38,
+                                color: isDark ? Colors.white38 : Colors.black38,
                                 size: 20,
                               ),
                             )
                           : null,
                       border: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 13),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 13),
                     ),
                   ),
                 ),
@@ -391,7 +389,7 @@ class SongPickerSheet extends HookWidget {
                           ),
               ),
             ],
-      ),
+          ),
         ),
       ),
     );
@@ -411,8 +409,9 @@ class SongPickerSheet extends HookWidget {
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              isSelected ? primaryColor.withValues(alpha: 0.12) : Colors.transparent,
+          color: isSelected
+              ? primaryColor.withValues(alpha: 0.12)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

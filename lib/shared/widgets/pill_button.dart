@@ -37,13 +37,16 @@ class PillButton extends StatelessWidget {
     final isDark = themeProvider.isDarkMode;
 
     final effectiveBackgroundColor = backgroundColor ??
-        (isPrimary ? Theme.of(context).colorScheme.primary : Colors.transparent);
+        (isPrimary
+            ? Theme.of(context).colorScheme.primary
+            : Colors.transparent);
 
     final effectiveForegroundColor =
         foregroundColor ?? (isDark ? Colors.white : Colors.black);
 
-    final outlinedBorderColor =
-        isDark ? Colors.white.withValues(alpha: 0.3) : Colors.black.withValues(alpha: 0.3);
+    final outlinedBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.3)
+        : Colors.black.withValues(alpha: 0.3);
 
     final buttonStyle = isPrimary
         ? FilledButton.styleFrom(

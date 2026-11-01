@@ -11,12 +11,16 @@ class ScrollingText extends StatefulWidget {
   final Duration pauseDuration;
   final Duration scrollDuration;
 
+  /// Key for the inner [Text], e.g. to measure where the text is drawn.
+  final GlobalKey? textKey;
+
   const ScrollingText({
     super.key,
     required this.text,
     required this.style,
     this.pauseDuration = const Duration(seconds: 2),
     this.scrollDuration = const Duration(seconds: 2),
+    this.textKey,
   });
 
   @override
@@ -110,6 +114,7 @@ class ScrollingTextState extends State<ScrollingText> {
       physics: const NeverScrollableScrollPhysics(),
       child: Text(
         widget.text,
+        key: widget.textKey,
         style: widget.style,
         textAlign: TextAlign.center,
       ),

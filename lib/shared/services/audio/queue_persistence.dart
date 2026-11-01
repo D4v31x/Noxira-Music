@@ -109,13 +109,13 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
         final mediaItems =
             _playlist.map((s) => _createMediaItemSync(s)).toList();
         final source = _playlist
-              .asMap()
-              .entries
-              .map((e) => AudioSource.uri(
-                    Uri.parse(e.value.uri ?? e.value.data),
-                    tag: mediaItems[e.key],
-                  ))
-              .toList();
+            .asMap()
+            .entries
+            .map((e) => AudioSource.uri(
+                  Uri.parse(e.value.uri ?? e.value.data),
+                  tag: mediaItems[e.key],
+                ))
+            .toList();
         await _audioPlayer.setAudioSources(
           source,
           initialIndex: savedIndex,

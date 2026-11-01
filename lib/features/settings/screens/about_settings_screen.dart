@@ -9,17 +9,17 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/providers/providers.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/donation_service.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/version_service.dart';
 import '../../../shared/widgets/changelog_dialog.dart';
-import '../../../shared/widgets/update_popup_dialog.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/feedback_dialog.dart';
 import '../../../shared/widgets/feedback_popup_widget.dart';
+import '../../../shared/widgets/support_goal_card.dart';
 import '../widgets/settings_tile_builders.dart';
 
 class AboutSettingsScreen extends StatelessWidget {
@@ -88,26 +88,10 @@ class AboutSettingsScreen extends StatelessWidget {
 
   void _showUpdateDialog(BuildContext context, dynamic latestVersion) {
     final l10n = AppLocalizations.of(context);
-    final perfProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
-    final cs = Theme.of(context).colorScheme;
-    final shouldBlur = perfProvider.shouldEnableBlur;
-    final bg = shouldBlur
-        ? Colors.grey[900]!.withValues(alpha: 0.9)
-        : cs.surfaceContainerHigh;
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: bg,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: shouldBlur
-                ? Colors.white.withValues(alpha: 0.1)
-                : cs.outlineVariant,
-          ),
-        ),
+      builder: (_) => GlassmorphicDialog(
         title: Text(l10n.updateAvailable,
             style: const TextStyle(
                 fontFamily: FontConstants.fontFamily,
@@ -148,131 +132,121 @@ class AboutSettingsScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final primary = Theme.of(context).colorScheme.primary;
 
-    return AppBackground(child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return AppBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: iconoir.NavArrowLeft(
-            color: isDark ? Colors.white : Colors.black,
-            width: 28,
-            height: 28,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: iconoir.NavArrowLeft(
+              color: isDark ? Colors.white : Colors.black,
+              width: 28,
+              height: 28,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
+          title: Text(
+            l10n.settingsAbout,
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
         ),
-        title: Text(
-          l10n.settingsAbout,
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-      ),
-      body: Selector<AudioPlayerService, bool>(
-        selector: (_, s) => s.currentSong != null,
-        builder: (context, hasCurrentSong, _) => ListView(
-          padding: EdgeInsets.only(
-            top: 10,
-            bottom: hasCurrentSong
-                ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
-                : MediaQuery.of(context).padding.bottom + 24,
-          ),
-          children: [
-            SettingsTiles.buildSectionHeader(context, l10n.settingsAbout),
-            SettingsTiles.buildGlassmorphicCard(context, children: [
-              SettingsTiles.buildActionTile(
-                context,
-                icon: iconoir.InfoCircle(
-                    color: primary, width: 20, height: 20),
-                title: l10n.settingsAboutApp,
-                subtitle: '${l10n.settingsVersion} $currentVersion',
-                onTap: () => _showAboutDialog(context),
-                isFirst: true,
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: const iconoir.Bell(
-                    color: Colors.blue, width: 20, height: 20),
-                title: l10n.whatsNew,
-                subtitle: l10n.view_changelog,
-                iconColor: Colors.blue,
-                onTap: () => _showChangelogDialog(context),
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: const iconoir.Sparks(
-                    color: Colors.orange, width: 20, height: 20),
-                title: l10n.showUpdatePopup,
-                subtitle: l10n.showUpdatePopupDesc,
-                iconColor: Colors.orange,
-                onTap: () => UpdatePopupDialog.show(context,
-                    version: currentVersion),
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: const iconoir.HeartSolid(
-                    color: Colors.pink, width: 20, height: 20),
-                title: l10n.supportAurora,
-                subtitle: l10n.supportAuroraDescShort,
-                iconColor: Colors.pink,
-                onTap: () => DonationService.showDonationDialog(context),
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: const iconoir.ChatBubble(
-                    color: Colors.green, width: 20, height: 20),
-                title: l10n.send_feedback,
-                subtitle: l10n.send_feedback_desc,
-                iconColor: Colors.green,
-                onTap: () => FeedbackDialog.show(context),
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: const iconoir.StarSolid(
-                    color: Colors.amber, width: 20, height: 20),
-                title: l10n.rateApp,
-                subtitle: l10n.rateAppDesc,
-                iconColor: Colors.amber,
-                onTap: () => FeedbackPopupWidget.show(context),
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: const iconoir.Language(
-                    color: Colors.purple, width: 20, height: 20),
-                title: l10n.contributeTranslations,
-                subtitle: l10n.contributeTranslationsDesc,
-                iconColor: Colors.purple,
-                onTap: () => launchUrl(
-                  Uri.parse('https://crowdin.com/project/aurora-music'),
-                  mode: LaunchMode.externalApplication,
-                ),
-              ),
-              SettingsTiles.buildActionTile(
-                context,
-                icon: iconoir.Refresh(
-                    color: primary, width: 20, height: 20),
-                title: l10n.settingsCheckUpdates,
-                subtitle: l10n.settingsCheckUpdatesDesc,
-                onTap: () => _checkUpdates(context),
-              ),
-              if (onResetSetup != null)
+        body: Selector<AudioPlayerService, bool>(
+          selector: (_, s) => s.currentSong != null,
+          builder: (context, hasCurrentSong, _) => ListView(
+            padding: EdgeInsets.only(
+              top: 10,
+              bottom: hasCurrentSong
+                  ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
+                  : MediaQuery.of(context).padding.bottom + 24,
+            ),
+            children: [
+              SettingsTiles.buildSectionHeader(context, l10n.settingsAbout),
+              const SupportGoalCard(),
+              SettingsTiles.buildGlassmorphicCard(context, children: [
                 SettingsTiles.buildActionTile(
                   context,
-                  icon: const iconoir.WarningTriangle(
-                      color: Colors.orange, width: 20, height: 20),
-                  title: l10n.settingsResetSetup,
-                  subtitle: l10n.settingsResetSetupDesc,
-                  iconColor: Colors.orange,
-                  onTap: onResetSetup!,
+                  icon:
+                      iconoir.InfoCircle(color: primary, width: 20, height: 20),
+                  title: l10n.settingsAboutApp,
+                  subtitle: '${l10n.settingsVersion} $currentVersion',
+                  onTap: () => _showAboutDialog(context),
+                  isFirst: true,
                 ),
-            ]),
-            const SizedBox(height: 32),
-          ],
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: const iconoir.Bell(
+                      color: Colors.blue, width: 20, height: 20),
+                  title: l10n.whatsNew,
+                  subtitle: l10n.view_changelog,
+                  iconColor: Colors.blue,
+                  onTap: () => _showChangelogDialog(context),
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: const iconoir.HeartSolid(
+                      color: Colors.pink, width: 20, height: 20),
+                  title: l10n.supportAurora,
+                  subtitle: l10n.supportAuroraDescShort,
+                  iconColor: Colors.pink,
+                  onTap: () => DonationService.showDonationDialog(context),
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: const iconoir.ChatBubble(
+                      color: Colors.green, width: 20, height: 20),
+                  title: l10n.send_feedback,
+                  subtitle: l10n.send_feedback_desc,
+                  iconColor: Colors.green,
+                  onTap: () => FeedbackDialog.show(context),
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: const iconoir.StarSolid(
+                      color: Colors.amber, width: 20, height: 20),
+                  title: l10n.rateApp,
+                  subtitle: l10n.rateAppDesc,
+                  iconColor: Colors.amber,
+                  onTap: () => FeedbackPopupWidget.show(context),
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: const iconoir.Language(
+                      color: Colors.purple, width: 20, height: 20),
+                  title: l10n.contributeTranslations,
+                  subtitle: l10n.contributeTranslationsDesc,
+                  iconColor: Colors.purple,
+                  onTap: () => launchUrl(
+                    Uri.parse('https://crowdin.com/project/aurora-music'),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: iconoir.Refresh(color: primary, width: 20, height: 20),
+                  title: l10n.settingsCheckUpdates,
+                  subtitle: l10n.settingsCheckUpdatesDesc,
+                  onTap: () => _checkUpdates(context),
+                ),
+                if (onResetSetup != null)
+                  SettingsTiles.buildActionTile(
+                    context,
+                    icon:
+                        iconoir.Refresh(color: primary, width: 20, height: 20),
+                    title: l10n.settingsResetSetup,
+                    subtitle: l10n.settingsResetSetupDesc,
+                    onTap: onResetSetup!,
+                  ),
+              ]),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }

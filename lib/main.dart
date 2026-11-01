@@ -1,3 +1,4 @@
+import 'shared/services/permission_guarded_audio_query.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:audio_service/audio_service.dart';
@@ -13,7 +14,6 @@ import 'shared/services/audio_player_service.dart';
 import 'shared/services/audio_handler.dart';
 import 'shared/services/error_tracking_service.dart';
 import 'shared/services/notification_manager.dart';
-import 'shared/services/shader_warmup_service.dart';
 import 'shared/services/background_manager_service.dart';
 import 'shared/services/sleep_timer_controller.dart';
 import 'shared/services/artist_separator_service.dart';
@@ -22,13 +22,17 @@ import 'l10n/generated/app_localizations.dart';
 import 'features/features.dart';
 import 'l10n/locale_provider.dart';
 import 'shared/providers/providers.dart';
+import 'shared/utils/app_text_scaler.dart';
 import 'shared/widgets/expanding_player.dart';
+import 'shared/widgets/motion/musicfy_motion.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_performance/firebase_performance.dart';
 import 'firebase_options.dart';
+import 'shared/services/device_performance_service.dart' show PerformanceLevel;
+import 'shared/services/artwork_cache_service.dart';
 import 'shared/services/equalizer_service.dart';
 import 'shared/services/smart_playlist_service.dart';
 import 'shared/services/track_tag_service.dart';
@@ -53,6 +57,48 @@ late AuroraAudioHandler audioHandler;
 /// Global equalizer effect — attached to the player via AudioPipeline
 late AndroidEqualizer equalizer;
 
+/// Creates the audio handler (custom, with no stop button in the notification).
+Future<AuroraAudioHandler> _initAudioHandler() async {
+  final eq = AndroidEqualizer();
+  equalizer = eq;
+  final player = AudioPlayer(
+    audioPipeline: AudioPipeline(androidAudioEffects: [eq]),
+  );
+  return AudioService.init(
+    builder: () => AuroraAudioHandler(player),
+    config: const AudioServiceConfig(
+      androidNotificationChannelId: AppConfig.androidNotificationChannelId,
+      androidNotificationChannelName: AppConfig.androidNotificationChannelName,
+      androidStopForegroundOnPause: false,
+      // Monochrome status-bar notification icon (white silhouette on transparent).
+      androidNotificationIcon: 'drawable/ic_stat_music',
+      // Without this, audio_service decodes the full-resolution album art and
+      // builds the notification with it on the main thread, which can ANR
+      // (FLUTTER-9E) on large embedded covers.
+      artDownscaleWidth: 512,
+      artDownscaleHeight: 512,
+    ),
+  );
+}
+
+/// Configures caches and transition complexity for a device tier.
+void _applyMemoryTuning(PerformanceLevel level) {
+  final imageCache = PaintingBinding.instance.imageCache;
+  switch (level) {
+    case PerformanceLevel.high:
+      imageCache.maximumSize = AppConfig.imageCacheMaxSize;
+      imageCache.maximumSizeBytes = AppConfig.imageCacheMaxSizeBytes;
+    case PerformanceLevel.medium:
+      imageCache.maximumSize = 80;
+      imageCache.maximumSizeBytes = 56 * 1024 * 1024;
+    case PerformanceLevel.low:
+      imageCache.maximumSize = 50;
+      imageCache.maximumSizeBytes = 32 * 1024 * 1024;
+  }
+  ArtworkCacheService.applyPerformanceLevel(level);
+  MusicfyPageTransitionsBuilder.simple = level == PerformanceLevel.low;
+}
+
 /// Application entry point
 void main() async {
   try {
@@ -61,13 +107,46 @@ void main() async {
 
     // Ensure Flutter bindings are initialized
     WidgetsFlutterBinding.ensureInitialized();
+    PermissionGuardedAudioQuery.install();
 
-    // Initialize Firebase — requires google-services.json at android/app/
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // Kick off the slow native initialisations concurrently instead of one
+    // after another: on low-end devices they dominate time-to-first-frame.
+    // Firebase requires google-services.json at android/app/
+    final firebaseInit =
+        Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    final audioInit = _initAudioHandler();
+
+    // Silence all debug output in release builds — kDebugMode is a
+    // compile-time constant so the AOT compiler eliminates this in debug.
+    if (!kDebugMode) {
+      debugPrint = (String? message, {int? wrapWidth}) {};
+    }
+
+    // Resolve the device tier before the first frame so the splash and
+    // onboarding already use the right effects for this hardware.
+    final performanceProvider = PerformanceModeProvider();
+    final results = await Future.wait([
+      SharedPreferences.getInstance(),
+      ArtistSeparatorService().initialize(),
+      HomeLayoutService().initialize(),
+      performanceProvider.initialize(),
+    ]);
+    final prefs = results[0] as SharedPreferences;
+    final languageCode =
+        prefs.getString('languageCode') ?? AppConfig.defaultLanguageCode;
+
+    // Size the decoded-image and artwork caches for this device's tier, and
+    // re-tune if the tier changes later (manual choice or runtime step-down).
+    _applyMemoryTuning(performanceProvider.currentMode);
+    performanceProvider
+        .addListener(() => _applyMemoryTuning(performanceProvider.currentMode));
+
+    await firebaseInit;
 
     // Disable performance data collection in debug to keep overhead low
     if (kDebugMode) {
-      await FirebasePerformance.instance.setPerformanceCollectionEnabled(false);
+      unawaited(
+          FirebasePerformance.instance.setPerformanceCollectionEnabled(false));
     }
 
     // Route all Flutter framework errors to Sentry + Firebase Crashlytics
@@ -83,74 +162,38 @@ void main() async {
     ui.PlatformDispatcher.instance.onError = (error, stack) {
       // Fire-and-forget — onError must be synchronous.
       unawaited(errorTracker.recordError(error, stack));
-      unawaited(FirebaseCrashlytics.instance.recordError(error, stack, fatal: true));
+      unawaited(
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true));
       return true;
     };
 
-    // Silence all debug output in release builds — kDebugMode is a
-    // compile-time constant so the AOT compiler eliminates this in debug.
-    if (!kDebugMode) {
-      debugPrint = (String? message, {int? wrapWidth}) {};
-    }
-
-    // Configure memory management early for better startup memory usage
-    ImageCache().maximumSize = AppConfig.imageCacheMaxSize;
-    ImageCache().maximumSizeBytes = AppConfig.imageCacheMaxSizeBytes;
-
-    // Start parallel initialization for faster startup
-    final parallelInit = Future.wait([
-      SharedPreferences.getInstance(),
-      ArtistSeparatorService().initialize(),
-      HomeLayoutService().initialize(),
-    ]);
-
-    // Warmup shaders in parallel with other initialization
-    final shaderWarmup = ShaderWarmupService.warmupShaders();
-
-    // Wait for parallel initialization
-    final results = await parallelInit;
-    final prefs = results[0] as SharedPreferences;
-    final languageCode =
-        prefs.getString('languageCode') ?? AppConfig.defaultLanguageCode;
-
-    // Wait for shader warmup to complete
-    await shaderWarmup;
-
-    // Initialize audio service with custom handler (no stop button in notification)
-    final eq = AndroidEqualizer();
-    equalizer = eq;
-    final player = AudioPlayer(
-      audioPipeline: AudioPipeline(androidAudioEffects: [eq]),
-    );
-    audioHandler = await AudioService.init(
-      builder: () => AuroraAudioHandler(player),
-      config: const AudioServiceConfig(
-        androidNotificationChannelId: AppConfig.androidNotificationChannelId,
-        androidNotificationChannelName:
-            AppConfig.androidNotificationChannelName,
-        androidStopForegroundOnPause: false,
-        // Monochrome status-bar notification icon (white silhouette on transparent).
-        androidNotificationIcon: 'drawable/ic_stat_music',
-      ),
-    );
+    audioHandler = await audioInit;
 
     // Launch the application with all required providers
-    await SentryFlutter.init(
-    (options) {
+    await SentryFlutter.init((options) {
       options.dsn = const String.fromEnvironment('SENTRY_DSN');
-      options.tracesSampleRate = 0.2;
+      // Tracing/profiling is real work on the UI thread: scale it with the
+      // device tier and skip it entirely on weak hardware.
+      final tier = performanceProvider.currentMode;
+      final lowEnd = tier == PerformanceLevel.low;
+      options.tracesSampleRate = lowEnd ? 0.0 : 0.2;
       // ignore: experimental_member_use
-      options.profilesSampleRate = 0.2;
-    },
-    appRunner: () {
+      options.profilesSampleRate = switch (tier) {
+        PerformanceLevel.high => 0.2,
+        PerformanceLevel.medium => 0.05,
+        PerformanceLevel.low => 0.0,
+      };
+      options.enableFramesTracking = !lowEnd;
+      options.enableUserInteractionTracing = !lowEnd;
+    }, appRunner: () {
       final app = MultiProvider(
         providers: [
           // Use lazy initialization for better startup performance
           ChangeNotifierProvider(create: (_) => AudioPlayerService()),
           ChangeNotifierProvider(create: (_) => ThemeProvider(), lazy: false),
-          ChangeNotifierProvider(create: (_) => EqualizerService(), lazy: false),
           ChangeNotifierProvider(
-              create: (_) => PerformanceModeProvider(), lazy: false),
+              create: (_) => EqualizerService(), lazy: false),
+          ChangeNotifierProvider.value(value: performanceProvider),
           ChangeNotifierProvider(
               create: (_) => BackgroundManagerService(), lazy: false),
           ChangeNotifierProvider(
@@ -170,8 +213,6 @@ void main() async {
                 Provider.of<AudioPlayerService>(context, listen: false);
             final backgroundManager =
                 Provider.of<BackgroundManagerService>(context, listen: false);
-            final performanceProvider =
-                Provider.of<PerformanceModeProvider>(context, listen: false);
 
             // Set the background manager in the audio player service
             audioPlayerService.setBackgroundManager(backgroundManager);
@@ -186,7 +227,7 @@ void main() async {
 
             // Initialize performance provider and equalizer eagerly
             WidgetsBinding.instance.addPostFrameCallback((_) async {
-              unawaited(performanceProvider.initialize());
+              performanceProvider.startFrameMonitor();
               final equalizerService =
                   Provider.of<EqualizerService>(context, listen: false);
               if (!equalizerService.initialized) {
@@ -234,8 +275,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     // Listen for notification clicks to expand the player
-    _notificationClickSub =
-        AudioService.notificationClicked.listen((clicked) {
+    _notificationClickSub = AudioService.notificationClicked.listen((clicked) {
       if (clicked) {
         // Expand the mini player to show Now Playing screen
         ExpandingPlayer.expand();
@@ -340,13 +380,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) {
-              return HeroControllerScope(
-                controller: HeroController(
-                  createRectTween: (Rect? begin, Rect? end) {
-                    return MaterialRectCenterArcTween(begin: begin, end: end);
-                  },
+              final media = MediaQuery.of(context);
+              return MediaQuery(
+                data: media.copyWith(
+                  textScaler: AppTextScaler(media.textScaler),
                 ),
-                child: child ?? const SizedBox.shrink(),
+                child: HeroControllerScope(
+                  controller: HeroController(
+                    createRectTween: (Rect? begin, Rect? end) {
+                      return MaterialRectCenterArcTween(begin: begin, end: end);
+                    },
+                  ),
+                  child: child ?? const SizedBox.shrink(),
+                ),
               );
             },
             // The root navigator's single page is the app shell: an inner page
@@ -356,7 +402,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             // while normal pages — hosted by the inner navigator — render below
             // it. This separation is what keeps the mini player layered
             // correctly without fighting the navigator's overlay ordering.
-            home: _AppShell(observers: [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)]),
+            home: _AppShell(observers: [
+              FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)
+            ]),
           ),
         );
       },

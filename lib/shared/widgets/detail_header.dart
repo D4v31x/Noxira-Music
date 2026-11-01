@@ -4,6 +4,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
+import 'motion/musicfy_motion.dart';
+import 'blurred_image.dart';
+import 'adaptive_blur.dart';
 
 /// A beautiful blurred-artwork header for detail screens (album, artist, playlist, folder).
 ///
@@ -22,7 +25,6 @@ class DetailHeader extends StatelessWidget {
   final String? subtitle;
   final String? metadata;
   final String badge;
-  final String? heroTag;
   final Color accentColor;
   final double expandedHeight;
   final List<Widget>? actions;
@@ -36,7 +38,6 @@ class DetailHeader extends StatelessWidget {
     this.subtitle,
     this.metadata,
     required this.badge,
-    this.heroTag,
     this.accentColor = Colors.cyan,
     this.expandedHeight = 300,
     this.actions,
@@ -78,10 +79,29 @@ class DetailHeader extends StatelessWidget {
               fit: StackFit.expand,
               children: [
                 // ── Blurred artwork background ──
+                // Scrolls away like musicfy's cover: zooms in, dims, then dissolves.
                 Opacity(
-                  // Fade out artwork fully when collapsed – collapsed bar is text-only
-                  opacity: (1.0 - collapseProgress).clamp(0.0, 1.0),
-                  child: _buildBlurredBackground(context),
+                  opacity: (1.0 - smoothstep(0.2, 0.85, collapseProgress))
+                      .clamp(0.0, 1.0),
+                  child: Transform.scale(
+                    scale: 1 + 0.22 * collapseProgress,
+                    alignment: const Alignment(0, -0.3),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        ArtworkHeroTarget(
+                          radius: 10,
+                          ready:
+                              artworkBytes != null || artworkFilePath != null,
+                          child: _buildBlurredBackground(context),
+                        ),
+                        ColoredBox(
+                          color: Colors.black
+                              .withValues(alpha: 0.22 * collapseProgress),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
 
                 // ── Solid dark background for collapsed state ──
@@ -113,55 +133,43 @@ class DetailHeader extends StatelessWidget {
                 // Centered vertically, fades out as the bar collapses
                 Opacity(
                   opacity: (1.0 - collapseProgress * 2.0).clamp(0.0, 1.0),
-                  child: SafeArea(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // Badge pill
-                            _buildBadgePill(),
-                            const SizedBox(height: 16),
-                            // Title
-                            heroTag != null
-                                ? Hero(
-                                    tag: heroTag!,
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: _buildTitleText(fontSize: 32),
-                                    ),
-                                  )
-                                : _buildTitleText(fontSize: 32),
-                            // Subtitle
-                            if (subtitle != null) ...[
-                              const SizedBox(height: 6),
-                              Text(
-                                subtitle!,
+                  child: _RouteReveal(
+                    child: SafeArea(
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Badge pill
+                              _buildBadgePill(),
+                              const SizedBox(height: 16),
+                              // Title
+                              _buildTitleText(fontSize: 32),
+                              // Subtitle
+                              _lateLine(
+                                subtitle,
+                                top: 6,
                                 style: TextStyle(
                                   fontFamily: FontConstants.fontFamily,
                                   color: Colors.white.withValues(alpha: 0.85),
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
-                            ],
-                            // Metadata
-                            if (metadata != null) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                metadata!,
+                              // Metadata
+                              _lateLine(
+                                metadata,
+                                top: 4,
                                 style: TextStyle(
                                   fontFamily: FontConstants.fontFamily,
                                   color: Colors.white.withValues(alpha: 0.55),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w400,
                                 ),
-                                textAlign: TextAlign.center,
                               ),
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -223,6 +231,27 @@ class DetailHeader extends StatelessWidget {
   }
 
   // ─────────────────────────── Sub-widgets ───────────────────────────
+
+  /// A line that may only be known after loading: it grows in and fades in
+  /// instead of popping into the layout.
+  Widget _lateLine(String? text,
+      {required double top, required TextStyle style}) {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 320),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 320),
+        child: text == null
+            ? const SizedBox(key: ValueKey('none'), width: 0, height: 0)
+            : Padding(
+                key: ValueKey(text),
+                padding: EdgeInsets.only(top: top),
+                child: Text(text, style: style, textAlign: TextAlign.center),
+              ),
+      ),
+    );
+  }
 
   Widget _buildBackButton(BuildContext context) {
     // PERF: No BackdropFilter – the back button is a leading widget in a
@@ -295,23 +324,30 @@ class DetailHeader extends StatelessWidget {
 
   Widget _buildBlurredBackground(BuildContext context) {
     Widget imageWidget;
+    ImageProvider provider;
 
     if (artworkBytes != null) {
+      provider = MemoryImage(artworkBytes!);
       imageWidget = Image.memory(
         artworkBytes!,
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
+        // Heavily blurred anyway; a full-size decode only costs time and memory.
+        cacheWidth: 640,
         gaplessPlayback: true,
       );
     } else if (artworkFilePath != null) {
+      provider = FileImage(File(artworkFilePath!));
       imageWidget = Image.file(
         File(artworkFilePath!),
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
+        cacheWidth: 640,
       );
     } else if (fallbackAsset != null) {
+      provider = AssetImage(fallbackAsset!);
       imageWidget = Image.asset(
         fallbackAsset!,
         fit: BoxFit.cover,
@@ -341,14 +377,103 @@ class DetailHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ImageFiltered(
-            imageFilter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: imageWidget,
+          BlurredImage(
+            provider: provider,
+            sigma: 30,
+            fallback: AdaptiveImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+              child: imageWidget,
+            ),
           ),
           Container(
             color: Colors.black.withValues(alpha: 0.15),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Fades and lifts its child in with the page's route animation. If the header
+/// is built after the transition has finished (the screen loaded its data
+/// first), it plays the same reveal on its own instead of appearing at once.
+class _RouteReveal extends StatefulWidget {
+  const _RouteReveal({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_RouteReveal> createState() => _RouteRevealState();
+}
+
+class _RouteRevealState extends State<_RouteReveal>
+    with SingleTickerProviderStateMixin {
+  /// The text waits until the flying artwork has all but landed.
+  static const double _startAt = 0.8;
+
+  late final AnimationController _own = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 480),
+    reverseDuration: const Duration(milliseconds: 160),
+  );
+  late final Animation<double> _reveal =
+      _own.drive(CurveTween(curve: Curves.easeOutCubic));
+  Animation<double>? _route;
+  bool _decided = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_decided) return;
+    _decided = true;
+    final route = ModalRoute.of(context)?.animation;
+    if (route == null) {
+      _own.forward();
+      return;
+    }
+    // A route's animation reads "completed" until its first frame, so the
+    // real state is only known after this one.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (route.status == AnimationStatus.completed) {
+        _own.forward();
+      } else {
+        _route = route..addListener(_onRoute);
+        _onRoute();
+      }
+    });
+  }
+
+  void _onRoute() {
+    final route = _route!;
+    if (route.status == AnimationStatus.reverse) {
+      if (_own.status != AnimationStatus.reverse && _own.value > 0) {
+        _own.reverse();
+      }
+    } else if (route.value >= _startAt &&
+        _own.status != AnimationStatus.forward &&
+        _own.value < 1) {
+      _own.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _route?.removeListener(_onRoute);
+    _own.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final reveal = _reveal;
+    return FadeTransition(
+      opacity: reveal,
+      child: SlideTransition(
+        position: reveal.drive(
+          Tween(begin: const Offset(0, 0.08), end: Offset.zero),
+        ),
+        child: widget.child,
       ),
     );
   }

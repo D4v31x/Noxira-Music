@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:provider/provider.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/sleep_timer_controller.dart';
 
 // MARK: - Constants
@@ -136,9 +137,29 @@ class PlayerMoreOptionsMenu extends StatelessWidget {
         // Add to Playlist
         PopupMenuItem<String>(
           value: 'add_playlist',
-          child: _MenuItemRow(
-            icon: const iconoir.PlaylistPlus(color: Colors.white),
-            label: l10n.addToPlaylist,
+          child: Row(
+            children: [
+              const iconoir.PlaylistPlus(color: Colors.white),
+              const SizedBox(width: _kIconSpacing),
+              Flexible(
+                child: Text(
+                  l10n.addToPlaylist,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              // A star marks a song that is already in one of your playlists.
+              if (Provider.of<AudioPlayerService>(context, listen: false)
+                  .isSongInAnyUserPlaylist(
+                      Provider.of<AudioPlayerService>(context, listen: false)
+                          .currentSong)) ...[
+                const SizedBox(width: 8),
+                Tooltip(
+                  message: l10n.inPlaylistHint,
+                  child: const Icon(Icons.star_rounded,
+                      size: 18, color: Color(0xFFFFC857)),
+                ),
+              ],
+            ],
           ),
         ),
         // Share

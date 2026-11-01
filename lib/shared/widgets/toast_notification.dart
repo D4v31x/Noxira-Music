@@ -34,7 +34,11 @@ class ToastNotification {
     // Remove any existing overlay
     hide();
 
-    final overlay = Overlay.of(context);
+    // A Navigator's own context has no Overlay ancestor, so fall back to the
+    // Navigator's overlay (callers pass a long-lived root context).
+    final overlay =
+        Overlay.maybeOf(context) ?? Navigator.maybeOf(context)?.overlay;
+    if (overlay == null) return;
 
     // Check if blur should be enabled based on performance mode
     final performanceProvider =

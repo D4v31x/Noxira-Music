@@ -35,8 +35,7 @@ class MetadataService {
     if (cleaned != original && cleaned.isNotEmpty) variants.add(cleaned);
 
     // 3. First 3 words of the cleaned query (cuts extra metadata tokens).
-    final words =
-        cleaned.split(' ').where((w) => w.isNotEmpty).toList();
+    final words = cleaned.split(' ').where((w) => w.isNotEmpty).toList();
     if (words.length > 3) {
       variants.add(words.take(3).join(' '));
     }
@@ -82,9 +81,7 @@ class MetadataService {
         final data = json.decode(response.body);
         final tracks = data['data'];
         if (tracks is List) {
-          return tracks
-              .map((track) => track as Map<String, dynamic>)
-              .toList();
+          return tracks.map((track) => track as Map<String, dynamic>).toList();
         }
       }
     } catch (_) {}

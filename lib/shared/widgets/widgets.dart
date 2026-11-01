@@ -1,4 +1,4 @@
-/// Aurora Music Widgets
+/// Noxira Music Widgets
 ///
 /// This library exports all reusable UI components in the application,
 /// organized by category:

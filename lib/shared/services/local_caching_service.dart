@@ -15,7 +15,8 @@ class LocalCachingArtistService {
   late Directory cacheDir;
   String? _accessToken;
   static const String _clientId = String.fromEnvironment('SPOTIFY_CLIENT_ID');
-  static const String _clientSecret = String.fromEnvironment('SPOTIFY_CLIENT_SECRET');
+  static const String _clientSecret =
+      String.fromEnvironment('SPOTIFY_CLIENT_SECRET');
   final Map<String, String?> _imageCache = {};
   bool _isInitialized = false;
   bool _spotifyEnabled = false;
@@ -70,8 +71,7 @@ class LocalCachingArtistService {
         final fileName = entity.path.split('/').last;
         if (_isStale(fileName)) continue;
         // Reverse _fileNameFor: "Artist_Name.jpg" → "Artist Name"
-        final artistName =
-            fileName.replaceAll('.jpg', '').replaceAll('_', ' ');
+        final artistName = fileName.replaceAll('.jpg', '').replaceAll('_', ' ');
         _imageCache[artistName] = entity.path;
       }
     } catch (_) {}
@@ -350,7 +350,8 @@ class LocalCachingArtistService {
   Future<String?> _downloadAndCacheImage(
       String imageUrl, File cacheFile, String fileName) async {
     try {
-      final imageResponse = await _client.get(Uri.parse(imageUrl))
+      final imageResponse = await _client
+          .get(Uri.parse(imageUrl))
           .timeout(const Duration(seconds: 10));
 
       if (imageResponse.statusCode == 200) {

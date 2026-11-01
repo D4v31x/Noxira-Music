@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../shared/services/audio_player_service.dart';
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 
 /// Playback controls for the music player.
 ///
@@ -27,11 +28,11 @@ class PlayerControls extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildShuffleButton(iconSize),
-          _buildSkipPreviousButton(skipIconSize),
-          _buildPlayPauseButton(playIconSize),
-          _buildSkipNextButton(skipIconSize),
-          _buildRepeatButton(iconSize),
+          SpringPress(child: _buildShuffleButton(iconSize)),
+          SpringPress(child: _buildSkipPreviousButton(skipIconSize)),
+          SpringPress(child: _buildPlayPauseButton(playIconSize)),
+          SpringPress(child: _buildSkipNextButton(skipIconSize)),
+          SpringPress(child: _buildRepeatButton(iconSize)),
         ],
       ),
     );
@@ -76,9 +77,27 @@ class PlayerControls extends StatelessWidget {
         return IconButton(
           padding: const EdgeInsets.all(4),
           constraints: const BoxConstraints(),
-          icon: isPlaying
-              ? PauseSolid(color: Colors.white, width: iconSize, height: iconSize)
-              : PlaySolid(color: Colors.white, width: iconSize, height: iconSize),
+          icon: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutBack,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(scale: animation, child: child),
+            ),
+            child: isPlaying
+                ? PauseSolid(
+                    key: const ValueKey('pause'),
+                    color: Colors.white,
+                    width: iconSize,
+                    height: iconSize,
+                  )
+                : PlaySolid(
+                    key: const ValueKey('play'),
+                    color: Colors.white,
+                    width: iconSize,
+                    height: iconSize,
+                  ),
+          ),
           onPressed: () {
             if (isPlaying) {
               audioPlayerService.pause();

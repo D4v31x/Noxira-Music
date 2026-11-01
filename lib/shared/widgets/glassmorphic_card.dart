@@ -1,3 +1,4 @@
+import 'motion/musicfy_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:provider/provider.dart';
@@ -225,7 +226,9 @@ class GlassmorphicCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
 
     final borderRadius = BorderRadius.circular(16);
 
@@ -268,7 +271,7 @@ class GlassmorphicCard extends StatelessWidget {
                 child: SizedBox(
                   width: width,
                   height: artworkSize,
-                  child: artwork,
+                  child: ArtworkHero(radius: 16, child: artwork),
                 ),
               ),
               if (badge != null)
@@ -321,11 +324,13 @@ class GlassmorphicCard extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6.0),
-      child: GestureDetector(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        child: RepaintBoundary(
-          child: cardContent,
+      child: Press3D(
+        child: GestureDetector(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          child: RepaintBoundary(
+            child: cardContent,
+          ),
         ),
       ),
     );

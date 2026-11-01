@@ -64,7 +64,8 @@ class AudioSettingsService {
 
         _gaplessPlayback = json['gaplessPlayback'] ?? true;
         _volumeNormalization = json['volumeNormalization'] ?? false;
-        _playbackSpeed = (json['playbackSpeed'] ?? _kDefaultPlaybackSpeed).toDouble();
+        _playbackSpeed =
+            (json['playbackSpeed'] ?? _kDefaultPlaybackSpeed).toDouble();
         _defaultSortOrder = json['defaultSortOrder'] ?? _kDefaultSortOrder;
         _cacheSize = json['cacheSize'] ?? _kDefaultCacheSize;
         _mediaControls = json['mediaControls'] ?? true;

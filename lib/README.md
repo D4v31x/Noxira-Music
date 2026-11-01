@@ -1,6 +1,6 @@
-# Aurora Music - Project Structure
+# Noxira Music - Project Structure
 
-This document describes the folder structure and organization of the Aurora Music Flutter application.
+This document describes the folder structure and organization of the Noxira Music Flutter application.
 
 ## Directory Structure
 

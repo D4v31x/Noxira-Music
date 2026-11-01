@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'dart:ui' as ui show Image;
 import 'dart:math' as math;
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'dart:io';
@@ -39,6 +40,14 @@ import '../screens/listening_recap_screen.dart';
 import 'package:upgrader/upgrader.dart';
 import '../../../shared/widgets/update_dialog.dart';
 import '../../../main.dart' show navigatorKey;
+import '../../../shared/widgets/motion/musicfy_motion.dart';
+import '../../../shared/services/album_query_cache.dart';
+import '../../../shared/widgets/adaptive_blur.dart';
+import '../../splash/animated_logo.dart';
+import '../widgets/library_pull_to_refresh.dart';
+import '../widgets/support_app_bar_content.dart';
+import '../../../shared/services/donation_service.dart';
+import '../../../shared/services/support_goal_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -62,10 +71,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   AnimationController? _animationController;
   final ScrollController _scrollController = ScrollController();
   final ValueNotifier<bool> _isScrolledNotifier = ValueNotifier<bool>(false);
-  // Pull-to-refresh tracking
-  double _pullProgress = 0.0;
-  bool _isRefreshing = false;
-  static const double _pullThreshold = 380.0; // pixels to pull for full refresh
   int _totalSongs = 0;
   List<SeparatedArtist> artists = [];
   List<AlbumModel> albums = [];
@@ -186,6 +191,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         Provider.of<AudioPlayerService>(context, listen: false);
     await InsightsPromoService.checkAndTriggerBanner(
         audioService.firstListenTime);
+
+    // The support banner only takes the app bar when no recap is waiting.
+    if (!mounted || InsightsPromoService.recapBannerNotifier.value) return;
+    await SupportGoalService.checkAndTrigger();
   }
 
   Future<void> _checkAndShowFeedbackReminder() async {
@@ -251,7 +260,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _loadAlbumsAndArtists() async {
     try {
       final onAudioQuery = OnAudioQuery();
-      final loadedAlbums = sanitizeAlbums(await onAudioQuery.queryAlbums());
+      final library =
+          Provider.of<AudioPlayerService>(context, listen: false).songs;
+      final loadedAlbums =
+          sanitizeAlbums(await AlbumQueryCache.get(onAudioQuery, library));
       // Use ArtistAggregatorService for properly separated artists
       final loadedArtists = await _artistAggregator.getAllArtists();
       if (mounted) {
@@ -306,63 +318,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  // Handle overscroll for pull-to-refresh
-  bool _handleOverscroll(OverscrollNotification notification) {
-    // Only handle overscroll at the top (negative overscroll)
-    if (notification.overscroll < 0 && !_isRefreshing) {
-      final pullAmount = -notification.overscroll;
-      _pullProgress =
-          (_pullProgress + pullAmount / _pullThreshold).clamp(0.0, 1.0);
-      _notificationManager.updatePullProgress(_pullProgress);
-    }
-    return false;
-  }
-
-  // Handle scroll updates to allow pulling back (reducing progress)
-  bool _handleScrollUpdate(ScrollUpdateNotification notification) {
-    // If we have pull progress and user is scrolling down (releasing pull)
-    if (_pullProgress > 0 &&
-        !_isRefreshing &&
-        notification.scrollDelta != null) {
-      final delta = notification.scrollDelta!;
-      // Positive delta means scrolling down (releasing the pull)
-      if (delta > 0) {
-        _pullProgress =
-            (_pullProgress - delta / _pullThreshold).clamp(0.0, 1.0);
-        _notificationManager.updatePullProgress(_pullProgress);
-      }
-    }
-    return false;
-  }
-
-  // Handle scroll end to trigger refresh or reset
-  bool _handleScrollEnd(ScrollEndNotification notification) {
-    if (_pullProgress >= 1.0 && !_isRefreshing) {
-      // Trigger refresh
-      _triggerPullRefresh();
-    } else if (!_isRefreshing) {
-      // Reset progress
-      _pullProgress = 0.0;
-      _notificationManager.clearPullProgress();
-    }
-    return false;
-  }
-
-  Future<void> _triggerPullRefresh() async {
-    _isRefreshing = true;
-    _pullProgress = 0.0;
-    unawaited(HapticFeedback.mediumImpact());
-
-    await _refreshLibrary();
-
-    _isRefreshing = false;
-    unawaited(HapticFeedback.lightImpact());
-  }
-
+  /// Rescans the library, reporting progress and the result in the app bar.
   Future<void> _refreshLibrary() async {
     final audioPlayerService =
         Provider.of<AudioPlayerService>(context, listen: false);
     final localizations = AppLocalizations.of(context);
+
+    void showResult(String message) {
+      if (!mounted) return;
+      _notificationManager.showNotification(
+        message,
+        duration: const Duration(seconds: 5),
+        onComplete: () => _notificationManager.showDefaultTitle(),
+      );
+    }
 
     _notificationManager.showNotification(
       localizations.scanningSongs,
@@ -370,53 +339,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
 
     try {
-      // Re-initialize the music library from AudioPlayerService
       // Force rescan to truly re-query all songs from MediaStore
       final success =
           await audioPlayerService.initializeMusicLibrary(forceRescan: true);
-
-      if (success) {
-        // Get the updated songs from the service
-        final allSongs = audioPlayerService.songs;
-        _totalSongs = allSongs.length;
-
-        // Update local state and trigger UI refresh
-        if (mounted) {
-          setState(() {
-            songs = allSongs;
-          });
-
-          // Reload smart suggestions for For You section
-          await _loadSmartSuggestions();
-
-          // Reload albums and artists
-          unawaited(_loadAlbumsAndArtists());
-        }
-
-        if (!mounted) return;
-        _notificationManager.showNotification(
-          '${localizations.libraryUpdated} ($_totalSongs ${localizations.songsLoaded})',
-          duration: const Duration(seconds: 5),
-          onComplete: () => _notificationManager.showDefaultTitle(),
-        );
-
-        await audioPlayerService.saveLibrary();
-      } else {
-        if (!mounted) return;
-        _notificationManager.showNotification(
-          localizations.scanFailed,
-          duration: const Duration(seconds: 5),
-          onComplete: () => _notificationManager.showDefaultTitle(),
-        );
+      if (!success) {
+        showResult(localizations.scanFailed);
+        return;
       }
+
+      final allSongs = audioPlayerService.songs;
+      _totalSongs = allSongs.length;
+
+      if (mounted) {
+        // Second stage: the scan is done, now refresh what is built from it.
+        _notificationManager.showNotification(
+          '$_totalSongs ${localizations.songsLoaded}',
+          isProgress: true,
+        );
+        setState(() {
+          songs = allSongs;
+        });
+
+        // Reload smart suggestions for For You section
+        await _loadSmartSuggestions();
+
+        // Reload albums and artists
+        unawaited(_loadAlbumsAndArtists());
+      }
+
+      await audioPlayerService.saveLibrary();
+      showResult(
+          '${localizations.libraryUpdated} ($_totalSongs ${localizations.songsLoaded})');
     } catch (e) {
       debugPrint('Error refreshing library: $e');
-      if (!mounted) return;
-      _notificationManager.showNotification(
-        localizations.scanFailed,
-        duration: const Duration(seconds: 5),
-        onComplete: () => _notificationManager.showDefaultTitle(),
-      );
+      showResult(localizations.scanFailed);
     }
   }
 
@@ -533,7 +489,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
+        return GlassmorphicDialog(
           title: Text(AppLocalizations.of(dialogContext).permissionRequired),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -734,16 +690,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: message.isEmpty
-                          ? Text(
-                              AppLocalizations.of(context).auroraMusic,
-                              key: const ValueKey('default'),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontFamily: FontConstants.fontFamily,
-                                color: Colors.white,
-                                fontSize: 34,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          ? const Padding(
+                              key: ValueKey('default'),
+                              padding: EdgeInsets.only(bottom: 4),
+                              child: NoxiraWordmark(width: 210),
                             )
                           : AutoScrollText(
                               key: ValueKey(message),
@@ -841,17 +791,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             body: Stack(
               children: [
                 RepaintBoundary(
-                  child: NotificationListener<ScrollNotification>(
-                    onNotification: (notification) {
-                      if (notification is OverscrollNotification) {
-                        return _handleOverscroll(notification);
-                      } else if (notification is ScrollUpdateNotification) {
-                        return _handleScrollUpdate(notification);
-                      } else if (notification is ScrollEndNotification) {
-                        return _handleScrollEnd(notification);
-                      }
-                      return false;
-                    },
+                  child: LibraryPullToRefresh(
+                    topInset: MediaQuery.paddingOf(context).top,
+                    onRefresh: _refreshLibrary,
                     child: NestedScrollView(
                       controller: _scrollController,
                       headerSliverBuilder: (context, innerBoxIsScrolled) => [
@@ -922,34 +864,58 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                               .recapBannerNotifier
                                               .value = false,
                                         )
-                                      : LayoutBuilder(
-                                          key: const ValueKey('normal'),
-                                          builder: (context, constraints) {
-                                            // toolbarHeight(70) + bottom(55) + statusBar padding
-                                            final statusBarHeight =
-                                                MediaQuery.of(context)
-                                                    .padding
-                                                    .top;
-                                            final minHeight = kToolbarHeight +
-                                                55 +
-                                                statusBarHeight;
-                                            final maxHeight =
-                                                250 + statusBarHeight;
-                                            final currentHeight =
-                                                constraints.maxHeight;
-                                            // 0.0 = fully collapsed, 1.0 = fully expanded
-                                            final expandRatio =
-                                                ((currentHeight - minHeight) /
-                                                        (maxHeight - minHeight))
-                                                    .clamp(0.0, 1.0);
-                                            return ColoredBox(
-                                              color: Colors.transparent,
-                                              child: Center(
-                                                child: Opacity(
-                                                  opacity: expandRatio,
-                                                  child: buildAppBarTitle(),
-                                                ),
-                                              ),
+                                      : ValueListenableBuilder<bool>(
+                                          key: const ValueKey(
+                                              'support-or-normal'),
+                                          valueListenable:
+                                              SupportGoalService.bannerNotifier,
+                                          builder: (context, supportShown, _) {
+                                            if (supportShown) {
+                                              return SupportAppBarContent(
+                                                key: const ValueKey('support'),
+                                                onSupport: () {
+                                                  SupportGoalService.dismiss();
+                                                  DonationService
+                                                      .showDonationDialog(
+                                                          context);
+                                                },
+                                                onClose:
+                                                    SupportGoalService.dismiss,
+                                              );
+                                            }
+                                            return LayoutBuilder(
+                                              key: const ValueKey('normal'),
+                                              builder: (context, constraints) {
+                                                // toolbarHeight(70) + bottom(55) + statusBar padding
+                                                final statusBarHeight =
+                                                    MediaQuery.of(context)
+                                                        .padding
+                                                        .top;
+                                                final minHeight =
+                                                    kToolbarHeight +
+                                                        55 +
+                                                        statusBarHeight;
+                                                final maxHeight =
+                                                    250 + statusBarHeight;
+                                                final currentHeight =
+                                                    constraints.maxHeight;
+                                                // 0.0 = fully collapsed, 1.0 = fully expanded
+                                                final expandRatio =
+                                                    ((currentHeight -
+                                                                minHeight) /
+                                                            (maxHeight -
+                                                                minHeight))
+                                                        .clamp(0.0, 1.0);
+                                                return ColoredBox(
+                                                  color: Colors.transparent,
+                                                  child: Center(
+                                                    child: Opacity(
+                                                      opacity: expandRatio,
+                                                      child: buildAppBarTitle(),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
                                             );
                                           },
                                         ),
@@ -1017,11 +983,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 );
                               },
                               onResetSetup: () {
-                                Navigator.pushReplacement(
+                                // Clears the stack (including the About page this
+                                // is called from); onboarding ends by opening Home.
+                                // The mini player would cover its bottom buttons.
+                                ExpandingPlayer.hiddenNotifier.value = true;
+                                Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
                                       builder: (context) =>
                                           const OnboardingScreen()),
+                                  (route) => false,
                                 );
                               },
                             ),
@@ -1076,50 +1047,59 @@ class _HomeTabBarState extends State<_HomeTabBar> {
   }
 
   Widget _buildTabItem(BuildContext context, String text) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 80),
-      height: 28,
-      child: Tab(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            text,
-            maxLines: 1,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontFamily: FontConstants.fontFamily,
-              fontWeight: FontWeight.w500,
+    return SpringPress(
+        pressedScale: 0.85,
+        damping: 0.6,
+        stiffness: 300,
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 80),
+          height: 28,
+          child: Tab(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                text,
+                maxLines: 1,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontFamily: FontConstants.fontFamily,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return TabBar(
-      controller: widget.tabController,
-      dividerColor: Colors.transparent,
-      labelPadding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
-      indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
-      indicator: OutlineIndicator(
-        radius: const Radius.circular(20),
-        text: [
-          AppLocalizations.of(context).home,
-          AppLocalizations.of(context).library,
-          AppLocalizations.of(context).search,
-          AppLocalizations.of(context).settings,
-        ][_currentIndex],
-      ),
-      tabs: [
-        _buildTabItem(context, AppLocalizations.of(context).home),
-        _buildTabItem(context, AppLocalizations.of(context).library),
-        _buildTabItem(context, AppLocalizations.of(context).search),
-        _buildTabItem(context, AppLocalizations.of(context).settings),
-      ],
-    );
+    return Press3D(
+        maxTilt: 4,
+        pressedScale: 0.985,
+        opensPage: false,
+        child: TabBar(
+          controller: widget.tabController,
+          dividerColor: Colors.transparent,
+          labelPadding:
+              const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+          indicatorPadding: const EdgeInsets.symmetric(vertical: 4.0),
+          indicator: OutlineIndicator(
+            radius: const Radius.circular(20),
+            text: [
+              AppLocalizations.of(context).home,
+              AppLocalizations.of(context).library,
+              AppLocalizations.of(context).search,
+              AppLocalizations.of(context).settings,
+            ][_currentIndex],
+          ),
+          tabs: [
+            _buildTabItem(context, AppLocalizations.of(context).home),
+            _buildTabItem(context, AppLocalizations.of(context).library),
+            _buildTabItem(context, AppLocalizations.of(context).search),
+            _buildTabItem(context, AppLocalizations.of(context).settings),
+          ],
+        ));
   }
 }
 
@@ -1175,7 +1155,7 @@ class _BlurredNavBar extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: radius,
-      child: BackdropFilter(
+      child: AdaptiveBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: inner,
       ),
@@ -1222,6 +1202,7 @@ class _RecapAppBarContentState extends State<_RecapAppBarContent>
   @override
   void dispose() {
     _entryCtrl.dispose();
+    _bakedBackground?.dispose();
     super.dispose();
   }
 
@@ -1230,96 +1211,160 @@ class _RecapAppBarContentState extends State<_RecapAppBarContent>
     if (mounted) callback();
   }
 
+  // The banner background never animates, so it is rasterised once into a
+  // texture instead of re-drawing six huge screen-blend gradients and a
+  // full-banner mask layer on every scroll / transition frame.
+  ui.Image? _bakedBackground;
+  Size? _bakedSize;
+  double? _bakedRatio;
+
+  static const _fadeMask = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    stops: [0.0, 0.28, 1.0],
+    colors: [Colors.white, Colors.white, Colors.transparent],
+  );
+
+  ui.Image _background(Size size, double devicePixelRatio) {
+    // The gradients are very soft, so half resolution is visually identical.
+    final ratio = math.max(1.0, devicePixelRatio * 0.5);
+    final cached = _bakedBackground;
+    if (cached != null && _bakedSize == size && _bakedRatio == ratio) {
+      return cached;
+    }
+    cached?.dispose();
+
+    final rect = Offset.zero & size;
+    final recorder = PictureRecorder();
+    final canvas = Canvas(recorder)..scale(ratio);
+    canvas.saveLayer(rect, Paint());
+    canvas.drawRect(rect, Paint()..color = const Color(0xFF08000F));
+    // Own layer so the blobs' screen blend starts from a transparent backdrop,
+    // exactly like the RepaintBoundary this replaces.
+    canvas.saveLayer(rect, Paint());
+    const _RecapAuroraPainter(0.2).paint(canvas, size);
+    canvas.restore();
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..blendMode = BlendMode.dstIn
+        ..shader = _fadeMask.createShader(rect),
+    );
+    canvas.restore();
+    final picture = recorder.endRecording();
+    final image = picture.toImageSync(
+      (size.width * ratio).ceil(),
+      (size.height * ratio).ceil(),
+    );
+    picture.dispose();
+
+    _bakedBackground = image;
+    _bakedSize = size;
+    _bakedRatio = ratio;
+    return image;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // RepaintBoundary isolates the whole banner (incl. the ShaderMask, which
-    // always needs its own offscreen layer) onto a single cached compositing
-    // layer, so the SliverAppBar's per-scroll-frame collapse/parallax
-    // recomposition doesn't force this subtree to re-rasterize every frame.
+    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
+    final l10n = AppLocalizations.of(context);
     return RepaintBoundary(
-      child: ShaderMask(
-        shaderCallback: (bounds) => const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          stops: [0.0, 0.28, 1.0],
-          colors: [Colors.white, Colors.white, Colors.transparent],
-        ).createShader(bounds),
-        blendMode: BlendMode.dstIn,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            const ColoredBox(color: Color(0xFF08000F)),
-            // Static — painted once, no animation driving continuous repaints.
-            const RepaintBoundary(
-              child: CustomPaint(painter: _RecapAuroraPainter(0.2)),
-            ),
-            FadeTransition(
-              opacity: _fadeAnim,
-              child: SlideTransition(
-                position: _slideAnim,
-                child: Align(
-                  alignment: const Alignment(0, 0.05),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        AppLocalizations.of(context).recapBannerTitle,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w600,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withValues(alpha: 0.5),
-                              blurRadius: 12,
-                            ),
-                          ],
-                        ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final size = constraints.biggest;
+          return Stack(
+            fit: StackFit.expand,
+            children: [
+              if (size.isFinite && !size.isEmpty)
+                RawImage(
+                  image: _background(size, devicePixelRatio),
+                  fit: BoxFit.fill,
+                  filterQuality: FilterQuality.low,
+                ),
+              FadeTransition(
+                opacity: _fadeAnim,
+                child: SlideTransition(
+                  position: _slideAnim,
+                  child: Align(
+                    alignment: const Alignment(0, 0.05),
+                    // Same fade-out as the background, but masking only the
+                    // text block instead of the whole banner. The gradient is
+                    // anchored to the banner, so the result is unchanged.
+                    child: ShaderMask(
+                      shaderCallback: (bounds) {
+                        final top = (size.height - bounds.height) * 0.525;
+                        return _fadeMask.createShader(
+                          Rect.fromLTWH(0, -top, bounds.width, size.height),
+                        );
+                      },
+                      blendMode: BlendMode.dstIn,
+                      // Padding keeps the text shadow from being clipped.
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 24),
+                        child: _buildContent(l10n),
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          FilledButton(
-                            onPressed: () => _dismiss(widget.onShow),
-                            style: FilledButton.styleFrom(
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: 0.18),
-                              foregroundColor: Colors.white,
-                              side: BorderSide(
-                                  color: Colors.white.withValues(alpha: 0.35)),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(50)),
-                            ),
-                            child: Text(
-                                AppLocalizations.of(context).recapBannerShow),
-                          ),
-                          const SizedBox(width: 12),
-                          TextButton(
-                            onPressed: () => _dismiss(widget.onLater),
-                            style: TextButton.styleFrom(
-                              foregroundColor:
-                                  Colors.white.withValues(alpha: 0.65),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                            ),
-                            child: Text(
-                                AppLocalizations.of(context).recapBannerLater),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildContent(AppLocalizations l10n) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          l10n.recapBannerTitle,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.w600,
+            shadows: [
+              Shadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 12,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            FilledButton(
+              onPressed: () => _dismiss(widget.onShow),
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white.withValues(alpha: 0.18),
+                foregroundColor: Colors.white,
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.35)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50)),
+              ),
+              child: Text(l10n.recapBannerShow),
+            ),
+            const SizedBox(width: 12),
+            TextButton(
+              onPressed: () => _dismiss(widget.onLater),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white.withValues(alpha: 0.65),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ),
+              child: Text(l10n.recapBannerLater),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 }

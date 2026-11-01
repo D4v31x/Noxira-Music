@@ -59,8 +59,7 @@ class _HomeTabState extends State<HomeTab> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionTitle(
-                title: l10n.suggestedArtists, isTablet: isTablet),
+            _SectionTitle(title: l10n.suggestedArtists, isTablet: isTablet),
             SizedBox(height: isTablet ? 16.0 : 12.0),
             RepaintBoundary(
               child: SuggestedArtistsSection(
@@ -76,8 +75,7 @@ class _HomeTabState extends State<HomeTab> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionTitle(
-                title: l10n.recentlyPlayed, isTablet: isTablet),
+            _SectionTitle(title: l10n.recentlyPlayed, isTablet: isTablet),
             SizedBox(height: isTablet ? 16.0 : 12.0),
             const RepaintBoundary(child: RecentlyPlayedSection()),
             SizedBox(height: spacing),
@@ -87,8 +85,7 @@ class _HomeTabState extends State<HomeTab> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionTitle(
-                title: l10n.mostPlayed, isTablet: isTablet),
+            _SectionTitle(title: l10n.mostPlayed, isTablet: isTablet),
             SizedBox(height: isTablet ? 16.0 : 12.0),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: isTablet ? 24.0 : 16.0),
@@ -109,8 +106,7 @@ class _HomeTabState extends State<HomeTab> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _SectionTitle(
-                title: l10n.recentlyAdded, isTablet: isTablet),
+            _SectionTitle(title: l10n.recentlyAdded, isTablet: isTablet),
             SizedBox(height: isTablet ? 16.0 : 12.0),
             const RepaintBoundary(child: RecentlyAddedSection()),
             SizedBox(height: spacing),

@@ -14,9 +14,11 @@ import '../../../shared/services/metadata_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/audio/audio_properties_reader.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
+import '../../../shared/utils/flac_repair.dart';
 
 class MetadataDetailScreen extends StatefulWidget {
   final SongModel song;
@@ -59,7 +61,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
   String? _sampleRate;
 
   // Inline auto-tag search state
-  final TextEditingController _autoTagSearchController = TextEditingController();
+  final TextEditingController _autoTagSearchController =
+      TextEditingController();
   List<Map<String, dynamic>>? _autoTagResults;
   bool _autoTagIsLoading = false;
   // Index of the result currently being applied/downloaded (null = none).
@@ -68,7 +71,10 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
   @override
   void initState() {
     super.initState();
-    ExpandingPlayer.hiddenNotifier.value = true;
+    // Notifying listeners while the tree is building throws.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) ExpandingPlayer.hiddenNotifier.value = true;
+    });
     _initControllers();
     _loadTags();
     _loadCachedArtwork();
@@ -157,7 +163,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
 
   @override
   void dispose() {
-    ExpandingPlayer.hiddenNotifier.value = false;
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => ExpandingPlayer.hiddenNotifier.value = false);
     _titleController.dispose();
     _artistController.dispose();
     _albumController.dispose();
@@ -442,57 +449,52 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
     final loc = AppLocalizations.of(context);
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+      builder: (context) => GlassmorphicDialog(
+        title: Text(
+          loc.saveChanges,
+          style: const TextStyle(
+            color: Colors.white,
+            fontFamily: FontConstants.fontFamily,
+            fontWeight: FontWeight.bold,
           ),
-          title: Text(
-            loc.saveChanges,
-            style: const TextStyle(
-              color: Colors.white,
-              fontFamily: FontConstants.fontFamily,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            loc.saveChangesDesc,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontFamily: FontConstants.fontFamily,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _discardChanges();
-              },
-              child: Text(
-                loc.discard,
-                style: const TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _saveChanges();
-              },
-              child: Text(
-                loc.save,
-                style: const TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         ),
+        content: Text(
+          loc.saveChangesDesc,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontFamily: FontConstants.fontFamily,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _discardChanges();
+            },
+            child: Text(
+              loc.discard,
+              style: const TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _saveChanges();
+            },
+            child: Text(
+              loc.save,
+              style: const TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -559,6 +561,11 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
             : _currentTag?.pictures ?? [],
       );
       await AudioTags.write(tempFile.path, updatedTag);
+      // The tag writer can leave FLAC files with an unflagged last metadata
+      // block, which ExoPlayer refuses to play. Repair before pushing back.
+      if (await FlacRepair.ensureLastBlockFlag(tempFile.path)) {
+        debugPrint('[META] Step 2 – repaired FLAC last-block flag');
+      }
       debugPrint(
           '[META] Step 2 – AudioTags.write OK, temp size now: ${tempFile.lengthSync()} bytes');
 
@@ -579,7 +586,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
             await tempFile.delete();
           } catch (_) {}
           if (mounted) {
-            NotificationManager.showMessage(context, loc.storagePermissionNeeded);
+            NotificationManager.showMessage(
+                context, loc.storagePermissionNeeded);
           }
           return;
         }
@@ -661,101 +669,96 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
   void _showSaveErrorDialog(AppLocalizations loc, String error) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          title: Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.red[400]),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  loc.saveFailed,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontFamily: FontConstants.fontFamily,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                loc.saveFailedDesc,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontFamily: FontConstants.fontFamily,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Show the raw error so we can diagnose it without logcat
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.black38,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: SelectableText(
-                  error,
-                  style: const TextStyle(
-                    color: Colors.redAccent,
-                    fontSize: 11,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      loc.possibleReasons,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                        fontFamily: FontConstants.fontFamily,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildReasonItem(loc.reasonPermissions),
-                    _buildReasonItem(loc.reasonReadonly),
-                    _buildReasonItem(loc.reasonFormat),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
+      builder: (context) => GlassmorphicDialog(
+        title: Row(
+          children: [
+            Icon(Icons.error_outline, color: Colors.red[400]),
+            const SizedBox(width: 12),
+            Expanded(
               child: Text(
-                loc.gotIt,
+                loc.saveFailed,
                 style: const TextStyle(
-                  fontFamily: FontConstants.fontFamily,
                   color: Colors.white,
+                  fontSize: 18,
+                  fontFamily: FontConstants.fontFamily,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
           ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              loc.saveFailedDesc,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontFamily: FontConstants.fontFamily,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Show the raw error so we can diagnose it without logcat
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.black38,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SelectableText(
+                error,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    loc.possibleReasons,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                      fontFamily: FontConstants.fontFamily,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildReasonItem(loc.reasonPermissions),
+                  _buildReasonItem(loc.reasonReadonly),
+                  _buildReasonItem(loc.reasonFormat),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              loc.gotIt,
+              style: const TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -790,7 +793,9 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return AppBackground(
@@ -801,7 +806,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const iconoir.NavArrowLeft(color: Colors.white, width: 28, height: 28),
+            icon: const iconoir.NavArrowLeft(
+                color: Colors.white, width: 28, height: 28),
             onPressed: () {
               if (_hasChanges) {
                 _showSaveDialog();
@@ -904,8 +910,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                                 Icons.folder_open_outlined,
                                 size: 20,
                                 color: Colors.white,
-                                semanticLabel:
-                                    loc.chooseArtworkFromDevice,
+                                semanticLabel: loc.chooseArtworkFromDevice,
                               ),
                             ),
                           ),
@@ -932,10 +937,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                 Icons.graphic_eq,
                 [
                   _buildInfoRow(loc.format, _getFileFormat()),
-                  _buildInfoRow(loc.bitrate,
-                      '${_estimateBitrateValue()} kbps'),
-                  _buildInfoRow(
-                      loc.sampleRate, _sampleRate ?? '…'),
+                  _buildInfoRow(loc.bitrate, '${_estimateBitrateValue()} kbps'),
+                  _buildInfoRow(loc.sampleRate, _sampleRate ?? '…'),
                   _buildInfoRow(loc.duration, _formatDuration()),
                 ],
                 description: loc.audioQualityDesc,
@@ -953,16 +956,13 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                   _buildEditableRow(loc.artist, _artistController),
                   _buildEditableRow(loc.album, _albumController),
                   _buildEditableRow(loc.genre, _genreController),
-                  _buildEditableRow(loc.year, _yearController,
-                      isNumber: true),
+                  _buildEditableRow(loc.year, _yearController, isNumber: true),
                   _buildEditableRow(loc.track, _trackController,
                       isNumber: true),
-                  _buildEditableRow(
-                      loc.composer, _composerController),
+                  _buildEditableRow(loc.composer, _composerController),
                 ],
-                description: _isEditing
-                    ? loc.trackInfoEditDesc
-                    : loc.trackInfoDesc,
+                description:
+                    _isEditing ? loc.trackInfoEditDesc : loc.trackInfoDesc,
                 isLowEnd: isLowEnd,
                 colorScheme: colorScheme,
               ),
@@ -973,12 +973,11 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                 loc.fileInfo,
                 Icons.folder_outlined,
                 [
-                  _buildInfoRow(loc.fileName, _getFileName(),
-                      canCopy: true),
+                  _buildInfoRow(loc.fileName, _getFileName(), canCopy: true),
                   _buildInfoRow(loc.size, _getFileSizeFormatted()),
                   if (widget.song.dateAdded != null)
-                    _buildInfoRow(loc.dateAdded,
-                        _formatDate(widget.song.dateAdded)),
+                    _buildInfoRow(
+                        loc.dateAdded, _formatDate(widget.song.dateAdded)),
                   if (widget.song.dateModified != null)
                     _buildInfoRow(loc.dateModified,
                         _formatDate(widget.song.dateModified)),
@@ -999,24 +998,29 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
     );
   }
 
-  Widget _buildQualityCard(AppLocalizations loc, bool isLowEnd, ColorScheme colorScheme) {
+  Widget _buildQualityCard(
+      AppLocalizations loc, bool isLowEnd, ColorScheme colorScheme) {
     final qualityColor = _getQualityColor(loc);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: isLowEnd ? null : LinearGradient(
-          colors: [
-            qualityColor.withValues(alpha: 0.3),
-            qualityColor.withValues(alpha: 0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: isLowEnd
+            ? null
+            : LinearGradient(
+                colors: [
+                  qualityColor.withValues(alpha: 0.3),
+                  qualityColor.withValues(alpha: 0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
         color: isLowEnd ? colorScheme.surfaceContainerHigh : null,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isLowEnd ? colorScheme.outlineVariant : qualityColor.withValues(alpha: 0.3),
+          color: isLowEnd
+              ? colorScheme.outlineVariant
+              : qualityColor.withValues(alpha: 0.3),
         ),
       ),
       // replace two uses of _getQualityColor(loc) below with local variable
@@ -1225,7 +1229,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
     );
   }
 
-  Widget _buildPathCard(AppLocalizations loc, bool isLowEnd, ColorScheme colorScheme) {
+  Widget _buildPathCard(
+      AppLocalizations loc, bool isLowEnd, ColorScheme colorScheme) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -1263,8 +1268,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                   color: Colors.white.withValues(alpha: 0.5),
                   size: 18,
                 ),
-                onPressed: () => _copyToClipboard(
-                    widget.song.data, loc.filePath),
+                onPressed: () =>
+                    _copyToClipboard(widget.song.data, loc.filePath),
                 tooltip: loc.copy,
               ),
             ],
@@ -1372,8 +1377,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                         borderSide: BorderSide.none),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide:
-                          BorderSide(color: colorScheme.primary),
+                      borderSide: BorderSide(color: colorScheme.primary),
                     ),
                   ),
                   onSubmitted: (_) => _runAutoTagSearch(),
@@ -1457,26 +1461,26 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                                           errorBuilder: (_, __, ___) =>
                                               Container(
                                             width: 104,
-                                        height: 104,
-                                        color: Colors.grey[800],
-                                        child: const Icon(Icons.music_note,
-                                            color: Colors.white54),
-                                      ),
-                                    )
-                                  : Container(
-                                      width: 104,
-                                      height: 104,
-                                      color: Colors.grey[800],
-                                      child: const Icon(Icons.music_note,
-                                          color: Colors.white54),
-                                    ),
+                                            height: 104,
+                                            color: Colors.grey[800],
+                                            child: const Icon(Icons.music_note,
+                                                color: Colors.white54),
+                                          ),
+                                        )
+                                      : Container(
+                                          width: 104,
+                                          height: 104,
+                                          color: Colors.grey[800],
+                                          child: const Icon(Icons.music_note,
+                                              color: Colors.white54),
+                                        ),
                                   // Loading indicator overlay while this
                                   // result's metadata/artwork is downloading.
                                   if (isApplying)
                                     Positioned.fill(
                                       child: ColoredBox(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.55),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.55),
                                         child: const Center(
                                           child: SizedBox(
                                             width: 26,
@@ -1497,11 +1501,9 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                             // Text
                             Expanded(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(6, 5, 6, 4),
+                                padding: const EdgeInsets.fromLTRB(6, 5, 6, 4),
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       title,
@@ -1531,8 +1533,8 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.4),
+                                        color:
+                                            Colors.white.withValues(alpha: 0.4),
                                         fontSize: 9,
                                         fontFamily: FontConstants.fontFamily,
                                       ),

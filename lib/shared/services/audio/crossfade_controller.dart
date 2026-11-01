@@ -143,8 +143,8 @@ extension AudioCrossfadeControllerExtension on AudioPlayerService {
       // track doesn't suddenly change tempo when it becomes primary — unless
       // an AutoMix tempo correction override is supplied.
       await standby.setSpeed(speedOverride ?? _playbackSpeed);
-      await standby.setPitch(
-          pitchOverride ?? (_pitchWithSpeed ? _playbackSpeed : 1.0));
+      await standby
+          .setPitch(pitchOverride ?? (_pitchWithSpeed ? _playbackSpeed : 1.0));
 
       final uri = nextSong.uri ?? nextSong.data;
       final nextMediaItem = await _createMediaItem(nextSong);

@@ -1,4 +1,4 @@
-/// Aurora Music Player Widgets
+/// Noxira Music Player Widgets
 ///
 /// This library exports all reusable player UI components:
 /// - PlayerProgressBar: Seekable audio progress bar

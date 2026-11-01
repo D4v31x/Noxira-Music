@@ -21,7 +21,6 @@ import '../../../shared/utils/formatters/duration_formatter.dart';
 import '../../../shared/widgets/optimized_tiles.dart' show NowPlayingBars;
 import '../screens/track_tag_editor_screen.dart';
 
-
 /// Index of the tag currently playing — the last tag whose position is at
 /// or before [position] — or -1 if [position] precedes every tag.
 int _activeTagIndex(List<TrackTag> tags, Duration position) {
@@ -220,8 +219,7 @@ class _TagsListCard extends StatelessWidget {
                                     ),
                                     if (isActive)
                                       NowPlayingBars(
-                                        isPlaying:
-                                            audioPlayerService.isPlaying,
+                                        isPlaying: audioPlayerService.isPlaying,
                                         size: 16,
                                       )
                                     else
@@ -245,7 +243,6 @@ class _TagsListCard extends StatelessWidget {
     );
   }
 }
-
 
 class _TagSuggestionBar extends StatelessWidget {
   final AudioPlayerService audioPlayerService;
@@ -324,4 +321,3 @@ class _TagSuggestionBar extends StatelessWidget {
     );
   }
 }
-

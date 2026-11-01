@@ -1,4 +1,4 @@
-/// File size formatting utilities for the Aurora Music app.
+/// File size formatting utilities for the Noxira Music app.
 ///
 /// Provides consistent file size formatting across the application.
 library;

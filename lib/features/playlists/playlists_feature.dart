@@ -1,4 +1,4 @@
-/// Aurora Music Playlists Feature
+/// Noxira Music Playlists Feature
 ///
 /// This library exports the playlists feature components:
 /// - Playlists screens

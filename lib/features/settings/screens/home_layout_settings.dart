@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/services/home_layout_service.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 
 /// Settings screen for customizing home tab layout and section order
 class HomeLayoutSettingsScreen extends StatefulWidget {
@@ -22,56 +23,57 @@ class _HomeLayoutSettingsScreenState extends State<HomeLayoutSettingsScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context);
 
-    return AppBackground(child: Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
+    return AppBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: iconoir.NavArrowLeft(
-            color: isDark ? Colors.white : Colors.black,
-            width: 28,
-            height: 28,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: iconoir.NavArrowLeft(
+              color: isDark ? Colors.white : Colors.black,
+              width: 28,
+              height: 28,
+            ),
+            onPressed: () => Navigator.pop(context),
           ),
-          onPressed: () => Navigator.pop(context),
+          title: Text(
+            l10n.customizeHomeTab,
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.white : Colors.black,
+            ),
+          ),
+          actions: [
+            Consumer<HomeLayoutService>(
+              builder: (context, layoutService, _) {
+                if (layoutService.isCustomLayout) {
+                  return IconButton(
+                    icon: Icon(
+                      Icons.restore_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    tooltip: l10n.resetToDefault,
+                    onPressed: () => _showResetDialog(context, layoutService),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          ],
         ),
-        title: Text(
-          l10n.customizeHomeTab,
-          style: TextStyle(
-            fontFamily: FontConstants.fontFamily,
-            fontWeight: FontWeight.bold,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-        actions: [
-          Consumer<HomeLayoutService>(
-            builder: (context, layoutService, _) {
-              if (layoutService.isCustomLayout) {
-                return IconButton(
-                  icon: Icon(
-                    Icons.restore_rounded,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  tooltip: l10n.resetToDefault,
-                  onPressed: () => _showResetDialog(context, layoutService),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
-      body: Consumer<HomeLayoutService>(
-        builder: (context, layoutService, _) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Instructions
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
+        body: Consumer<HomeLayoutService>(
+          builder: (context, layoutService, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Instructions
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: (isDark ? Colors.white : Colors.black)
@@ -102,62 +104,62 @@ class _HomeLayoutSettingsScreenState extends State<HomeLayoutSettingsScreen> {
                         ],
                       ),
                     ),
-                ),
-              ),
-              // Section list
-              Expanded(
-                child: ReorderableListView.builder(
-                  padding: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    bottom: MediaQuery.of(context).padding.bottom + 16,
                   ),
-                  itemCount: layoutService.sectionOrder.length,
-                  onReorderItem: (oldIndex, newIndex) {
-                    HapticFeedback.mediumImpact();
-                    layoutService.reorderSections(oldIndex, newIndex);
-                  },
-                  proxyDecorator: (child, index, animation) {
-                    return AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, child) {
-                        final double elevation =
-                            Curves.easeInOut.transform(animation.value) * 8;
-                        return Material(
-                          elevation: elevation,
-                          borderRadius: BorderRadius.circular(16),
-                          shadowColor: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.3),
-                          child: child,
-                        );
-                      },
-                      child: child,
-                    );
-                  },
-                  itemBuilder: (context, index) {
-                    final section = layoutService.sectionOrder[index];
-                    final isVisible = layoutService.isSectionVisible(section);
-
-                    return _SectionTile(
-                      key: ValueKey(section),
-                      section: section,
-                      isVisible: isVisible,
-                      isDark: isDark,
-                      onVisibilityChanged: (visible) {
-                        HapticFeedback.lightImpact();
-                        layoutService.setSectionVisibility(section, visible);
-                      },
-                    );
-                  },
                 ),
-              ),
-            ],
-          );
-        },
+                // Section list
+                Expanded(
+                  child: ReorderableListView.builder(
+                    padding: EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: MediaQuery.of(context).padding.bottom + 16,
+                    ),
+                    itemCount: layoutService.sectionOrder.length,
+                    onReorderItem: (oldIndex, newIndex) {
+                      HapticFeedback.mediumImpact();
+                      layoutService.reorderSections(oldIndex, newIndex);
+                    },
+                    proxyDecorator: (child, index, animation) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, child) {
+                          final double elevation =
+                              Curves.easeInOut.transform(animation.value) * 8;
+                          return Material(
+                            elevation: elevation,
+                            borderRadius: BorderRadius.circular(16),
+                            shadowColor: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.3),
+                            child: child,
+                          );
+                        },
+                        child: child,
+                      );
+                    },
+                    itemBuilder: (context, index) {
+                      final section = layoutService.sectionOrder[index];
+                      final isVisible = layoutService.isSectionVisible(section);
+
+                      return _SectionTile(
+                        key: ValueKey(section),
+                        section: section,
+                        isVisible: isVisible,
+                        isDark: isDark,
+                        onVisibilityChanged: (visible) {
+                          HapticFeedback.lightImpact();
+                          layoutService.setSectionVisibility(section, visible);
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
-    ),
     );
   }
 
@@ -166,55 +168,50 @@ class _HomeLayoutSettingsScreenState extends State<HomeLayoutSettingsScreen> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-          backgroundColor: Colors.grey[900]?.withValues(alpha: 0.9),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+      builder: (context) => GlassmorphicDialog(
+        title: Text(
+          l10n.resetLayoutConfirm,
+          style: const TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
-          title: Text(
-            l10n.resetLayoutConfirm,
-            style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Text(
-            l10n.resetLayoutMessage,
-            style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white70,
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(
-                l10n.cancel,
-                style: const TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                layoutService.resetToDefault();
-                Navigator.pop(context);
-                HapticFeedback.mediumImpact();
-              },
-              child: Text(
-                l10n.resetToDefault,
-                style: const TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
         ),
+        content: Text(
+          l10n.resetLayoutMessage,
+          style: const TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Colors.white70,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              l10n.cancel,
+              style: const TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              layoutService.resetToDefault();
+              Navigator.pop(context);
+              HapticFeedback.mediumImpact();
+            },
+            child: Text(
+              l10n.resetToDefault,
+              style: const TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -261,68 +258,68 @@ class _SectionTile extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
         child: DecoratedBox(
-            decoration: BoxDecoration(
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : Colors.black)
+                .withValues(alpha: isVisible ? 0.08 : 0.03),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
               color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isVisible ? 0.08 : 0.03),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: (isDark ? Colors.white : Colors.black)
-                    .withValues(alpha: isVisible ? 0.15 : 0.05),
-              ),
-            ),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: isVisible ? 0.15 : 0.05),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  _getSectionIcon(),
-                  size: 22,
-                  color: isVisible
-                      ? Theme.of(context).colorScheme.primary
-                      : (isDark ? Colors.white38 : Colors.black26),
-                ),
-              ),
-              title: Text(
-                section.localizedName(l10n),
-                style: TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                  color: isVisible
-                      ? (isDark ? Colors.white : Colors.black)
-                      : (isDark ? Colors.white38 : Colors.black38),
-                ),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Visibility toggle
-                  Switch.adaptive(
-                    value: isVisible,
-                    onChanged: onVisibilityChanged,
-                    activeTrackColor: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  // Drag handle
-                  ReorderableDragStartListener(
-                    index: HomeLayoutService().sectionOrder.indexOf(section),
-                    child: Icon(
-                      Icons.drag_handle_rounded,
-                      color: isDark ? Colors.white38 : Colors.black26,
-                    ),
-                  ),
-                ],
-              ),
+                  .withValues(alpha: isVisible ? 0.15 : 0.05),
             ),
           ),
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: isVisible ? 0.15 : 0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                _getSectionIcon(),
+                size: 22,
+                color: isVisible
+                    ? Theme.of(context).colorScheme.primary
+                    : (isDark ? Colors.white38 : Colors.black26),
+              ),
+            ),
+            title: Text(
+              section.localizedName(l10n),
+              style: TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+                color: isVisible
+                    ? (isDark ? Colors.white : Colors.black)
+                    : (isDark ? Colors.white38 : Colors.black38),
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Visibility toggle
+                Switch.adaptive(
+                  value: isVisible,
+                  onChanged: onVisibilityChanged,
+                  activeTrackColor: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                // Drag handle
+                ReorderableDragStartListener(
+                  index: HomeLayoutService().sectionOrder.indexOf(section),
+                  child: Icon(
+                    Icons.drag_handle_rounded,
+                    color: isDark ? Colors.white38 : Colors.black26,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

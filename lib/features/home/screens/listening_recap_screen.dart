@@ -44,13 +44,14 @@ class _RecapData {
   final List<MapEntry<String, int>> topTracks;
   final List<MapEntry<String, int>> topArtists;
   final List<MapEntry<String, int>> topGenres;
-  final Map<String, String> trackTitles;      // trackId → "Title — Artist"
-  final Map<String, int> trackSongIds;         // trackId → int song ID
+  final Map<String, String> trackTitles; // trackId → "Title — Artist"
+  final Map<String, int> trackSongIds; // trackId → int song ID
   final Map<String, Uint8List?> trackArtworks; // trackId → artwork bytes
-  final List<Color> topTrackPalette;           // gradient from #1 track art
-  final List<Color> topArtistPalette;          // gradient from top artist art
-  final Uint8List? topArtistArtwork;           // art for top artist slide
-  final Map<String, Uint8List?> artistArtworks; // artistName → Spotify image bytes
+  final List<Color> topTrackPalette; // gradient from #1 track art
+  final List<Color> topArtistPalette; // gradient from top artist art
+  final Uint8List? topArtistArtwork; // art for top artist slide
+  final Map<String, Uint8List?>
+      artistArtworks; // artistName → Spotify image bytes
 
   const _RecapData({
     required this.periodDays,
@@ -315,7 +316,8 @@ class _ListeningRecapScreenState extends State<ListeningRecapScreen> {
     final l10n = AppLocalizations.of(context);
     final specs = <_PageSpec>[];
     final pl = data.periodDays == 7 ? l10n.recapWeek : l10n.recapMonth;
-    final plCap = data.periodDays == 7 ? l10n.recapPeriodWeek : l10n.recapPeriodMonth;
+    final plCap =
+        data.periodDays == 7 ? l10n.recapPeriodWeek : l10n.recapPeriodMonth;
     final weekdays = [
       l10n.recapWeekdayMonday,
       l10n.recapWeekdayTuesday,
@@ -336,8 +338,8 @@ class _ListeningRecapScreenState extends State<ListeningRecapScreen> {
         colors: [Color(0xFF2D0060), Color(0xFF100830), Color(0xFF0A0B30)],
         stops: [0.0, 0.5, 1.0],
       ),
-      builder: (_, isLast, isActive) =>
-          _IntroSlide(periodDays: data.periodDays, isLast: isLast, isActive: isActive),
+      builder: (_, isLast, isActive) => _IntroSlide(
+          periodDays: data.periodDays, isLast: isLast, isActive: isActive),
     ));
 
     // 2 — Total plays
@@ -351,7 +353,9 @@ class _ListeningRecapScreenState extends State<ListeningRecapScreen> {
         builder: (_, isLast, isActive) => _BigStatSlide(
           eyebrow: l10n.recapPlayedEyebrow(pl),
           bigNumber: '${data.totalListens}',
-          label: data.totalListens == 1 ? l10n.recapTimeSingular : l10n.recapTimePlural,
+          label: data.totalListens == 1
+              ? l10n.recapTimeSingular
+              : l10n.recapTimePlural,
           isLast: isLast,
           isActive: isActive,
         ),
@@ -567,7 +571,8 @@ class _ListeningRecapScreenState extends State<ListeningRecapScreen> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   child: Row(
                     children: [
                       IconButton(
@@ -779,7 +784,9 @@ class _BlobPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..blendMode = BlendMode.screen;
+    // The blobs are white, and screen == source-over for a white source. Plain
+    // source-over avoids the framebuffer copy a screen blend forces every frame.
+    final paint = Paint();
     final t = Curves.easeInOut.transform(progress);
     void blob(double cx, double cy, double baseR, Color color) {
       final r = baseR * (0.90 + 0.12 * t);
@@ -1309,8 +1316,7 @@ class _NameSlide extends StatelessWidget {
             isActive: isActive,
             delay: const Duration(milliseconds: 420),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(24),
@@ -1701,12 +1707,10 @@ class _SummarySlide extends StatelessWidget {
     final topTrack = data.topTracks.isNotEmpty ? data.topTracks.first : null;
     final topArtist =
         data.topArtists.isNotEmpty ? data.topArtists.first.key : null;
-    final topArt =
-        topTrack != null ? data.trackArtworks[topTrack.key] : null;
+    final topArt = topTrack != null ? data.trackArtworks[topTrack.key] : null;
     final h = data.estimatedMinutes ~/ 60;
     final m = data.estimatedMinutes % 60;
-    final minuteLabel =
-        h > 0 ? (m > 0 ? '${h}h ${m}m' : '${h}h') : '${m}m';
+    final minuteLabel = h > 0 ? (m > 0 ? '${h}h ${m}m' : '${h}h') : '${m}m';
 
     return SingleChildScrollView(
       child: Padding(
@@ -1803,10 +1807,13 @@ class _SummarySlide extends StatelessWidget {
               child: _StatsGrid(
                 stats: [
                   _StatItem(
-                      label: l10n.recapStatTotalPlays, value: '${data.totalListens}'),
-                  _StatItem(label: l10n.recapStatTimeListened, value: minuteLabel),
+                      label: l10n.recapStatTotalPlays,
+                      value: '${data.totalListens}'),
                   _StatItem(
-                      label: l10n.recapStatUniqueTracks, value: '${data.uniqueTracks}'),
+                      label: l10n.recapStatTimeListened, value: minuteLabel),
+                  _StatItem(
+                      label: l10n.recapStatUniqueTracks,
+                      value: '${data.uniqueTracks}'),
                   if (topArtist != null)
                     _StatItem(label: l10n.recapStatTopArtist, value: topArtist),
                 ],

@@ -5,6 +5,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'dart:io';
 import '../../../shared/services/audio_player_service.dart';
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/artist_aggregator_service.dart';
 import '../../../shared/models/models.dart';
@@ -343,12 +344,11 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.person, size: 64, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.person,
+                size: 64, color: Colors.white.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(
-              _searchQuery.isEmpty
-                  ? loc.noArtistsFound
-                  : loc.noResults,
+              _searchQuery.isEmpty ? loc.noArtistsFound : loc.noResults,
               style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             ),
           ],
@@ -418,7 +418,8 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
   Widget _buildArtistGridTile(SeparatedArtist artist) {
     final imagePath = _artistImages[artist.name];
 
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: () => _navigateToArtistDetail(artist),
       onLongPress: () => _showArtistOptions(artist),
       child: glassmorphicContainer(
@@ -467,7 +468,7 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildArtistsList() {
@@ -517,8 +518,7 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              Hero(
-                tag: 'artist_image_${artist.name}',
+              ArtworkHero(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(30),
                   child: imagePath != null
@@ -555,7 +555,8 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                     Row(
                       children: [
                         Icon(Icons.music_note,
-                            size: 14, color: Colors.white.withValues(alpha: 0.6)),
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.6)),
                         const SizedBox(width: 4),
                         Text(
                           '${artist.numberOfTracks} songs',
@@ -566,7 +567,8 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                         ),
                         const SizedBox(width: 12),
                         Icon(Icons.album,
-                            size: 14, color: Colors.white.withValues(alpha: 0.6)),
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.6)),
                         const SizedBox(width: 4),
                         Text(
                           '$albumCount albums',
@@ -616,95 +618,97 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
       builder: (context) {
         final loc = AppLocalizations.of(context);
         return DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: SafeArea(
-          top: false,
-          child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white30,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(25),
-                    child: imagePath != null
-                        ? Image.file(File(imagePath),
-                            width: 50, height: 50, fit: BoxFit.cover)
-                        : Image.asset(
-                            'assets/images/UI/unknown.png',
-                            width: 50,
-                            height: 50,
-                            fit: BoxFit.cover,
-                          ),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            top: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white30,
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          artist.name,
-                          style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                ),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(25),
+                        child: imagePath != null
+                            ? Image.file(File(imagePath),
+                                width: 50, height: 50, fit: BoxFit.cover)
+                            : Image.asset(
+                                'assets/images/UI/unknown.png',
+                                width: 50,
+                                height: 50,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              artist.name,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              loc.songCount(artist.numberOfTracks),
+                              style: const TextStyle(
+                                  color: Colors.white70, fontSize: 13),
+                            ),
+                          ],
                         ),
-                        Text(
-                          loc.songCount(artist.numberOfTracks),
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const Divider(color: Colors.white24),
+                ListTile(
+                  leading: const Icon(Icons.play_arrow, color: Colors.white),
+                  title: Text(loc.playAll,
+                      style: const TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _playArtist(artist);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.shuffle, color: Colors.white),
+                  title: Text(loc.shuffleAll,
+                      style: const TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _shuffleArtist(artist);
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.info_outline, color: Colors.white),
+                  title: Text(loc.viewDetails,
+                      style: const TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _navigateToArtistDetail(artist);
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            const Divider(color: Colors.white24),
-            ListTile(
-              leading: const Icon(Icons.play_arrow, color: Colors.white),
-              title:
-                  Text(loc.playAll, style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _playArtist(artist);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shuffle, color: Colors.white),
-              title: Text(loc.shuffleAll,
-                  style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _shuffleArtist(artist);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.white),
-              title: Text(loc.viewDetails,
-                  style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _navigateToArtistDetail(artist);
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-        ),
+          ),
         );
       },
     );

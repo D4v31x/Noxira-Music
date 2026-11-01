@@ -131,13 +131,13 @@ class _FolderFilterSettingsScreenState
             backgroundColor: Colors.transparent,
             elevation: 0,
             leading: IconButton(
-                    icon: iconoir.NavArrowLeft(
-                      color: isDark ? Colors.white : Colors.black,
-                      width: 28,
-                      height: 28,
-                    ),
-                    onPressed: _applyAndPop,
-                  ),
+              icon: iconoir.NavArrowLeft(
+                color: isDark ? Colors.white : Colors.black,
+                width: 28,
+                height: 28,
+              ),
+              onPressed: _applyAndPop,
+            ),
             title: Text(
               'Folder Filter',
               style: TextStyle(
@@ -166,9 +166,7 @@ class _FolderFilterSettingsScreenState
                       hintText: 'Search folders…',
                       hintStyle: TextStyle(
                         fontFamily: FontConstants.fontFamily,
-                        color: isDark
-                            ? Colors.white38
-                            : Colors.black38,
+                        color: isDark ? Colors.white38 : Colors.black38,
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
@@ -177,9 +175,8 @@ class _FolderFilterSettingsScreenState
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: Icon(Icons.clear_rounded,
-                                  color: isDark
-                                      ? Colors.white54
-                                      : Colors.black45),
+                                  color:
+                                      isDark ? Colors.white54 : Colors.black45),
                               onPressed: () {
                                 _searchController.clear();
                                 _applySearch();
@@ -228,15 +225,12 @@ class _FolderFilterSettingsScreenState
                               itemCount: _visibleFolders.length,
                               itemBuilder: (context, i) => _FolderTile(
                                 folder: _visibleFolders[i],
-                                displayName:
-                                    _displayName(_visibleFolders[i]),
-                                songCount:
-                                    _songCounts[_visibleFolders[i]] ?? 0,
+                                displayName: _displayName(_visibleFolders[i]),
+                                songCount: _songCounts[_visibleFolders[i]] ?? 0,
                                 isExcluded: _filterService
                                     .isExcluded(_visibleFolders[i]),
                                 isDark: isDark,
-                                onToggle: (v) =>
-                                    _toggle(_visibleFolders[i], v),
+                                onToggle: (v) => _toggle(_visibleFolders[i], v),
                               ),
                             ),
                 ),
@@ -321,9 +315,7 @@ class _FolderTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
-                included
-                    ? Icons.folder_rounded
-                    : Icons.folder_off_rounded,
+                included ? Icons.folder_rounded : Icons.folder_off_rounded,
                 size: 20,
                 color: included
                     ? cs.primary
@@ -352,9 +344,7 @@ class _FolderTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: FontConstants.fontFamily,
                     fontSize: 11,
-                    color: isDark
-                        ? Colors.white38
-                        : Colors.black38,
+                    color: isDark ? Colors.white38 : Colors.black38,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -365,9 +355,7 @@ class _FolderTile extends StatelessWidget {
                   style: TextStyle(
                     fontFamily: FontConstants.fontFamily,
                     fontSize: 12,
-                    color: isDark
-                        ? Colors.white54
-                        : Colors.black54,
+                    color: isDark ? Colors.white54 : Colors.black54,
                   ),
                 ),
               ],

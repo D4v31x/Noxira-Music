@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/glassmorphic_container.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../widgets/adaptive_blur.dart';
 
 /// Service for handling donations via external platforms
 /// Uses free services like Ko-fi, Buy Me a Coffee, and PayPal
@@ -13,7 +14,7 @@ class DonationService {
   // Configure your donation links here
   static const String kofiUsername =
       'aurorasoftwarecz'; // Replace with your Ko-fi username
-  static const String buyMeCoffeeUsername = 
+  static const String buyMeCoffeeUsername =
       'aurorasoftwareCZ'; // Replace with your BMC username
 
   static const String kofiUrl = 'https://ko-fi.com/$kofiUsername';
@@ -66,7 +67,6 @@ class DonationService {
     return _launchUrl(buyMeCoffeeUrl);
   }
 
-
   static Future<bool> _launchUrl(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -94,97 +94,98 @@ class DonationService {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
+          child: AdaptiveBackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: GlassmorphicContainer(
               borderRadius: BorderRadius.circular(24),
               blur: 20,
               padding: const EdgeInsets.all(24),
               child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 20),
-              // Title
-              Text(
-                loc.enjoyingAurora,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: FontConstants.fontFamily,
-                  color: isDark ? Colors.white : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Description
-              Text(
-                loc.enjoyingAuroraDesc,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontFamily: FontConstants.fontFamily,
-                  color: isDark ? Colors.white60 : Colors.black54,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 24),
-              // Support button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    showDonationDialog(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.pink,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    loc.supportAuroraBtn,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 20),
+                  // Title
+                  Text(
+                    loc.enjoyingAurora,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                       fontFamily: FontConstants.fontFamily,
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Maybe later button
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  loc.maybeLater,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontFamily: FontConstants.fontFamily,
-                    color: isDark ? Colors.white54 : Colors.black45,
+                  const SizedBox(height: 12),
+                  // Description
+                  Text(
+                    loc.enjoyingAuroraDesc,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontFamily: FontConstants.fontFamily,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-              ),
-              // Don't show again
-              TextButton(
-                onPressed: () {
-                  neverShowAgain();
-                  Navigator.pop(context);
-                },
-                child: Text(
-                  loc.dontShowAgain,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontFamily: FontConstants.fontFamily,
-                    color: isDark ? Colors.white30 : Colors.black26,
+                  const SizedBox(height: 24),
+                  // Support button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        showDonationDialog(context);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.pink,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        loc.supportAuroraBtn,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: FontConstants.fontFamily,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  // Maybe later button
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      loc.maybeLater,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontFamily: FontConstants.fontFamily,
+                        color: isDark ? Colors.white54 : Colors.black45,
+                      ),
+                    ),
+                  ),
+                  // Don't show again
+                  TextButton(
+                    onPressed: () {
+                      neverShowAgain();
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      loc.dontShowAgain,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontFamily: FontConstants.fontFamily,
+                        color: isDark ? Colors.white30 : Colors.black26,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
             ),
           ),
         ),
@@ -201,9 +202,10 @@ class DonationService {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
-          child: BackdropFilter(
+          child: AdaptiveBackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: ConstrainedBox(
               constraints: BoxConstraints(
@@ -214,71 +216,71 @@ class DonationService {
                 borderRadius: BorderRadius.circular(28),
                 blur: 25,
                 padding: const EdgeInsets.fromLTRB(24, 32, 24, 32),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Title
-                  Text(
-                    loc.supportAuroraTitle,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: FontConstants.fontFamily,
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Description
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      loc.supportAuroraMessage,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white60 : Colors.black54,
-                        height: 1.4,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Title
+                      Text(
+                        loc.supportAuroraTitle,
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: FontConstants.fontFamily,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 8),
+                      // Description
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          loc.supportAuroraMessage,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontFamily: FontConstants.fontFamily,
+                            color: isDark ? Colors.white60 : Colors.black54,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      // Donation options
+                      _DonationOption(
+                        title: loc.buyMeCoffee,
+                        subtitle: loc.oneTimeSupport,
+                        color: const Color(0xFFFFDD00),
+                        onTap: () {
+                          Navigator.pop(context);
+                          openBuyMeACoffee();
+                        },
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 12),
+                      _DonationOption(
+                        title: loc.kofi,
+                        subtitle: loc.coffeeSupport,
+                        color: const Color(0xFFFF5E5B),
+                        onTap: () {
+                          Navigator.pop(context);
+                          openKofi();
+                        },
+                        isDark: isDark,
+                      ),
+                      const SizedBox(height: 16),
+                      // Thank you note
+                      Text(
+                        loc.thankYouSupport,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontFamily: FontConstants.fontFamily,
+                          color: isDark ? Colors.white38 : Colors.black38,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 28),
-                  // Donation options
-                  _DonationOption(
-                    title: loc.buyMeCoffee,
-                    subtitle: loc.oneTimeSupport,
-                    color: const Color(0xFFFFDD00),
-                    onTap: () {
-                      Navigator.pop(context);
-                      openBuyMeACoffee();
-                    },
-                    isDark: isDark,
-                  ),
-                  const SizedBox(height: 12),
-                  _DonationOption(
-                    title: loc.kofi,
-                    subtitle: loc.coffeeSupport,
-                    color: const Color(0xFFFF5E5B),
-                    onTap: () {
-                      Navigator.pop(context);
-                      openKofi();
-                    },
-                    isDark: isDark,
-                  ),
-                  const SizedBox(height: 16),
-                  // Thank you note
-                  Text(
-                    loc.thankYouSupport,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontFamily: FontConstants.fontFamily,
-                      color: isDark ? Colors.white38 : Colors.black38,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
               ),
             ),
           ),

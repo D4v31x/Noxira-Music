@@ -209,8 +209,7 @@ class ArtistSeparatorService extends ChangeNotifier {
       if (excRegex.hasMatch(modified)) {
         final placeholder = '\x00E$i\x00';
         // Keep the first matched casing for restoration
-        restorations[placeholder] =
-            excRegex.firstMatch(modified)!.group(0)!;
+        restorations[placeholder] = excRegex.firstMatch(modified)!.group(0)!;
         modified = modified.replaceAll(excRegex, placeholder);
       }
     }

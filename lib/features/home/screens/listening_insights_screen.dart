@@ -1,5 +1,5 @@
 /// Listening Insights screen — a Spotify-Wrapped-style view that surfaces
-/// the rich listening-pattern data Aurora Music already collects but never
+/// the rich listening-pattern data Noxira Music already collects but never
 /// previously showed to the user.
 ///
 /// Data sources:
@@ -296,7 +296,8 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
               padding: EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.music_note_rounded, color: Colors.white54, size: 64),
+                  Icon(Icons.music_note_rounded,
+                      color: Colors.white54, size: 64),
                   SizedBox(height: 16),
                   Text(
                     'No listening data yet',
@@ -399,7 +400,8 @@ class _QuickStat extends StatelessWidget {
   final String value;
   final String label;
   final IconData icon;
-  const _QuickStat({required this.value, required this.label, required this.icon});
+  const _QuickStat(
+      {required this.value, required this.label, required this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -688,8 +690,7 @@ class _TopItemsCard extends StatelessWidget {
               showArtwork: showArtwork,
             ),
             if (i < items.length - 1)
-              Divider(
-                  color: Colors.white.withValues(alpha: 0.08), height: 1),
+              Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
           ],
         ],
       ),
@@ -895,8 +896,7 @@ class _GenreCard extends StatelessWidget {
               color: HSLColor.fromAHSL(1, _hues[i % _hues.length], 0.7, 0.55)
                   .toColor(),
             ),
-            if (i < genres.length - 1)
-              const SizedBox(height: 10),
+            if (i < genres.length - 1) const SizedBox(height: 10),
           ],
         ],
       ),

@@ -27,7 +27,7 @@ class LyricsIsolate {
     final lines = normalizedContent.split('\n');
 
     // Basic LRC format regex
-    final timeRegex = RegExp(r'\[(\d{2}):(\d{2})[\.:]\d{2,3}\]');
+    final timeRegex = RegExp(r'\[(\d{2}):(\d{2})[\.:](\d{2,3})\]');
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i].trim();
@@ -45,12 +45,9 @@ class LyricsIsolate {
 
       // Parse all timestamps for this line (some lines have multiple timestamps)
       for (final match in matches) {
-        final minutes = int.tryParse(match.group(1) ?? '0') ?? 0;
-        final seconds = int.tryParse(match.group(2) ?? '0') ?? 0;
-        final milliseconds = minutes * 60000 + seconds * 1000;
-
         timedLyrics.add(TimedLyric(
-          time: Duration(milliseconds: milliseconds),
+          time: TimedLyric.parseTimestamp(
+              match.group(1)!, match.group(2)!, match.group(3)),
           text: text,
         ));
       }

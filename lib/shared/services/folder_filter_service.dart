@@ -15,8 +15,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class FolderFilterService extends ChangeNotifier {
   static const _prefsKey = 'folder_filter_excluded_v1';
 
-  static final FolderFilterService _instance =
-      FolderFilterService._internal();
+  static final FolderFilterService _instance = FolderFilterService._internal();
 
   factory FolderFilterService() => _instance;
   FolderFilterService._internal();

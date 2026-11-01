@@ -13,8 +13,7 @@ class NewLanguagesService {
   static Future<List<SupportedLanguage>> getNewLanguages() async {
     final prefs = await SharedPreferences.getInstance();
     final seenRaw = prefs.getString(_seenLanguagesKey) ?? '';
-    final seenCodes =
-        seenRaw.isEmpty ? <String>{} : seenRaw.split(',').toSet();
+    final seenCodes = seenRaw.isEmpty ? <String>{} : seenRaw.split(',').toSet();
 
     return SupportedLanguages.all
         .where((lang) => lang.code != 'en' && !seenCodes.contains(lang.code))

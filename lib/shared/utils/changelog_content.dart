@@ -3,8 +3,34 @@ import 'package:flutter/material.dart' show IconData, Icons;
 class ChangelogContent {
   /// Short, user-facing summaries shown in the post-update popup.
   static const Map<String, List<({IconData icon, String text})>> highlights = {
+    '1.5.0': [
+      (
+        icon: Icons.open_in_full_rounded,
+        text: 'The mini player now expands smoothly into Now Playing'
+      ),
+      (
+        icon: Icons.auto_awesome_rounded,
+        text: 'Smart Playlists built from your own rules'
+      ),
+      (
+        icon: Icons.bookmarks_rounded,
+        text: 'Track Tags to jump to any moment in a song'
+      ),
+      (
+        icon: Icons.content_cut_rounded,
+        text: 'Save and share short clips of songs'
+      ),
+      (icon: Icons.swap_horiz_rounded, text: 'Crossfade between tracks'),
+      (
+        icon: Icons.translate_rounded,
+        text: 'Now in German, Spanish, Hindi and Russian'
+      ),
+    ],
     '1.4.0': [
-      (icon: Icons.drag_indicator_rounded, text: 'Reorder songs in your playlists'),
+      (
+        icon: Icons.drag_indicator_rounded,
+        text: 'Reorder songs in your playlists'
+      ),
       (icon: Icons.swap_vert_rounded, text: 'Import and export M3U playlists'),
       (icon: Icons.sort_rounded, text: 'Your sort choices are remembered'),
       (icon: Icons.bolt_rounded, text: 'Smoother lists and a faster start'),
@@ -20,9 +46,73 @@ class ChangelogContent {
 
   static const Map<String, List<Map<String, List<String>>>> versions = {
     // Latest version at the top
+    '1.5.0': [
+      {
+        '_': ['Noxira Music 1.5'],
+      },
+      {
+        'New Features': [
+          'Smart Playlists — build a playlist from rules (match all or any), optionally limit the number of songs, and see how many songs match as you edit',
+          'Track Tags — mark any moment in a track (chapters, highlights, bookmarks) and jump straight to it; import timestamps by pasting them',
+          'Share as clip — cut part of a song (choose the start point and duration), then save it to your device or share it',
+          'Crossfade — smoothly blend the end of one track into the next, with an adjustable duration, plus an Automix toggle',
+          'The mini player now expands into Now Playing — tap it or swipe up, and the artwork, title and artist glide into place',
+        ],
+      },
+      {
+        'Languages': [
+          'Noxira Music is now available in German, Spanish, Hindi and Russian',
+          'A short notice tells existing users about the new languages, and you can pick your language during setup',
+        ],
+      },
+      {
+        'Lyrics': [
+          'Lyrics editor: paste plain lyrics and stamp each line with a tap while the song plays, or import a .lrc file',
+          'Fixed automatic lyric lookup and refined the lyrics views',
+        ],
+      },
+      {
+        'Now Playing & Library': [
+          'Refreshed sleep timer',
+          'Song info now shows the file path and sample rate',
+          'Metadata editor can use artwork chosen from your device',
+          'Visualizer has previous / next mode and close buttons',
+          'Search for playlists and folders',
+          'Albums grid shows at most 3 columns and defaults to list view',
+        ],
+      },
+      {
+        'Look & Feel': [
+          'New app font (Host Grotesk)',
+          'New Color Theme picker in Appearance settings',
+        ],
+      },
+      {
+        'Feedback & Updates': [
+          'New update prompt that shows what is new in the latest version',
+          'Send a bug report or suggestion from inside the app, and rate Noxira Music from Settings',
+          'Onboarding now explains anonymous analytics and crash reports',
+        ],
+      },
+      {
+        'Performance': [
+          'Long lists (Tracks, Albums, Artists, Folders, playlists and detail screens) load further ahead, so scrolling far no longer waits for items to appear',
+          'The Now Playing transition is built to stay light: heavy parts load only once it has nearly finished opening',
+        ],
+      },
+      {
+        'Under the Hood': [
+          'Fixed an error when opening the metadata editor, which could leave the mini player visible or hidden at the wrong time',
+          'Now Playing scrolling no longer bounces at the top so pull-down-to-collapse works reliably',
+          'Improved overall app stability and performance, flagged by user feedback',
+          'Added support for API 36',
+          'Updated Firebase, sharing, file picker and other dependencies',
+        ],
+      },
+    ],
     '1.4.0': [
       {
-        '_': ['Aurora Music 1.4 — Orbit'],
+        '_': ['Noxira Music 1.4 — Orbit'],
       },
       {
         'New Features': [
@@ -60,7 +150,7 @@ class ChangelogContent {
     ],
     '1.3.2': [
       {
-        '_': ['Aurora Music 1.3 — Insights, Equalizer & Folder Filtering'],
+        '_': ['Noxira Music 1.3 — Insights, Equalizer & Folder Filtering'],
       },
       {
         'New Features': [
@@ -111,12 +201,12 @@ class ChangelogContent {
     ],
     '1.0.5': [
       {
-        '_': ['Aurora Music 1.0 — the first production release'],
+        '_': ['Noxira Music 1.0 — the first production release'],
       },
       {
         'Preface for beta testers': [
-          'After over a year of development and testing, Aurora Music has reached its first stable release! This version includes all the core features I envisioned, along with numerous optimizations and bug fixes. I am incredibly grateful to our early adopters and beta testers for their invaluable feedback and support throughout this journey.',
-          'This release marks a major milestone for me, but it’s just the beginning. I am committed to continuously enhancing Aurora Music based on user feedback and evolving needs. Thank you for being part of this journey, and I can’t wait to share what’s next!',
+          'After over a year of development and testing, Noxira Music has reached its first stable release! This version includes all the core features I envisioned, along with numerous optimizations and bug fixes. I am incredibly grateful to our early adopters and beta testers for their invaluable feedback and support throughout this journey.',
+          'This release marks a major milestone for me, but it’s just the beginning. I am committed to continuously enhancing Noxira Music based on user feedback and evolving needs. Thank you for being part of this journey, and I can’t wait to share what’s next!',
         ],
         'New Features': [
           'Music Visualizer — real-time audio visualization with multiple modes (accessible from Now Playing)',
@@ -126,7 +216,7 @@ class ChangelogContent {
         ],
       },
       {
-        'Lyrics': [ 
+        'Lyrics': [
           'Lyrics Editor for writing and fine-tuning timed (.lrc) lyrics',
           'Smoother lyric line animations and improved scroll behavior',
         ],
@@ -160,7 +250,7 @@ class ChangelogContent {
         ],
       },
       {
-        'Lyrics':[
+        'Lyrics': [
           'Lyrics translation — translate button lets you translate lyrics to your app language using online service'
         ],
       },
@@ -182,9 +272,7 @@ class ChangelogContent {
         ],
       },
       {
-        'Others': [
-          'In-app update support via Google Play version checking'
-        ],
+        'Others': ['In-app update support via Google Play version checking'],
       },
     ],
     '0.1.21': [

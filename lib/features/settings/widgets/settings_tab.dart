@@ -123,6 +123,7 @@ class _SettingsTabState extends State<SettingsTab> {
               builder: (_) => AboutSettingsScreen(
                 currentVersion: _currentVersion,
                 notificationManager: widget.notificationManager,
+                onResetSetup: widget.onResetSetup,
               ),
             ),
           ),
@@ -165,32 +166,30 @@ class _SettingsTabState extends State<SettingsTab> {
             DecoratedBox(
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
                 border: Border(
                   top: BorderSide(color: borderColor),
                   left: BorderSide(color: borderColor),
                   right: BorderSide(color: borderColor),
                 ),
               ),
-              child: _categoryRow(
-                  icon, title, subtitle, onTap, isDark, isFirst,
+              child: _categoryRow(icon, title, subtitle, onTap, isDark, isFirst,
                   isLast: false),
             )
           else if (isLast)
             DecoratedBox(
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(20)),
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(20)),
                 border: Border(
                   bottom: BorderSide(color: borderColor),
                   left: BorderSide(color: borderColor),
                   right: BorderSide(color: borderColor),
                 ),
               ),
-              child: _categoryRow(
-                  icon, title, subtitle, onTap, isDark, isFirst,
+              child: _categoryRow(icon, title, subtitle, onTap, isDark, isFirst,
                   isLast: true),
             )
           else
@@ -202,8 +201,7 @@ class _SettingsTabState extends State<SettingsTab> {
                   right: BorderSide(color: borderColor),
                 ),
               ),
-              child: _categoryRow(
-                  icon, title, subtitle, onTap, isDark, isFirst,
+              child: _categoryRow(icon, title, subtitle, onTap, isDark, isFirst,
                   isLast: false),
             ),
         ],
@@ -301,5 +299,4 @@ class _SettingsTabState extends State<SettingsTab> {
       ],
     );
   }
-
 }

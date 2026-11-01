@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/lyrics_service.dart';
 import '../../../shared/widgets/app_background.dart';
@@ -44,8 +45,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final audioService =
           Provider.of<AudioPlayerService>(context, listen: false);
-      _positionSub =
-          audioService.audioPlayer.positionStream.listen((pos) {
+      _positionSub = audioService.audioPlayer.positionStream.listen((pos) {
         if (mounted) setState(() => _currentPosition = pos);
       });
       // Pre-populate with existing cached lyrics if available
@@ -65,7 +65,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
   String _formatTimestamp(Duration d) {
     final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
     final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    final cs = (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
+    final cs =
+        (d.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
     return '$m:$s.$cs';
   }
 
@@ -141,10 +142,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
     final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      builder: (ctx) => GlassmorphicDialog(
         title: Text(
           AppLocalizations.of(context).lyricsPasteLyricsTitle,
           style: const TextStyle(
@@ -196,8 +194,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
             child: Text(
               AppLocalizations.of(context).cancel,
               style: const TextStyle(
-                  color: Colors.white54,
-                  fontFamily: FontConstants.fontFamily),
+                  color: Colors.white54, fontFamily: FontConstants.fontFamily),
             ),
           ),
           TextButton(
@@ -246,8 +243,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       final path = result?.files.single.path;
       if (path == null) return;
       if (!path.toLowerCase().endsWith('.lrc')) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context).lyricsSelectLrcFile)));
+        messenger.showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context).lyricsSelectLrcFile)));
         return;
       }
 
@@ -264,10 +261,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
         final song = audioService.currentSong;
         if (song == null) return;
         final artistRaw = song.artist ?? '';
-        final artist =
-            artistRaw.trim().isEmpty ? 'Unknown' : artistRaw.trim();
-        final title =
-            song.title.trim().isEmpty ? 'Unknown' : song.title.trim();
+        final artist = artistRaw.trim().isEmpty ? 'Unknown' : artistRaw.trim();
+        final title = song.title.trim().isEmpty ? 'Unknown' : song.title.trim();
 
         await service.saveLyricsToCache(artist, title, content);
 
@@ -282,8 +277,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       // no manual stamping required.
       final lines = _extractPlainLines(content);
       if (lines.isEmpty) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context).lyricsNoLyricsInFile)));
+        messenger.showSnackBar(SnackBar(
+            content: Text(AppLocalizations.of(context).lyricsNoLyricsInFile)));
         return;
       }
 
@@ -293,9 +288,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       if (song == null) return;
 
       final songDurationMs = song.duration ?? 0;
-      final stepMs = songDurationMs > 0
-          ? songDurationMs ~/ (lines.length + 1)
-          : 3000;
+      final stepMs =
+          songDurationMs > 0 ? songDurationMs ~/ (lines.length + 1) : 3000;
 
       final buffer = StringBuffer();
       for (var i = 0; i < lines.length; i++) {
@@ -317,7 +311,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       widget.onSaved();
       Navigator.pop(context);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(AppLocalizations.of(context).importFailed('$e'))));
+      messenger.showSnackBar(SnackBar(
+          content: Text(AppLocalizations.of(context).importFailed('$e'))));
     }
   }
 
@@ -344,10 +339,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
     final buffer = StringBuffer();
     for (final i in stampedIndices) {
       final t = _timestamps[i]!;
-      final m =
-          t.inMinutes.remainder(60).toString().padLeft(2, '0');
-      final s =
-          t.inSeconds.remainder(60).toString().padLeft(2, '0');
+      final m = t.inMinutes.remainder(60).toString().padLeft(2, '0');
+      final s = t.inSeconds.remainder(60).toString().padLeft(2, '0');
       final cs =
           (t.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
       buffer.writeln('[$m:$s.$cs]${_lines[i]}');
@@ -360,8 +353,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
 
     final artistRaw = song.artist ?? '';
     final artist = artistRaw.trim().isEmpty ? 'Unknown' : artistRaw.trim();
-    final title =
-        song.title.trim().isEmpty ? 'Unknown' : song.title.trim();
+    final title = song.title.trim().isEmpty ? 'Unknown' : song.title.trim();
 
     final service = TimedLyricsService();
     await service.saveLyricsToCache(artist, title, buffer.toString());
@@ -375,7 +367,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final audioService = Provider.of<AudioPlayerService>(context, listen: false);
+    final audioService =
+        Provider.of<AudioPlayerService>(context, listen: false);
     final song = audioService.currentSong;
 
     return AppBackground(
@@ -412,7 +405,9 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
             child: Column(
               children: [
                 Text(
-                  title.isNotEmpty ? title : AppLocalizations.of(context).unknown,
+                  title.isNotEmpty
+                      ? title
+                      : AppLocalizations.of(context).unknown,
                   style: const TextStyle(
                     fontFamily: FontConstants.fontFamily,
                     color: Colors.white,
@@ -548,12 +543,13 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
                         icon: const Icon(Icons.replay_5_rounded,
                             color: Colors.white70, size: 22),
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
                         onPressed: () => audioService.audioPlayer.seek(
                           Duration(
-                            milliseconds: (_currentPosition.inMilliseconds - 5000)
-                                .clamp(0, total.inMilliseconds),
+                            milliseconds:
+                                (_currentPosition.inMilliseconds - 5000)
+                                    .clamp(0, total.inMilliseconds),
                           ),
                         ),
                       ),
@@ -568,8 +564,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
                             size: 30,
                           ),
                           padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                              minWidth: 40, minHeight: 40),
+                          constraints:
+                              const BoxConstraints(minWidth: 40, minHeight: 40),
                           onPressed: () {
                             if (isPlaying) {
                               audioService.pause();
@@ -583,12 +579,13 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
                         icon: const Icon(Icons.forward_5_rounded,
                             color: Colors.white70, size: 22),
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(
-                            minWidth: 36, minHeight: 36),
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
                         onPressed: () => audioService.audioPlayer.seek(
                           Duration(
-                            milliseconds: (_currentPosition.inMilliseconds + 5000)
-                                .clamp(0, total.inMilliseconds),
+                            milliseconds:
+                                (_currentPosition.inMilliseconds + 5000)
+                                    .clamp(0, total.inMilliseconds),
                           ),
                         ),
                       ),
@@ -619,7 +616,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.lyrics_outlined, size: 56, color: Colors.white.withValues(alpha: 0.18)),
+            Icon(Icons.lyrics_outlined,
+                size: 56, color: Colors.white.withValues(alpha: 0.18)),
             const SizedBox(height: 16),
             Text(
               AppLocalizations.of(context).lyricsNoLyricsYet,
@@ -734,9 +732,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
             SizedBox(
               width: 76,
               child: Text(
-                isStamped
-                    ? _formatTimestamp(_timestamps[index]!)
-                    : '--:--.--',
+                isStamped ? _formatTimestamp(_timestamps[index]!) : '--:--.--',
                 style: TextStyle(
                   fontFamily: FontConstants.fontFamily,
                   fontSize: 12,
@@ -774,8 +770,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
                 style: TextStyle(
                   fontFamily: FontConstants.fontFamily,
                   fontSize: isNext ? 15 : 14,
-                  fontWeight:
-                      isNext ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isNext ? FontWeight.w600 : FontWeight.normal,
                   color: isPast
                       ? Colors.white60
                       : isNext
@@ -794,8 +789,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
 
   Widget _buildStampButton() {
     final hasLines = _lines.isNotEmpty;
-    final allStamped =
-        hasLines && _nextStampIndex >= _lines.length;
+    final allStamped = hasLines && _nextStampIndex >= _lines.length;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
@@ -854,7 +848,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
                       ? AppLocalizations.of(context).lyricsAllStamped
                       : !hasLines
                           ? AppLocalizations.of(context).lyricsPasteFirst
-                          : AppLocalizations.of(context).lyricsTapToStamp(_nextStampIndex + 1, _lines.length),
+                          : AppLocalizations.of(context).lyricsTapToStamp(
+                              _nextStampIndex + 1, _lines.length),
                   style: TextStyle(
                     fontFamily: FontConstants.fontFamily,
                     fontSize: 15,

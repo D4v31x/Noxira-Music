@@ -1,4 +1,4 @@
-/// Aurora Music Shared Providers
+/// Noxira Music Shared Providers
 ///
 /// This library exports state providers:
 /// - [ThemeProvider] - Theme state management

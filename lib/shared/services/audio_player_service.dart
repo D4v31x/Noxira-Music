@@ -207,6 +207,7 @@ class AudioPlayerService extends ChangeNotifier {
         '🎵 [LIBRARY] Song library updated: ${newSongs.length} songs total');
     _songs = newSongs;
     songsNotifier.value = newSongs;
+    if (newSongs.isNotEmpty) unawaited(_refreshWidgetRecommendations());
   }
 
   static const String likedSongsPlaylistId = 'liked_songs';
@@ -247,7 +248,8 @@ class AudioPlayerService extends ChangeNotifier {
   bool get mediaControls => _mediaControls;
   bool get crossfadeEnabled => _crossfadeEnabled;
   int get crossfadeDurationMs => _crossfadeDurationMs;
-  Duration get crossfadeDuration => Duration(milliseconds: _crossfadeDurationMs);
+  Duration get crossfadeDuration =>
+      Duration(milliseconds: _crossfadeDurationMs);
   bool get automixEnabled => _automixEnabled;
 
   // Add ValueNotifiers for reactive state
@@ -339,7 +341,8 @@ class AudioPlayerService extends ChangeNotifier {
     await _loadPlaylists();
 
     // Initialize home screen widget
-    unawaited(_homeWidgetService.initialize());
+    unawaited(_homeWidgetService.initialize().then(
+        (_) => _homeWidgetService.attachLaunchHandler(_handleWidgetLaunch)));
 
     // Listen to song changes to update home screen widget
     currentSongNotifier.addListener(_onSongChangedForWidget);
@@ -355,7 +358,6 @@ class AudioPlayerService extends ChangeNotifier {
     _bindCorePlayerListeners();
 
     _startCacheCleanup();
-
 
     // Restore the queue from the previous session (non-blocking).
     unawaited(loadQueueState());
@@ -561,19 +563,75 @@ class AudioPlayerService extends ChangeNotifier {
         artworkBytes: currentArtwork.value,
         source: _playbackSource.name != null
             ? 'Playing from ${_playbackSource.name}'
-            : 'Aurora Music',
-        currentPosition: _audioPlayer.position,
-        totalDuration: _audioPlayer.duration ?? Duration.zero,
+            : 'Noxira Music',
       );
-      _homeWidgetService.updateQueue(upcomingQueue.take(6).toList());
-      if (isPlayingNotifier.value) {
-        _homeWidgetService.startProgressUpdates(
-          getCurrentPosition: () => _audioPlayer.position,
-          getTotalDuration: () => _audioPlayer.duration ?? Duration.zero,
-        );
-      }
+      unawaited(_refreshWidgetRecommendations());
     } else {
       _homeWidgetService.clearWidget();
+      unawaited(_refreshWidgetRecommendations());
+    }
+  }
+
+  /// Songs currently offered in the widget's "Recommended for you" row.
+  List<SongModel> _widgetRecommendations = [];
+
+  Future<void> _refreshWidgetRecommendations() async {
+    if (songs.isEmpty) return;
+    try {
+      final suggested = await getSuggestedTracks(count: 6);
+      final currentId = currentSong?.id;
+      _widgetRecommendations =
+          suggested.where((s) => s.id != currentId).take(4).toList();
+      await _homeWidgetService.updateRecommendations(_widgetRecommendations);
+    } catch (e) {
+      if (kDebugMode) debugPrint('Widget recommendations failed: $e');
+    }
+  }
+
+  /// Handles taps on the home screen widget that open the app.
+  Future<void> _handleWidgetLaunch(Uri uri) async {
+    if (uri.scheme != 'noxira' || uri.host != 'widget') return;
+    final action = uri.pathSegments.isEmpty ? '' : uri.pathSegments.first;
+
+    if (action == 'resume') {
+      if (currentSong != null && !isPlayingNotifier.value) await resume();
+      return;
+    }
+    if (action != 'play') return;
+
+    final id = int.tryParse(uri.queryParameters['id'] ?? '');
+    if (id == null) return;
+    await _waitForLibrary();
+
+    final queue = _widgetRecommendations.any((s) => s.id == id)
+        ? _widgetRecommendations
+        : songs;
+    final index = queue.indexWhere((s) => s.id == id);
+    if (index < 0) return;
+    await setPlaylist(
+      queue,
+      index,
+      source: const PlaybackSourceInfo(source: PlaybackSource.forYou),
+    );
+  }
+
+  /// A cold start from the widget arrives before the library has loaded.
+  Future<void> _waitForLibrary() async {
+    if (songs.isNotEmpty) return;
+    final completer = Completer<void>();
+    void listener() {
+      if (songsNotifier.value.isNotEmpty && !completer.isCompleted) {
+        completer.complete();
+      }
+    }
+
+    songsNotifier.addListener(listener);
+    try {
+      await completer.future.timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      // Give up quietly; the app simply opens.
+    } finally {
+      songsNotifier.removeListener(listener);
     }
   }
 
@@ -582,14 +640,6 @@ class AudioPlayerService extends ChangeNotifier {
   /// addListener / removeListener.
   void _onPlayStateChangedForWidget() {
     _homeWidgetService.updatePlayingState(isPlayingNotifier.value);
-    if (isPlayingNotifier.value) {
-      _homeWidgetService.startProgressUpdates(
-        getCurrentPosition: () => _audioPlayer.position,
-        getTotalDuration: () => _audioPlayer.duration ?? Duration.zero,
-      );
-    } else {
-      _homeWidgetService.stopProgressUpdates();
-    }
   }
 
   // Sleep timer methods

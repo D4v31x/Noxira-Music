@@ -1,4 +1,4 @@
-/// Aurora Music Screens
+/// Noxira Music Screens
 ///
 /// This library exports all screens in the application, organized by category:
 /// - Home: Core screens like home screen

@@ -1,7 +1,13 @@
+import 'motion/swipe_actions.dart';
+import 'motion/touch_and_reveal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mini_music_visualizer/mini_music_visualizer.dart';
 import 'package:on_audio_query/on_audio_query.dart';
+import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
+import '../services/audio_player_service.dart';
+import '../services/notification_manager.dart';
 import '../../core/constants/font_constants.dart';
 import '../services/artwork_cache_service.dart';
 import '../models/artist_utils.dart';
@@ -72,84 +78,111 @@ class _OptimizedSongTileState extends State<OptimizedSongTile> {
   }
 
   Widget _buildTile({required bool isCurrent, required bool isPlaying}) {
-    return RepaintBoundary(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: widget.onTap,
-          onLongPress: widget.onLongPress,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: isCurrent
-                ? BoxDecoration(
-                    color: _kNowPlayingAccent.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _kNowPlayingAccent.withValues(alpha: 0.45),
-                    ),
-                  )
-                : null,
-            child: Row(
-              children: [
-                // Artwork with RepaintBoundary, overlaid with the now-playing
-                // bars when this is the active song.
-                RepaintBoundary(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Stack(
-                      children: [
-                        _artworkService.buildCachedArtwork(widget.song.id),
-                        if (isCurrent)
-                          Positioned.fill(
-                            child: ColoredBox(
-                              color: Colors.black.withValues(alpha: 0.45),
-                              child: Center(
-                                child: NowPlayingBars(
-                                  isPlaying: isPlaying,
+    final l10n = AppLocalizations.of(context);
+    final audio = Provider.of<AudioPlayerService>(context, listen: false);
+    return SwipeActions(
+      rightLabel: l10n.playNext,
+      leftLabel: l10n.addToQueue,
+      onSwipeRight: () async {
+        await audio.playNext(widget.song);
+        if (mounted) {
+          NotificationManager.showMessage(
+              context, '${l10n.playNext}: ${widget.song.title}');
+        }
+      },
+      onSwipeLeft: () async {
+        await audio.addToQueue(widget.song);
+        if (mounted) {
+          NotificationManager.showMessage(
+              context, l10n.songAddedToQueue(widget.song.title));
+        }
+      },
+      child: RoundedHighlight(
+        cornerRadius: 10,
+        child: RepaintBoundary(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              splashFactory: NoSplash.splashFactory,
+              highlightColor: Colors.transparent,
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: isCurrent
+                    ? BoxDecoration(
+                        color: _kNowPlayingAccent.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _kNowPlayingAccent.withValues(alpha: 0.45),
+                        ),
+                      )
+                    : null,
+                child: Row(
+                  children: [
+                    // Artwork with RepaintBoundary, overlaid with the now-playing
+                    // bars when this is the active song.
+                    RepaintBoundary(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Stack(
+                          children: [
+                            _artworkService.buildCachedArtwork(widget.song.id),
+                            if (isCurrent)
+                              Positioned.fill(
+                                child: ColoredBox(
+                                  color: Colors.black.withValues(alpha: 0.45),
+                                  child: Center(
+                                    child: NowPlayingBars(
+                                      isPlaying: isPlaying,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Song info
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.song.title,
-                        style: TextStyle(
-                          color: isCurrent ? _kNowPlayingAccent : Colors.white,
-                          fontSize: 14,
-                          fontWeight:
-                              isCurrent ? FontWeight.w700 : FontWeight.w500,
-                          fontFamily: FontConstants.fontFamily,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    const SizedBox(width: 12),
+                    // Song info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.song.title,
+                            style: TextStyle(
+                              color:
+                                  isCurrent ? _kNowPlayingAccent : Colors.white,
+                              fontSize: 14,
+                              fontWeight:
+                                  isCurrent ? FontWeight.w700 : FontWeight.w500,
+                              fontFamily: FontConstants.fontFamily,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            splitArtists(widget.song.artist ?? 'Unknown Artist')
+                                .join(', '),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 12,
+                              fontFamily: FontConstants.fontFamily,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        splitArtists(widget.song.artist ?? 'Unknown Artist')
-                            .join(', '),
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 12,
-                          fontFamily: FontConstants.fontFamily,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
+                    ),
+                    // Trailing widget
+                    if (widget.trailing != null) widget.trailing!,
+                  ],
                 ),
-                // Trailing widget
-                if (widget.trailing != null) widget.trailing!,
-              ],
+              ),
             ),
           ),
         ),
@@ -209,7 +242,6 @@ class _OptimizedGridTileState extends State<OptimizedGridTile> {
 
   @override
   Widget build(BuildContext context) {
-
     return RepaintBoundary(
       child: Material(
         color: Colors.transparent,

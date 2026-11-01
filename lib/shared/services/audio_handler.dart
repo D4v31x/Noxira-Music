@@ -314,23 +314,21 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
           orderType: OrderType.ASC_OR_SMALLER,
           uriType: UriType.EXTERNAL,
         );
-        return artists
-            .map((artist) {
-              // Find a representative song to use for artwork (grid view requires it)
-              final candidates = songs.where((s) => s.artistId == artist.id);
-              final rep = candidates.isEmpty ? null : candidates.first;
-              return MediaItem(
-                id: 'artist/${artist.id}',
-                title: artist.artist,
-                playable: false,
-                artUri: rep?.albumId != null
-                    ? Uri.parse(
-                        'content://media/external/audio/albumart/${rep!.albumId}')
-                    : null,
-                extras: {'trackCount': artist.numberOfTracks ?? 0},
-              );
-            })
-            .toList();
+        return artists.map((artist) {
+          // Find a representative song to use for artwork (grid view requires it)
+          final candidates = songs.where((s) => s.artistId == artist.id);
+          final rep = candidates.isEmpty ? null : candidates.first;
+          return MediaItem(
+            id: 'artist/${artist.id}',
+            title: artist.artist,
+            playable: false,
+            artUri: rep?.albumId != null
+                ? Uri.parse(
+                    'content://media/external/audio/albumart/${rep!.albumId}')
+                : null,
+            extras: {'trackCount': artist.numberOfTracks ?? 0},
+          );
+        }).toList();
 
       // All playlists
       case _aaPlaylists:
@@ -349,8 +347,7 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
           final albumIdStr = parentMediaId.substring('album/'.length);
           final albumId = int.tryParse(albumIdStr);
           if (albumId == null) return [];
-          var albumSongs =
-              songs.where((s) => s.albumId == albumId).toList();
+          var albumSongs = songs.where((s) => s.albumId == albumId).toList();
           if (albumSongs.isEmpty) {
             final all = await aoq.querySongs(
               orderType: OrderType.ASC_OR_SMALLER,
@@ -368,8 +365,7 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
           final artistIdStr = parentMediaId.substring('artist/'.length);
           final artistId = int.tryParse(artistIdStr);
           if (artistId == null) return [];
-          var artistSongs =
-              songs.where((s) => s.artistId == artistId).toList();
+          var artistSongs = songs.where((s) => s.artistId == artistId).toList();
           if (artistSongs.isEmpty) {
             final all = await aoq.querySongs(
               orderType: OrderType.ASC_OR_SMALLER,
@@ -445,8 +441,9 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
         final albumId = int.tryParse(parts[1]);
         final songId = int.tryParse(parts[2]);
         if (albumId == null || songId == null) return;
-        var albumSongs =
-            (_aaGetSongs?.call() ?? []).where((s) => s.albumId == albumId).toList();
+        var albumSongs = (_aaGetSongs?.call() ?? [])
+            .where((s) => s.albumId == albumId)
+            .toList();
         if (albumSongs.isEmpty) {
           final all = await aoq.querySongs(
             orderType: OrderType.ASC_OR_SMALLER,
@@ -476,7 +473,8 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
         }
         if (artistSongs.isEmpty) return;
         final artistIdx = artistSongs.indexWhere((s) => s.id == songId);
-        await playSongs(artistSongs, artistIdx.clamp(0, artistSongs.length - 1));
+        await playSongs(
+            artistSongs, artistIdx.clamp(0, artistSongs.length - 1));
         await resume();
 
       case 'playlist':

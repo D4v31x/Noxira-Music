@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/models/track_tag_model.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/track_tag_service.dart';
@@ -74,10 +75,7 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (dialogContext, setDialogState) {
-            return AlertDialog(
-              backgroundColor: Colors.grey[900],
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18)),
+            return GlassmorphicDialog(
               title: Text(
                 existing == null ? loc.addTrackTag : loc.editTrackTags,
                 style: const TextStyle(
@@ -92,6 +90,8 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
                   TextField(
                     controller: nameController,
                     autofocus: true,
+                    // Save's enabled state depends on the text.
+                    onChanged: (_) => setDialogState(() {}),
                     style: const TextStyle(
                       color: Colors.white,
                       fontFamily: FontConstants.fontFamily,
@@ -130,8 +130,8 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => setDialogState(
-                            () => position = _currentPosition),
+                        onPressed: () =>
+                            setDialogState(() => position = _currentPosition),
                         child: Text(
                           loc.useCurrentPosition,
                           style: const TextStyle(
@@ -225,8 +225,7 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
       tags.add(TrackTag(
         id: 'tag_${DateTime.now().microsecondsSinceEpoch}_${counter++}',
         name: name,
-        position:
-            Duration(hours: hours, minutes: minutes, seconds: seconds),
+        position: Duration(hours: hours, minutes: minutes, seconds: seconds),
       ));
     }
     tags.sort((a, b) => a.position.compareTo(b.position));
@@ -238,10 +237,7 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
     final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      builder: (ctx) => GlassmorphicDialog(
         title: Text(
           loc.pasteSetlistDialogTitle,
           style: const TextStyle(
@@ -293,8 +289,7 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
             child: Text(
               loc.cancel,
               style: const TextStyle(
-                  color: Colors.white54,
-                  fontFamily: FontConstants.fontFamily),
+                  color: Colors.white54, fontFamily: FontConstants.fontFamily),
             ),
           ),
           TextButton(
@@ -369,6 +364,16 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
     );
   }
 
+  bool _closing = false;
+
+  /// Closes the screen once. A second tap while the page is animating away
+  /// would otherwise run on a disposed State (and could pop the page below).
+  void _close() {
+    if (_closing || !mounted) return;
+    _closing = true;
+    Navigator.of(context).pop();
+  }
+
   Widget _buildHeader(AppLocalizations loc) {
     final song = widget.song;
     return Padding(
@@ -377,7 +382,7 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white70),
-            onPressed: () => Navigator.pop(context),
+            onPressed: _close,
           ),
           Expanded(
             child: Column(
@@ -444,10 +449,8 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               trackHeight: 3,
-              thumbShape:
-                  const RoundSliderThumbShape(enabledThumbRadius: 6),
-              overlayShape:
-                  const RoundSliderOverlayShape(overlayRadius: 14),
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+              overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
               activeTrackColor: Colors.white,
               inactiveTrackColor: Colors.white24,
               thumbColor: Colors.white,
@@ -462,8 +465,7 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
               }),
               onChanged: (v) => setState(() => _seekValue = v),
               onChangeEnd: (v) {
-                audio.audioPlayer
-                    .seek(Duration(milliseconds: v.round()));
+                audio.audioPlayer.seek(Duration(milliseconds: v.round()));
                 setState(() {
                   _isSeeking = false;
                   _currentPosition = Duration(milliseconds: v.round());
@@ -501,7 +503,9 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
                   valueListenable: audio.isPlayingNotifier,
                   builder: (context, isPlaying, _) => IconButton(
                     icon: Icon(
-                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       color: Colors.white,
                     ),
                     onPressed: () => isPlaying
@@ -649,4 +653,3 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
     );
   }
 }
-

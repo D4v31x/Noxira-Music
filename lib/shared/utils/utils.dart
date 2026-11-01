@@ -1,4 +1,4 @@
-/// Aurora Music Shared Utils
+/// Noxira Music Shared Utils
 ///
 /// This library exports utility functions and helpers:
 /// - Audio service selectors

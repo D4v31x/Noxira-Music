@@ -5,6 +5,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/services/audio_player_service.dart';
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/folder_filter_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
@@ -97,8 +98,8 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
 
   void _cycleGridColumns() {
     final currentIndex = _gridColumnChoices.indexOf(_gridColumns);
-    final next = _gridColumnChoices[
-        (currentIndex + 1) % _gridColumnChoices.length];
+    final next =
+        _gridColumnChoices[(currentIndex + 1) % _gridColumnChoices.length];
     setState(() => _gridColumns = next);
     unawaited(
       SharedPreferences.getInstance()
@@ -388,12 +389,11 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.album, size: 64, color: Colors.white.withValues(alpha: 0.3)),
+            Icon(Icons.album,
+                size: 64, color: Colors.white.withValues(alpha: 0.3)),
             const SizedBox(height: 16),
             Text(
-              _searchQuery.isEmpty
-                  ? loc.noAlbumsFound
-                  : loc.noResults,
+              _searchQuery.isEmpty ? loc.noAlbumsFound : loc.noResults,
               style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             ),
           ],
@@ -477,7 +477,8 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
   }
 
   Widget _buildAlbumGridTile(AlbumModel album) {
-    return GestureDetector(
+    return Press3D(
+        child: GestureDetector(
       onTap: () => _navigateToAlbumDetail(album),
       onLongPress: () => _showAlbumOptions(album),
       child: glassmorphicContainer(
@@ -531,7 +532,7 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildAlbumsList(AudioPlayerService audioPlayerService) {
@@ -578,8 +579,7 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
           padding: const EdgeInsets.all(8),
           child: Row(
             children: [
-              Hero(
-                tag: 'album_image_${album.album}',
+              ArtworkHero(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
                   child: _artworkService.buildCachedAlbumArtwork(
@@ -656,83 +656,86 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
       builder: (context) {
         final loc = AppLocalizations.of(context);
         return DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white30,
-                borderRadius: BorderRadius.circular(2),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade900,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white30,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: _artworkService.buildCachedAlbumArtwork(album.id),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          album.album,
-                          style: const TextStyle(
-                              color: Colors.white, fontWeight: FontWeight.bold),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          splitArtists(album.artist ?? 'Unknown').join(', '),
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 13),
-                        ),
-                      ],
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: _artworkService.buildCachedAlbumArtwork(album.id),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            album.album,
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            splitArtists(album.artist ?? 'Unknown').join(', '),
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(color: Colors.white24),
-            ListTile(
-              leading: const Icon(Icons.play_arrow, color: Colors.white),
-              title: Text(loc.play, style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _playAlbum(album);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.shuffle, color: Colors.white),
-              title:
-                  Text(loc.shuffle, style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _shuffleAlbum(album);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.playlist_add, color: Colors.white),
-              title: Text(loc.addToQueue,
-                  style: const TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.pop(context);
-                _addAlbumToQueue(album);
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
+              const Divider(color: Colors.white24),
+              ListTile(
+                leading: const Icon(Icons.play_arrow, color: Colors.white),
+                title:
+                    Text(loc.play, style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _playAlbum(album);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.shuffle, color: Colors.white),
+                title: Text(loc.shuffle,
+                    style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _shuffleAlbum(album);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add, color: Colors.white),
+                title: Text(loc.addToQueue,
+                    style: const TextStyle(color: Colors.white)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _addAlbumToQueue(album);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         );
       },
     );

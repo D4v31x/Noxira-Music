@@ -1,4 +1,4 @@
-/// Aurora Music Player Feature
+/// Noxira Music Player Feature
 ///
 /// This library exports the player feature components:
 /// - Player screens (now playing, fullscreen lyrics, fullscreen artwork)

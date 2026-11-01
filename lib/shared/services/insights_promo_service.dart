@@ -24,11 +24,11 @@ class InsightsPromoService {
 
   // ── Persistence keys ──────────────────────────────────────────────────────
 
-  static const _kWeeklyLastSeenWeek  = 'recap_weekly_last_seen_week';
+  static const _kWeeklyLastSeenWeek = 'recap_weekly_last_seen_week';
   static const _kMonthlyLastSeenMonth = 'recap_monthly_last_seen_month';
-  static const _kWeeklyEnabled       = 'recap_weekly_enabled';
-  static const _kMonthlyEnabled      = 'recap_monthly_enabled';
-  static const _kRecapPeriodKey      = 'insights_recap_period_days';
+  static const _kWeeklyEnabled = 'recap_weekly_enabled';
+  static const _kMonthlyEnabled = 'recap_monthly_enabled';
+  static const _kRecapPeriodKey = 'insights_recap_period_days';
 
   static const int defaultPeriodDays = 7;
 
@@ -41,13 +41,13 @@ class InsightsPromoService {
   static Future<void> checkAndTriggerBanner(DateTime? firstListenTime) async {
     if (firstListenTime == null) return;
 
-    final prefs      = await SharedPreferences.getInstance();
-    final daysSince  = DateTime.now().difference(firstListenTime).inDays;
+    final prefs = await SharedPreferences.getInstance();
+    final daysSince = DateTime.now().difference(firstListenTime).inDays;
 
     // Monthly recap takes precedence.
     final monthlyEnabled = prefs.getBool(_kMonthlyEnabled) ?? true;
     if (monthlyEnabled && daysSince >= 30) {
-      final currentMonth  = daysSince ~/ 30;
+      final currentMonth = daysSince ~/ 30;
       final lastSeenMonth = prefs.getInt(_kMonthlyLastSeenMonth) ?? 0;
       if (currentMonth > lastSeenMonth) {
         recapBannerPeriodNotifier.value = 30;
@@ -59,7 +59,7 @@ class InsightsPromoService {
     // Weekly recap.
     final weeklyEnabled = prefs.getBool(_kWeeklyEnabled) ?? true;
     if (weeklyEnabled && daysSince >= 7) {
-      final currentWeek  = daysSince ~/ 7;
+      final currentWeek = daysSince ~/ 7;
       final lastSeenWeek = prefs.getInt(_kWeeklyLastSeenWeek) ?? 0;
       if (currentWeek > lastSeenWeek) {
         recapBannerPeriodNotifier.value = 7;
@@ -74,7 +74,7 @@ class InsightsPromoService {
     int periodDays,
     DateTime firstListenTime,
   ) async {
-    final prefs     = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     final daysSince = DateTime.now().difference(firstListenTime).inDays;
     if (periodDays >= 30) {
       await prefs.setInt(_kMonthlyLastSeenMonth, daysSince ~/ 30);

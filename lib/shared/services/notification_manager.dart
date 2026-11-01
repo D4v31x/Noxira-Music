@@ -48,7 +48,7 @@ class NotificationManager {
   }
 
   /// Show a toast-style notification from anywhere in the app.
-  /// Uses the same pill-shaped glassmorphic style as the Aurora Music notification system.
+  /// Uses the same pill-shaped glassmorphic style as the Noxira Music notification system.
   static void showMessage(
     BuildContext context,
     String message, {

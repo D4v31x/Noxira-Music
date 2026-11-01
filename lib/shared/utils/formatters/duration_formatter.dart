@@ -1,4 +1,4 @@
-/// Duration formatting utilities for the Aurora Music app.
+/// Duration formatting utilities for the Noxira Music app.
 ///
 /// Provides consistent duration formatting across the application,
 /// supporting both short (MM:SS) and long (HH:MM:SS) formats.

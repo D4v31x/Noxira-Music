@@ -1,4 +1,4 @@
-/// Aurora Music Library Feature
+/// Noxira Music Library Feature
 ///
 /// This library exports the library feature components:
 /// - Library screens (albums, artists, tracks, folders)

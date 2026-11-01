@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:aurora_music_v01/shared/services/device_performance_service.dart';
 
@@ -6,6 +7,20 @@ import 'package:aurora_music_v01/shared/services/device_performance_service.dart
 class PerformanceModeProvider extends ChangeNotifier {
   static const String _performanceModeKey = 'performance_mode';
   static const String _autoDetectKey = 'auto_detect_performance';
+  static const String _autoCapKey = 'performance_auto_cap';
+
+  // Runtime frame monitor: if a device classified as capable still drops
+  // frames in practice, step down one level (and remember it).
+  static const int _monitorWarmupFrames = 30;
+  static const int _monitorWindowFrames = 90;
+  static const int _monitorMaxFrames = 600;
+  static const double _slowFrameRatio = 0.35;
+  static const Duration _slowFrame = Duration(milliseconds: 34);
+
+  bool _monitoring = false;
+  int _framesSeen = 0;
+  int _windowFrames = 0;
+  int _windowSlow = 0;
 
   PerformanceLevel _currentMode = PerformanceLevel.medium;
   bool _autoDetect = true;
@@ -42,6 +57,11 @@ class PerformanceModeProvider extends ChangeNotifier {
         // Auto-detect performance level
         _currentMode =
             await DevicePerformanceService.instance.getPerformanceLevel();
+        // A previous run observed real jank: never exceed that cap.
+        final cap = prefs.getInt(_autoCapKey);
+        if (cap != null && cap > _currentMode.index) {
+          _currentMode = PerformanceLevel.values[cap.clamp(0, 2)];
+        }
       } else {
         // Load manual setting
         final savedMode = prefs.getInt(_performanceModeKey);
@@ -63,6 +83,71 @@ class PerformanceModeProvider extends ChangeNotifier {
       _isInitialized = true;
       notifyListeners();
     }
+  }
+
+  /// Starts watching real frame times (release/profile builds only) and steps
+  /// the performance level down when the device clearly can't keep up.
+  void startFrameMonitor() {
+    if (_monitoring || kDebugMode || !_autoDetect) return;
+    if (_currentMode == PerformanceLevel.low) return;
+    _monitoring = true;
+    SchedulerBinding.instance.addTimingsCallback(_onFrameTimings);
+  }
+
+  void _stopFrameMonitor() {
+    if (!_monitoring) return;
+    _monitoring = false;
+    SchedulerBinding.instance.removeTimingsCallback(_onFrameTimings);
+  }
+
+  void _onFrameTimings(List<FrameTiming> timings) {
+    if (!_autoDetect) {
+      _stopFrameMonitor();
+      return;
+    }
+    for (final t in timings) {
+      _framesSeen++;
+      if (_framesSeen <= _monitorWarmupFrames) continue;
+
+      _windowFrames++;
+      if (t.totalSpan > _slowFrame) _windowSlow++;
+
+      if (_windowFrames >= _monitorWindowFrames) {
+        final struggling = _windowSlow / _windowFrames >= _slowFrameRatio;
+        _windowFrames = 0;
+        _windowSlow = 0;
+        if (struggling) {
+          _stepDown();
+          if (_currentMode == PerformanceLevel.low) {
+            _stopFrameMonitor();
+            return;
+          }
+        }
+      }
+    }
+    if (_framesSeen >= _monitorMaxFrames) _stopFrameMonitor();
+  }
+
+  Future<void> _stepDown() async {
+    final next = PerformanceLevel.values[
+        (_currentMode.index + 1).clamp(0, PerformanceLevel.values.length - 1)];
+    if (next == _currentMode) return;
+    debugPrint('[Performance] Frame drops detected, '
+        'stepping down $_currentMode -> $next');
+    _currentMode = next;
+    _currentSettings =
+        DevicePerformanceService.instance.getAnimationSettings(next);
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_autoCapKey, next.index);
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _stopFrameMonitor();
+    super.dispose();
   }
 
   /// Set performance mode manually
@@ -102,6 +187,7 @@ class PerformanceModeProvider extends ChangeNotifier {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool(_autoDetectKey, true);
+        await prefs.remove(_autoCapKey);
       } catch (e) {
         // Ignore preference save errors
       }

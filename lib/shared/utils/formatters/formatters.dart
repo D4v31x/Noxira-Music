@@ -1,4 +1,4 @@
-/// Aurora Music Formatters
+/// Noxira Music Formatters
 ///
 /// This library exports all formatting utilities:
 /// - Duration formatters for audio playback

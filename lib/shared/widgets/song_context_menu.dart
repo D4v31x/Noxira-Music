@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -11,11 +12,14 @@ import '../../features/library/library_feature.dart';
 import '../../features/player/widgets/share_clip_sheet.dart';
 import '../../features/settings/settings_feature.dart';
 import '../../l10n/generated/app_localizations.dart';
+import 'glassmorphic_dialog.dart';
 import '../models/models.dart';
 import '../services/artwork_cache_service.dart';
 import '../services/audio_player_service.dart';
 import '../services/lyrics_service.dart';
 import '../services/notification_manager.dart';
+import 'adaptive_blur.dart';
+import 'add_to_playlist_sheet.dart';
 
 // ---------------------------------------------------------------------------
 // Public entry-point
@@ -55,12 +59,11 @@ class _SongContextMenu extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      child: BackdropFilter(
+      child: AdaptiveBackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
             ),
@@ -68,89 +71,89 @@ class _SongContextMenu extends StatelessWidget {
           child: Material(
             color: Colors.grey[900]!.withValues(alpha: 0.88),
             child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Drag handle
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white30,
-                    borderRadius: BorderRadius.circular(2),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Drag handle
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white30,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                // Song header
-                _buildHeader(context),
-                const Divider(color: Colors.white24, height: 1),
-                const SizedBox(height: 4),
-                // Menu items
-                _item(
-                  context,
-                  icon: Icons.playlist_add_rounded,
-                  label: AppLocalizations.of(context).addToPlaylist,
-                  onTap: () => _addToPlaylist(context, audioService),
-                ),
-                _item(
-                  context,
-                  icon: Icons.queue_music_rounded,
-                  label: AppLocalizations.of(context).addToQueue,
-                  onTap: () => _addToQueue(context, audioService),
-                ),
-                _item(
-                  context,
-                  icon: Icons.notifications_active_rounded,
-                  label: AppLocalizations.of(context).setAsRingtone,
-                  onTap: () => _setAsRingtone(context),
-                ),
-                _item(
-                  context,
-                  icon: Icons.share_rounded,
-                  label: AppLocalizations.of(context).share,
-                  onTap: () => _share(context),
-                ),
-                _item(
-                  context,
-                  icon: Icons.movie_creation_outlined,
-                  label: AppLocalizations.of(context).saveAsClip,
-                  onTap: () => _shareClip(context),
-                ),
-                _item(
-                  context,
-                  icon: Icons.edit_rounded,
-                  label: AppLocalizations.of(context).songInfoEdit,
-                  onTap: () => _editInfo(context),
-                ),
-                _item(
-                  context,
-                  icon: Icons.album_rounded,
-                  label: AppLocalizations.of(context).goToAlbum,
-                  onTap: () => _goToAlbum(context),
-                ),
-                _item(
-                  context,
-                  icon: Icons.person_rounded,
-                  label: AppLocalizations.of(context).goToArtist,
-                  onTap: () => _goToArtist(context),
-                ),
-                _item(
-                  context,
-                  icon: Icons.lyrics_rounded,
-                  label: AppLocalizations.of(context).clearCachedLyrics,
-                  onTap: () => _clearCachedLyrics(context),
-                ),
-                const Divider(color: Colors.white12, height: 1),
-                _item(
-                  context,
-                  icon: Icons.delete_outline_rounded,
-                  label: AppLocalizations.of(context).deleteFromDevice,
-                  color: Colors.redAccent,
-                  onTap: () => _deleteSong(context),
-                ),
-                const SizedBox(height: 4),
-              ],
-            ),
+                  // Song header
+                  _buildHeader(context),
+                  const Divider(color: Colors.white24, height: 1),
+                  const SizedBox(height: 4),
+                  // Menu items
+                  _item(
+                    context,
+                    icon: Icons.playlist_add_rounded,
+                    label: AppLocalizations.of(context).addToPlaylist,
+                    onTap: () => _addToPlaylist(context, audioService),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.queue_music_rounded,
+                    label: AppLocalizations.of(context).addToQueue,
+                    onTap: () => _addToQueue(context, audioService),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.notifications_active_rounded,
+                    label: AppLocalizations.of(context).setAsRingtone,
+                    onTap: () => _setAsRingtone(context),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.share_rounded,
+                    label: AppLocalizations.of(context).share,
+                    onTap: () => _share(context),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.movie_creation_outlined,
+                    label: AppLocalizations.of(context).saveAsClip,
+                    onTap: () => _shareClip(context),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.edit_rounded,
+                    label: AppLocalizations.of(context).songInfoEdit,
+                    onTap: () => _editInfo(context),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.album_rounded,
+                    label: AppLocalizations.of(context).goToAlbum,
+                    onTap: () => _goToAlbum(context),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.person_rounded,
+                    label: AppLocalizations.of(context).goToArtist,
+                    onTap: () => _goToArtist(context),
+                  ),
+                  _item(
+                    context,
+                    icon: Icons.lyrics_rounded,
+                    label: AppLocalizations.of(context).clearCachedLyrics,
+                    onTap: () => _clearCachedLyrics(context),
+                  ),
+                  const Divider(color: Colors.white12, height: 1),
+                  _item(
+                    context,
+                    icon: Icons.delete_outline_rounded,
+                    label: AppLocalizations.of(context).deleteFromDevice,
+                    color: Colors.redAccent,
+                    onTap: () => _deleteSong(context),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+              ),
             ),
           ),
         ),
@@ -185,7 +188,9 @@ class _SongContextMenu extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist).join(', '),
+                  splitArtists(song.artist ??
+                          AppLocalizations.of(context).unknownArtist)
+                      .join(', '),
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.65),
                     fontFamily: FontConstants.fontFamily,
@@ -226,46 +231,58 @@ class _SongContextMenu extends StatelessWidget {
 
   // ---- Actions ----
 
-  void _addToPlaylist(
-      BuildContext context, AudioPlayerService audioService) {
+  void _addToPlaylist(BuildContext context, AudioPlayerService audioService) {
+    // The menu's own context is deactivated once it is popped, so open the
+    // sheet from the (long-lived) root navigator's context instead.
+    final navigatorContext = Navigator.of(context, rootNavigator: true).context;
     Navigator.pop(context);
-    _showPlaylistPicker(context, audioService);
+    unawaited(showAddToPlaylistSheet(navigatorContext, song));
   }
 
   Future<void> _addToQueue(
       BuildContext context, AudioPlayerService audioService) async {
+    // The menu's context is deactivated once popped; use the root one after.
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final l10n = AppLocalizations.of(context);
     Navigator.pop(context);
     await audioService.addToQueue(song);
-    if (context.mounted) {
-      NotificationManager.showMessage(context, AppLocalizations.of(context).songAddedToQueue(song.title));
+    if (rootContext.mounted) {
+      NotificationManager.showMessage(
+          rootContext, l10n.songAddedToQueue(song.title));
     }
   }
 
   Future<void> _setAsRingtone(BuildContext context) async {
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final l10n = AppLocalizations.of(context);
     Navigator.pop(context);
     try {
       await _channel.invokeMethod('setAsRingtone', {'path': song.data});
-      if (context.mounted) {
-        NotificationManager.showMessage(context, AppLocalizations.of(context).songSetAsRingtone(song.title));
+      if (rootContext.mounted) {
+        NotificationManager.showMessage(
+            rootContext, l10n.songSetAsRingtone(song.title));
       }
     } on PlatformException catch (e) {
-      if (!context.mounted) return;
+      if (!rootContext.mounted) return;
       if (e.code == 'PERMISSION_NEEDED') {
-        NotificationManager.showMessage(context, AppLocalizations.of(context).modifySystemSettingsPermission);
+        NotificationManager.showMessage(
+            rootContext, l10n.modifySystemSettingsPermission);
       } else {
-        NotificationManager.showMessage(context, AppLocalizations.of(context).failedToSetRingtone(e.message ?? ''));
+        NotificationManager.showMessage(
+            rootContext, l10n.failedToSetRingtone(e.message ?? ''));
       }
     }
   }
 
   void _share(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     Navigator.pop(context);
     final text =
-        '${song.title} — ${splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist).join(', ')}';
+        '${song.title} — ${splitArtists(song.artist ?? l10n.unknownArtist).join(', ')}';
     SharePlus.instance.share(
       ShareParams(
         text: text,
-        subject: AppLocalizations.of(context).checkOutThisSong,
+        subject: l10n.checkOutThisSong,
       ),
     );
   }
@@ -295,7 +312,9 @@ class _SongContextMenu extends StatelessWidget {
 
   void _goToArtist(BuildContext context) {
     Navigator.pop(context);
-    final artist = splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist).first;
+    final artist =
+        splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist)
+            .first;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -304,18 +323,19 @@ class _SongContextMenu extends StatelessWidget {
   }
 
   Future<void> _clearCachedLyrics(BuildContext context) async {
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final l10n = AppLocalizations.of(context);
     Navigator.pop(context);
     final artist = song.artist?.trim().isNotEmpty == true
         ? song.artist!.trim()
-        : AppLocalizations.of(context).unknown;
+        : l10n.unknown;
     final title =
-        song.title.trim().isNotEmpty ? song.title.trim() : AppLocalizations.of(context).unknown;
+        song.title.trim().isNotEmpty ? song.title.trim() : l10n.unknown;
     final deleted =
         await TimedLyricsService().deleteCachedLyricsForSong(artist, title);
-    if (!context.mounted) return;
-    final l10n = AppLocalizations.of(context);
+    if (!rootContext.mounted) return;
     NotificationManager.showMessage(
-      context,
+      rootContext,
       deleted ? l10n.lyricsCleared(song.title) : l10n.noLyricsCached,
     );
   }
@@ -323,56 +343,52 @@ class _SongContextMenu extends StatelessWidget {
   Future<void> _deleteSong(BuildContext context) async {
     final audioService =
         Provider.of<AudioPlayerService>(context, listen: false);
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final l10n = AppLocalizations.of(context);
     Navigator.pop(context);
 
     final confirmed = await showDialog<bool>(
-      context: context,
+      context: rootContext,
       barrierColor: Colors.black.withValues(alpha: 0.75),
       builder: (ctx) {
-        final l10n = AppLocalizations.of(ctx);
-        return AlertDialog(
-        backgroundColor: Colors.grey[900]!.withValues(alpha: 0.95),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        title: Text(
-          l10n.deleteSong,
-          style: const TextStyle(
-            color: Colors.white,
-            fontFamily: FontConstants.fontFamily,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          l10n.deleteSongConfirm(song.title),
-          style: const TextStyle(
-            color: Colors.white70,
-            fontFamily: FontConstants.fontFamily,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(
-              l10n.cancel,
-              style: const TextStyle(
-                  color: Colors.white70,
-                  fontFamily: FontConstants.fontFamily),
+        return GlassmorphicDialog(
+          title: Text(
+            l10n.deleteSong,
+            style: const TextStyle(
+              color: Colors.white,
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(
-              l10n.delete,
-              style: const TextStyle(
-                color: Colors.redAccent,
-                fontFamily: FontConstants.fontFamily,
-                fontWeight: FontWeight.bold,
+          content: Text(
+            l10n.deleteSongConfirm(song.title),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontFamily: FontConstants.fontFamily,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(
+                l10n.cancel,
+                style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: FontConstants.fontFamily),
               ),
             ),
-          ),
-        ],
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(
+                l10n.delete,
+                style: const TextStyle(
+                  color: Colors.redAccent,
+                  fontFamily: FontConstants.fontFamily,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -384,117 +400,15 @@ class _SongContextMenu extends StatelessWidget {
       // Reflect the deletion across the whole app immediately, without waiting
       // for a full MediaStore rescan.
       await audioService.removeSongFromLibrary(song);
-      if (context.mounted) {
-        NotificationManager.showMessage(context, AppLocalizations.of(context).songDeleted(song.title));
+      if (rootContext.mounted) {
+        NotificationManager.showMessage(
+            rootContext, l10n.songDeleted(song.title));
       }
     } on PlatformException catch (e) {
-      if (context.mounted) {
-        NotificationManager.showMessage(context, AppLocalizations.of(context).failedToDelete(e.message ?? ''));
+      if (rootContext.mounted) {
+        NotificationManager.showMessage(
+            rootContext, l10n.failedToDelete(e.message ?? ''));
       }
     }
-  }
-
-  // ---- Playlist picker ----
-
-  void _showPlaylistPicker(
-      BuildContext context, AudioPlayerService audioService) {
-    showDialog<void>(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.75),
-      builder: (ctx) => Dialog(
-        backgroundColor: Colors.transparent,
-        shape: const RoundedRectangleBorder(),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(20),
-                border:
-                    Border.all(color: Colors.white.withValues(alpha: 0.2)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      'Add to playlist',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: FontConstants.fontFamily,
-                      ),
-                    ),
-                  ),
-                  const Divider(color: Colors.white24),
-                  if (audioService.playlists.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'No playlists yet',
-                        style: TextStyle(
-                            color: Colors.white70,
-                            fontFamily: FontConstants.fontFamily),
-                      ),
-                    )
-                  else
-                    ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 300),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: audioService.playlists.length,
-                          itemBuilder: (_, i) {
-                            final playlist = audioService.playlists[i];
-                            return ListTile(
-                              leading: const Icon(Icons.playlist_play,
-                                  color: Colors.white),
-                              title: Text(
-                                playlist.name,
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: FontConstants.fontFamily),
-                              ),
-                              subtitle: Text(
-                                '${playlist.songs.length} songs',
-                                style: const TextStyle(color: Colors.white70),
-                              ),
-                              onTap: () {
-                                audioService.addSongToPlaylist(
-                                    playlist.id, song);
-                                final message = AppLocalizations.of(context)
-                                    .addedToNamedPlaylist(playlist.name);
-                                Navigator.pop(ctx);
-                                if (!context.mounted) return;
-                                NotificationManager.showMessage(
-                                  context,
-                                  message,
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

@@ -102,156 +102,162 @@ class ListeningHistoryCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           blur: 15,
           child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Artwork
-                  Hero(
-                    tag: 'nowPlayingArtwork_home',
-                    child: Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _artworkService.buildCachedArtwork(
-                          song.id,
-                          size: 64,
+            borderRadius: BorderRadius.circular(16),
+            child: Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      // Artwork
+                      Hero(
+                        tag: 'nowPlayingArtwork_home',
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: _artworkService.buildCachedArtwork(
+                              song.id,
+                              size: 64,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Song info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ValueListenableBuilder<bool>(
-                          valueListenable: audioPlayerService.isPlayingNotifier,
-                          builder: (context, isPlaying, _) {
-                            return Text(
-                              isPlaying ? AppLocalizations.of(context).nowPlaying : AppLocalizations.of(context).paused,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.w600,
+                      const SizedBox(width: 16),
+                      // Song info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            ValueListenableBuilder<bool>(
+                              valueListenable:
+                                  audioPlayerService.isPlayingNotifier,
+                              builder: (context, isPlaying, _) {
+                                return Text(
+                                  isPlaying
+                                      ? AppLocalizations.of(context).nowPlaying
+                                      : AppLocalizations.of(context).paused,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                    fontFamily: FontConstants.fontFamily,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              song.title,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
                                 fontFamily: FontConstants.fontFamily,
                               ),
-                            );
-                          },
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              splitArtists(song.artist ??
+                                      AppLocalizations.of(context)
+                                          .unknownArtist)
+                                  .join(', '),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.6),
+                                fontFamily: FontConstants.fontFamily,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          song.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontFamily: FontConstants.fontFamily,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist).join(', '),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface
-                                .withValues(alpha: 0.6),
-                            fontFamily: FontConstants.fontFamily,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Play/Pause button
-                  ValueListenableBuilder<bool>(
-                    valueListenable: audioPlayerService.isPlayingNotifier,
-                    builder: (context, isPlaying, _) {
-                      return GestureDetector(
-                        onTap: () {
-                          if (isPlaying) {
-                            audioPlayerService.pause();
-                          } else {
-                            audioPlayerService.resume();
-                          }
+                      ),
+                      // Play/Pause button
+                      ValueListenableBuilder<bool>(
+                        valueListenable: audioPlayerService.isPlayingNotifier,
+                        builder: (context, isPlaying, _) {
+                          return GestureDetector(
+                            onTap: () {
+                              if (isPlaying) {
+                                audioPlayerService.pause();
+                              } else {
+                                audioPlayerService.resume();
+                              }
+                            },
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(22),
+                              ),
+                              child: Icon(
+                                isPlaying
+                                    ? Icons.pause_rounded
+                                    : Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                            ),
+                          );
                         },
-                        child: Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.primary,
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: Icon(
-                            isPlaying
-                                ? Icons.pause_rounded
-                                : Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Progress bar at bottom.
+                // KEY PERF FIX: BackgroundManagerService color and positionStream
+                // are subscribed independently so that neither causes the other to
+                // rebuild. Selector rebuilds on color change; StreamBuilder rebuilds
+                // on position change. Provider.of with listen:true is NOT called
+                // inside the StreamBuilder builder (which ran on every tick).
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Selector<BackgroundManagerService, Color>(
+                    selector: (_, bm) => bm.currentColors.length > 2
+                        ? bm.currentColors[2]
+                        : (bm.currentColors.isNotEmpty
+                            ? bm.currentColors.first
+                            : theme.colorScheme.primary),
+                    builder: (context, progressColor, _) {
+                      return StreamBuilder<Duration>(
+                        stream: audioPlayerService.audioPlayer.positionStream,
+                        builder: (context, snapshot) {
+                          final position = snapshot.data ?? Duration.zero;
+                          final duration =
+                              audioPlayerService.audioPlayer.duration ??
+                                  Duration.zero;
+                          final progress = duration.inMilliseconds > 0
+                              ? (position.inMilliseconds /
+                                      duration.inMilliseconds)
+                                  .clamp(0.0, 1.0)
+                              : 0.0;
+
+                          return Container(
+                            height: 3,
+                            color: progressColor.withValues(alpha: 0.15),
+                            child: FractionallySizedBox(
+                              alignment: Alignment.centerLeft,
+                              widthFactor: progress,
+                              child: Container(
+                                color: progressColor,
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            // Progress bar at bottom.
-            // KEY PERF FIX: BackgroundManagerService color and positionStream
-            // are subscribed independently so that neither causes the other to
-            // rebuild. Selector rebuilds on color change; StreamBuilder rebuilds
-            // on position change. Provider.of with listen:true is NOT called
-            // inside the StreamBuilder builder (which ran on every tick).
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Selector<BackgroundManagerService, Color>(
-                selector: (_, bm) => bm.currentColors.length > 2
-                    ? bm.currentColors[2]
-                    : (bm.currentColors.isNotEmpty
-                        ? bm.currentColors.first
-                        : theme.colorScheme.primary),
-                builder: (context, progressColor, _) {
-                  return StreamBuilder<Duration>(
-                    stream: audioPlayerService.audioPlayer.positionStream,
-                    builder: (context, snapshot) {
-                      final position = snapshot.data ?? Duration.zero;
-                      final duration =
-                          audioPlayerService.audioPlayer.duration ??
-                              Duration.zero;
-                      final progress = duration.inMilliseconds > 0
-                          ? (position.inMilliseconds /
-                                  duration.inMilliseconds)
-                              .clamp(0.0, 1.0)
-                          : 0.0;
-
-                      return Container(
-                        height: 3,
-                        color: progressColor.withValues(alpha: 0.15),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: progress,
-                          child: Container(
-                            color: progressColor,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-        ),
+          ),
         ),
       ),
     );

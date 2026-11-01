@@ -13,10 +13,11 @@ import 'package:provider/provider.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/models/models.dart';
-import '../screens/fullscreen_lyrics.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/services/lyrics_translation_service.dart';
+import 'lyrics_page_launcher.dart';
+import 'player_page_route.dart';
 
 // MARK: - Constants
 
@@ -30,7 +31,7 @@ const _kCurrentLyricFontSize = 17.0;
 const _kOtherLyricFontSize = 14.0;
 const _kCurrentLyricPadding = 10.0;
 const _kOtherLyricPadding = 6.0;
-const _kHorizontalLyricPadding = 4.0;
+const _kHorizontalLyricPadding = 16.0;
 
 const _kLyricAnimationDuration = Duration(milliseconds: 350);
 const _kNoLyricsAnimationDuration = Duration(milliseconds: 500);
@@ -185,7 +186,8 @@ class _LyricsSectionState extends State<LyricsSection>
       final song = widget.audioPlayerService.currentSong;
       final lyricsTexts = lyrics.map((l) => l.text).toList();
       final lyricsFingerprint = lyricsTexts.join().hashCode;
-      final cacheKey = '${song?.artist ?? ""}|${song?.title ?? ""}|$lyricsFingerprint';
+      final cacheKey =
+          '${song?.artist ?? ""}|${song?.title ?? ""}|$lyricsFingerprint';
 
       final translated = await LyricsTranslationService.translateLines(
         texts: lyricsTexts,
@@ -227,39 +229,69 @@ class _LyricsSectionState extends State<LyricsSection>
     }
   }
 
-  double? _targetOffsetForCurrentLyric() {
+  /// Scroll offsets that frame the current lyric: `start` shows its first
+  /// line, `end` its last. They match when it fits the clear part of the card.
+  ({double start, double end})? _targetOffsetsForCurrentLyric() {
     if (!_scrollController.hasClients) return null;
     final key = _lyricKeys[widget.currentLyricIndex];
     if (key?.currentContext == null) return null;
     final renderBox = key!.currentContext!.findRenderObject() as RenderBox?;
     if (renderBox == null || !renderBox.attached) return null;
-    final scrollBox = _scrollKey.currentContext?.findRenderObject() as RenderBox?;
+    final scrollBox =
+        _scrollKey.currentContext?.findRenderObject() as RenderBox?;
     if (scrollBox == null) return null;
 
-    final itemOffset = renderBox.localToGlobal(Offset.zero, ancestor: scrollBox);
+    final itemTop = _scrollController.offset +
+        renderBox.localToGlobal(Offset.zero, ancestor: scrollBox).dy;
     final itemHeight = renderBox.size.height;
     final viewportHeight = scrollBox.size.height;
+    final max = _scrollController.position.maxScrollExtent;
 
-    return (_scrollController.offset
-            + itemOffset.dy
-            - (viewportHeight / 2 - itemHeight / 2))
-        .clamp(0.0, _scrollController.position.maxScrollExtent);
+    // The top and bottom fifth of the card fade out.
+    final clear = viewportHeight * 0.6;
+    if (itemHeight <= clear) {
+      final centred =
+          (itemTop - (viewportHeight / 2 - itemHeight / 2)).clamp(0.0, max);
+      return (start: centred, end: centred);
+    }
+    return (
+      start: (itemTop - viewportHeight * 0.2).clamp(0.0, max),
+      end: (itemTop + itemHeight - viewportHeight * 0.8).clamp(0.0, max),
+    );
   }
 
   void _jumpToCurrentLyric() {
     if (!mounted) return;
-    final target = _targetOffsetForCurrentLyric();
-    if (target != null) _scrollController.jumpTo(target);
+    final target = _targetOffsetsForCurrentLyric();
+    if (target != null) _scrollController.jumpTo(target.start);
   }
 
-  void _scrollToCurrentLyric() {
+  Future<void> _scrollToCurrentLyric() async {
     if (!mounted) return;
-    final target = _targetOffsetForCurrentLyric();
+    final target = _targetOffsetsForCurrentLyric();
     if (target == null) return;
-    _scrollController.animateTo(
-      target,
+    final index = widget.currentLyricIndex;
+    await _scrollController.animateTo(
+      target.start,
       duration: const Duration(milliseconds: 400),
       curve: Curves.easeOutCubic,
+    );
+    if (!mounted ||
+        index != widget.currentLyricIndex ||
+        target.end - target.start < 4) {
+      return;
+    }
+
+    // A line too tall for the card is read through while it is sung.
+    final lyrics = widget.timedLyrics!;
+    final sung = index + 1 < lyrics.length
+        ? (lyrics[index + 1].time - lyrics[index].time)
+        : const Duration(seconds: 6);
+    final ms = (sung.inMilliseconds * 0.75 - 400).clamp(800, 10000).toInt();
+    await _scrollController.animateTo(
+      target.end,
+      duration: Duration(milliseconds: ms),
+      curve: Curves.easeInOut,
     );
   }
 
@@ -288,24 +320,40 @@ class _LyricsSectionState extends State<LyricsSection>
 
     return Stack(
       children: [
-        Container(
-          width: double.infinity,
-          height: _kLyricsSectionHeight,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-          decoration: BoxDecoration(
-            color: isLowEnd
-                ? colorScheme.surfaceContainerHigh
-                : Colors.white.withValues(alpha: _kLyricsContainerOpacity),
-            borderRadius: BorderRadius.circular(_kBorderRadius),
-            border: Border.all(
-              color: isLowEnd
-                  ? colorScheme.outlineVariant
-                  : Colors.white.withValues(alpha: 0.15),
+        // The key sits on the visible card (inside its margin) so the page
+        // grows from, and shrinks back to, exactly the card's outline.
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          child: ValueListenableBuilder<double>(
+            valueListenable: PlayerPageSources.cardChrome,
+            // While a page is open the route's own frame is the outline;
+            // drawing the card's too would show two.
+            builder: (context, chrome, child) => Container(
+              key: PlayerPageSources.card,
+              width: double.infinity,
+              height: _kLyricsSectionHeight,
+              decoration: chrome < 1
+                  ? null
+                  : BoxDecoration(
+                      color: isLowEnd
+                          ? colorScheme.surfaceContainerHigh
+                          : Colors.white
+                              .withValues(alpha: _kLyricsContainerOpacity),
+                      borderRadius: BorderRadius.circular(_kBorderRadius),
+                      border: Border.all(
+                        color: isLowEnd
+                            ? colorScheme.outlineVariant
+                            : Colors.white.withValues(alpha: 0.15),
+                      ),
+                    ),
+              child: child,
+            ),
+            child: _cardFade(
+              hasLyrics
+                  ? _buildLyricsContent(context, screenWidth)
+                  : _buildNoLyricsPlaceholder(context),
             ),
           ),
-          child: hasLyrics
-              ? _buildLyricsContent(context, screenWidth)
-              : _buildNoLyricsPlaceholder(context),
         ),
         // Always expose the expand button — even with no lyrics yet, tapping
         // it opens the fullscreen view where lyrics can be added/imported.
@@ -373,8 +421,7 @@ class _LyricsSectionState extends State<LyricsSection>
       final dist = (index - widget.currentLyricIndex).abs();
       final opacity =
           (1.0 - dist * _kOpacityDecayPerLine).clamp(_kMinLyricOpacity, 1.0);
-      final scale =
-          (1.0 - dist * _kScaleDecayPerLine).clamp(0.75, 1.0);
+      final scale = (1.0 - dist * _kScaleDecayPerLine).clamp(0.75, 1.0);
 
       final translatedText =
           (_showTranslated && index < _translatedLines.length)
@@ -403,8 +450,7 @@ class _LyricsSectionState extends State<LyricsSection>
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome_rounded,
-                  size: 10, color: Colors.white38),
+              Icon(Icons.auto_awesome_rounded, size: 10, color: Colors.white38),
               SizedBox(width: 4),
               Text(
                 'AI translated \u00b7 accuracy may vary',
@@ -445,7 +491,7 @@ class _LyricsSectionState extends State<LyricsSection>
       child: Transform.scale(
         scale: scale,
         child: SizedBox(
-          width: screenWidth - 80,
+          width: double.infinity,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -456,19 +502,17 @@ class _LyricsSectionState extends State<LyricsSection>
                 style: TextStyle(
                   color: (isCurrent ? Colors.white : Colors.white60)
                       .withValues(alpha: opacity),
-                  fontSize: isCurrent
-                      ? _kCurrentLyricFontSize
-                      : _kOtherLyricFontSize,
+                  fontSize:
+                      isCurrent ? _kCurrentLyricFontSize : _kOtherLyricFontSize,
                   fontFamily: FontConstants.fontFamily,
-                  fontWeight:
-                      isCurrent ? FontWeight.bold : FontWeight.normal,
+                  fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                   height: 1.3,
                   letterSpacing: isCurrent ? 0.2 : 0.0,
                 ),
                 child: Text(
                   translatedText ?? lyric.text,
                   textAlign: TextAlign.center,
-                  maxLines: 2,
+                  maxLines: isCurrent ? null : 2,
                   overflow: TextOverflow.ellipsis,
                   softWrap: true,
                 ),
@@ -499,10 +543,9 @@ class _LyricsSectionState extends State<LyricsSection>
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: (isCurrent
-                                        ? Colors.white
-                                        : Colors.white60)
-                                    .withValues(alpha: opacity * 0.5),
+                                color:
+                                    (isCurrent ? Colors.white : Colors.white60)
+                                        .withValues(alpha: opacity * 0.5),
                                 fontSize: 11,
                                 fontFamily: FontConstants.fontFamily,
                                 fontStyle: FontStyle.italic,
@@ -546,6 +589,15 @@ class _LyricsSectionState extends State<LyricsSection>
     );
   }
 
+  /// The card's contents give way to the page as it opens out of the card and
+  /// return as it closes, so the two never show overlapping text.
+  Widget _cardFade(Widget child) => ValueListenableBuilder<double>(
+        valueListenable: PlayerPageSources.cardReveal,
+        child: child,
+        builder: (context, reveal, child) =>
+            Opacity(opacity: reveal, child: child),
+      );
+
   // MARK: - Overlay buttons
 
   Widget _buildExpandButton(BuildContext context) {
@@ -556,7 +608,7 @@ class _LyricsSectionState extends State<LyricsSection>
     return Positioned(
       bottom: 28,
       right: 24,
-      child: _buttonShell(
+      child: _cardFade(_buttonShell(
         isLowEnd: isLowEnd,
         colorScheme: colorScheme,
         isActive: false,
@@ -569,7 +621,7 @@ class _LyricsSectionState extends State<LyricsSection>
           onPressed: () => _openFullscreenLyrics(context),
           tooltip: AppLocalizations.of(context).expandLyrics,
         ),
-      ),
+      )),
     );
   }
 
@@ -598,7 +650,7 @@ class _LyricsSectionState extends State<LyricsSection>
     return Positioned(
       bottom: 28,
       left: 24,
-      child: AnimatedBuilder(
+      child: _cardFade(AnimatedBuilder(
         animation: _pulseAnim,
         builder: (context, child) => Opacity(
           opacity: isLoading ? _pulseAnim.value : 1.0,
@@ -632,9 +684,7 @@ class _LyricsSectionState extends State<LyricsSection>
                           height: 20,
                         )
                       : iconoir.Language(
-                          color: isActive
-                              ? colorScheme.primary
-                              : Colors.white,
+                          color: isActive ? colorScheme.primary : Colors.white,
                           width: 20,
                           height: 20,
                         ),
@@ -642,7 +692,7 @@ class _LyricsSectionState extends State<LyricsSection>
                   tooltip: tooltip,
                 ),
         ),
-      ),
+      )),
     );
   }
 
@@ -681,11 +731,6 @@ class _LyricsSectionState extends State<LyricsSection>
 
   void _openFullscreenLyrics(BuildContext context) {
     if (widget.audioPlayerService.currentSong == null) return;
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const FullscreenLyricsScreen(),
-      ),
-    );
+    openLyricsPage(context);
   }
 }

@@ -151,8 +151,7 @@ extension AudioPlaylistM3uExtension on AudioPlayerService {
           // Folder file is newer → import into the app.
           final songs =
               await _m3uService.resolveSongsFromFile(existing.path, _songs);
-          if (songs.isNotEmpty &&
-              !_sameSongList(playlist.songs, songs)) {
+          if (songs.isNotEmpty && !_sameSongList(playlist.songs, songs)) {
             playlist.songs
               ..clear()
               ..addAll(songs);
@@ -175,8 +174,7 @@ extension AudioPlaylistM3uExtension on AudioPlayerService {
     // 2. Any remaining folder files are new external playlists → import them.
     for (final entry in folderFiles.entries) {
       final file = entry.value;
-      final songs =
-          await _m3uService.resolveSongsFromFile(file.path, _songs);
+      final songs = await _m3uService.resolveSongsFromFile(file.path, _songs);
       if (songs.isEmpty) continue;
       final id = DateTime.now().microsecondsSinceEpoch.toString();
       final playlist = Playlist(
@@ -218,9 +216,7 @@ extension AudioPlaylistM3uExtension on AudioPlayerService {
   /// Auto-generated playlists are not synced to files.
   bool _isSyncExcludedPlaylist(Playlist playlist) {
     final id = playlist.id;
-    return id == 'liked_songs' ||
-        id == 'most_played' ||
-        id == 'recently_added';
+    return id == 'liked_songs' || id == 'most_played' || id == 'recently_added';
   }
 
   bool _sameSongList(List<SongModel> a, List<SongModel> b) {

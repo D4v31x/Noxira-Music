@@ -19,7 +19,7 @@ class AppConfig {
 
   // Default Values
   static const String defaultLanguageCode = 'en';
-  static const String appName = 'Aurora Music';
+  static const String appName = 'Noxira Music';
 
   // Error Tracking Configuration
   static const String errorStorageKey = 'pending_errors';

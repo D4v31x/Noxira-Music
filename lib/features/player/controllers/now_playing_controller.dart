@@ -112,7 +112,12 @@ class NowPlayingController {
     debugPrint('🎵 [NOW_PLAYING] Requesting lyrics for: "$title" by "$artist"');
 
     // Load from cache first
-    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title);
+    final songDuration = _audioPlayerService.audioPlayer.duration ??
+        ((song.duration ?? 0) > 0
+            ? Duration(milliseconds: song.duration!)
+            : null);
+    var lyrics = await timedLyricsService.loadLyricsFromFile(artist, title,
+        songDuration: songDuration);
     if (song.id != _pendingSongLoadId) return;
 
     if (lyrics == null) {
@@ -120,7 +125,9 @@ class NowPlayingController {
       lyrics = await timedLyricsService.fetchTimedLyrics(
         artist,
         title,
-        songDuration: _audioPlayerService.audioPlayer.duration,
+        songDuration: songDuration,
+        audioPath: song.data,
+        album: song.album,
       );
     } else {
       debugPrint(
@@ -135,8 +142,8 @@ class NowPlayingController {
 
     // Set up position stream for lyric sync
     await _positionSubscription?.cancel();
-    _positionSubscription =
-        _audioPlayerService.audioPlayer.positionStream.listen(_updateCurrentLyric);
+    _positionSubscription = _audioPlayerService.audioPlayer.positionStream
+        .listen(_updateCurrentLyric);
   }
 
   /// Updates the current lyric index based on playback position.
@@ -164,9 +171,10 @@ class NowPlayingController {
   /// Updates artwork for a song.
   Future<void> _updateArtwork(SongModel song) async {
     try {
-      final provider =
-          await _artworkService.getCachedImageProvider(song.id, highQuality: true);
-      if (song.id != _lastSongId) return; // Song changed — discard stale artwork
+      final provider = await _artworkService.getCachedImageProvider(song.id,
+          highQuality: true);
+      if (song.id != _lastSongId)
+        return; // Song changed — discard stale artwork
       currentArtwork = provider;
     } catch (e) {
       if (song.id != _lastSongId) return;

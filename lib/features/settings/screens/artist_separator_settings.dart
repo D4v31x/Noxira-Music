@@ -8,6 +8,7 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../l10n/generated/app_localizations.dart';
+import '../../../shared/widgets/glassmorphic_dialog.dart';
 
 /// Settings screen for configuring artist name separation
 class ArtistSeparatorSettingsScreen extends StatefulWidget {
@@ -117,7 +118,8 @@ class _ArtistSeparatorSettingsScreenState
               // ── Enable toggle ──────────────────────────────────
               _glassCard(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Row(
                     children: [
                       Expanded(
@@ -137,7 +139,8 @@ class _ArtistSeparatorSettingsScreenState
                             Text(
                               l10n.enableArtistSeparationDesc,
                               style: TextStyle(
-                                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                color: colorScheme.onSurface
+                                    .withValues(alpha: 0.5),
                                 fontSize: 12,
                                 fontFamily: FontConstants.fontFamily,
                               ),
@@ -248,7 +251,10 @@ class _ArtistSeparatorSettingsScreenState
                     children: [
                       // Input field
                       Builder(builder: (ctx) {
-                        final isLowEnd = Provider.of<PerformanceModeProvider>(ctx, listen: false).isLowEndDevice;
+                        final isLowEnd = Provider.of<PerformanceModeProvider>(
+                                ctx,
+                                listen: false)
+                            .isLowEndDevice;
                         final cs = Theme.of(ctx).colorScheme;
                         return DecoratedBox(
                           decoration: BoxDecoration(
@@ -270,7 +276,8 @@ class _ArtistSeparatorSettingsScreenState
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 12),
                               border: InputBorder.none,
-                              hintText: 'e.g. Artist One / Artist Two feat. Three',
+                              hintText:
+                                  'e.g. Artist One / Artist Two feat. Three',
                               hintStyle: TextStyle(
                                   color: cs.onSurface.withValues(alpha: 0.35),
                                   fontSize: 13),
@@ -283,7 +290,8 @@ class _ArtistSeparatorSettingsScreenState
                         Text(
                           '—',
                           style: TextStyle(
-                              color: colorScheme.onSurface.withValues(alpha: 0.35),
+                              color:
+                                  colorScheme.onSurface.withValues(alpha: 0.35),
                               fontSize: 14),
                         )
                       else
@@ -427,7 +435,9 @@ class _ArtistSeparatorSettingsScreenState
   }
 
   Widget _glassCard({required Widget child}) {
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -466,8 +476,9 @@ class _ArtistSeparatorSettingsScreenState
             style: TextStyle(
               color: colorScheme.onSurface,
               fontSize: 13,
-              fontFamily:
-                  mono ? FontConstants.monospaceFontFamily : FontConstants.fontFamily,
+              fontFamily: mono
+                  ? FontConstants.monospaceFontFamily
+                  : FontConstants.fontFamily,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -507,7 +518,7 @@ class _ArtistSeparatorSettingsScreenState
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => GlassmorphicDialog(
         title: Text(
           l10n.addSeparator,
           style: const TextStyle(
@@ -518,12 +529,20 @@ class _ArtistSeparatorSettingsScreenState
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(fontFamily: FontConstants.fontFamily),
+          style: const TextStyle(
+              fontFamily: FontConstants.fontFamily, color: Colors.white),
           decoration: InputDecoration(
             labelText: l10n.separator,
             hintText: l10n.separatorHint,
-            border: OutlineInputBorder(
+            labelStyle: const TextStyle(color: Colors.white70),
+            hintStyle: const TextStyle(color: Colors.white38),
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white),
             ),
           ),
         ),
@@ -562,7 +581,7 @@ class _ArtistSeparatorSettingsScreenState
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => GlassmorphicDialog(
         title: Text(
           l10n.addExclusion,
           style: const TextStyle(
@@ -573,12 +592,20 @@ class _ArtistSeparatorSettingsScreenState
         content: TextField(
           controller: controller,
           autofocus: true,
-          style: const TextStyle(fontFamily: FontConstants.fontFamily),
+          style: const TextStyle(
+              fontFamily: FontConstants.fontFamily, color: Colors.white),
           decoration: InputDecoration(
             labelText: l10n.artistName,
             hintText: l10n.exclusionHint,
-            border: OutlineInputBorder(
+            labelStyle: const TextStyle(color: Colors.white70),
+            hintStyle: const TextStyle(color: Colors.white38),
+            enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white24),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.white),
             ),
           ),
         ),
@@ -632,7 +659,7 @@ class _ArtistSeparatorSettingsScreenState
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => GlassmorphicDialog(
         title: Text(
           l10n.resetToDefaults,
           style: const TextStyle(

@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 
-/// Performance optimization utilities for Aurora Music
-/// 
+/// Performance optimization utilities for Noxira Music
+///
 /// This file contains helper functions and classes to optimize
 /// rebuild behavior, state management, and rendering performance.
 

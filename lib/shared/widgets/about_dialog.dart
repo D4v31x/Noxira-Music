@@ -8,6 +8,8 @@ import './glassmorphic_container.dart';
 import './changelog_dialog.dart';
 import './packages_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'adaptive_blur.dart';
+import '../../features/splash/animated_logo.dart';
 
 class AuroraAboutDialog extends StatelessWidget {
   final String version;
@@ -55,210 +57,222 @@ class AuroraAboutDialog extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(15),
-          child: BackdropFilter(
+          child: AdaptiveBackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: GlassmorphicContainer(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Top Logo Section with gradient background
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.white.withValues(alpha: 0.15),
-                      Colors.white.withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(15)),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Column(
-                  children: [
-                    Image.asset(
-                      'assets/images/logo/Music_full_logo.png',
-                      width: 190,
-                      height: 70,
-                      fit: BoxFit.contain,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Top Logo Section with gradient background
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.15),
+                          Colors.white.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(15)),
                     ),
-                  ],
-                ),
-              ),
-
-              // Content Section
-              Flexible(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      // Version Info
-                      _buildInfoRow(
-                        icon: const iconoir.Hashtag(color: Colors.white70, width: 20, height: 20),
-                        title: 'Version',
-                        value: version,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInfoRow(
-                        icon: const iconoir.Label(color: Colors.white70, width: 20, height: 20),
-                        title: 'Codename',
-                        value: codename,
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInfoRow(
-                        icon: const iconoir.User(color: Colors.white70, width: 20, height: 20),
-                        title: 'Developer',
-                        value: 'D4v31x',
-                      ),
-                      const SizedBox(height: 12),
-                      _buildInfoRow(
-                        icon: const iconoir.Copyright(color: Colors.white70, width: 20, height: 20),
-                        title: 'Copyright',
-                        value: '© ${DateTime.now().year} Aurora Software CZ',
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // What's New Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showChangelog(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.withValues(alpha: 0.2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: Colors.blue.withValues(alpha: 0.3),
-                              ),
-                            ),
-                          ),
-                          icon: const iconoir.Star(color: Colors.white, width: 20, height: 20),
-                          label: Text(
-                            AppLocalizations.of(context).whatsNew,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: FontConstants.fontFamily,
-                            ),
-                          ),
+                    padding: const EdgeInsets.symmetric(vertical: 32),
+                    child: Column(
+                      children: [
+                        const NoxiraWordmark(
+                          width: 210,
+                          asset: AnimatedLogo.splashAsset,
                         ),
-                      ),
+                      ],
+                    ),
+                  ),
 
-                      const SizedBox(height: 12),
-
-                      // Open Source Packages Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showPackages(context),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.purple.withValues(alpha: 0.2),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: Colors.purple.withValues(alpha: 0.3),
-                              ),
-                            ),
-                          ),
-                          icon: const iconoir.Archive(color: Colors.white, width: 20, height: 20),
-                          label: const Text(
-                            'Open Source Packages',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: FontConstants.fontFamily,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-                      const Divider(color: Colors.white24),
-                      const SizedBox(height: 24),
-
-                      // Links Section
-                      Text(
-                        AppLocalizations.of(context)
-                            .connectWithUs,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 14,
-                          fontFamily: FontConstants.fontFamily,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                  // Content Section
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
                         children: [
-                          _buildSocialButton(
-                            icon: const iconoir.Globe(color: Colors.white, width: 24, height: 24),
-                            label: 'Website',
-                            onTap: () => _launchURL(
-                                'https://aurorasoftware.netlify.app'),
+                          // Version Info
+                          _buildInfoRow(
+                            icon: const iconoir.Hashtag(
+                                color: Colors.white70, width: 20, height: 20),
+                            title: 'Version',
+                            value: version,
                           ),
-                          const SizedBox(width: 16),
-                          _buildSocialButton(
-                            icon: const iconoir.Code(color: Colors.white, width: 24, height: 24),
-                            label: 'GitHub',
-                            onTap: () => _launchURL(
-                                'https://github.com/D4v31x/Aurora-Music'),
+                          const SizedBox(height: 12),
+                          _buildInfoRow(
+                            icon: const iconoir.Label(
+                                color: Colors.white70, width: 20, height: 20),
+                            title: 'Codename',
+                            value: codename,
                           ),
-                          const SizedBox(width: 16),
-                          _buildSocialButton(
-                            icon: const iconoir.Instagram(color: Colors.white, width: 24, height: 24),
-                            label: 'Instagram',
-                            onTap: () => _launchURL(
-                                'https://www.instagram.com/aurora.software'),
+                          const SizedBox(height: 12),
+                          _buildInfoRow(
+                            icon: const iconoir.User(
+                                color: Colors.white70, width: 20, height: 20),
+                            title: 'Developer',
+                            value: 'D4v31x',
+                          ),
+                          const SizedBox(height: 12),
+                          _buildInfoRow(
+                            icon: const iconoir.Copyright(
+                                color: Colors.white70, width: 20, height: 20),
+                            title: 'Copyright',
+                            value:
+                                '© ${DateTime.now().year} Aurora Software CZ',
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          // What's New Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _showChangelog(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Colors.blue.withValues(alpha: 0.2),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: Colors.blue.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                              ),
+                              icon: const iconoir.Star(
+                                  color: Colors.white, width: 20, height: 20),
+                              label: Text(
+                                AppLocalizations.of(context).whatsNew,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: FontConstants.fontFamily,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 12),
+
+                          // Open Source Packages Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _showPackages(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Colors.purple.withValues(alpha: 0.2),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: Colors.purple.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                              ),
+                              icon: const iconoir.Archive(
+                                  color: Colors.white, width: 20, height: 20),
+                              label: const Text(
+                                'Open Source Packages',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  fontFamily: FontConstants.fontFamily,
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 24),
+                          const Divider(color: Colors.white24),
+                          const SizedBox(height: 24),
+
+                          // Links Section
+                          Text(
+                            AppLocalizations.of(context).connectWithUs,
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 14,
+                              fontFamily: FontConstants.fontFamily,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildSocialButton(
+                                icon: const iconoir.Globe(
+                                    color: Colors.white, width: 24, height: 24),
+                                label: 'Website',
+                                onTap: () => _launchURL(
+                                    'https://aurorasoftware.netlify.app'),
+                              ),
+                              const SizedBox(width: 16),
+                              _buildSocialButton(
+                                icon: const iconoir.Code(
+                                    color: Colors.white, width: 24, height: 24),
+                                label: 'GitHub',
+                                onTap: () => _launchURL(
+                                    'https://github.com/D4v31x/Aurora-Music'),
+                              ),
+                              const SizedBox(width: 16),
+                              _buildSocialButton(
+                                icon: const iconoir.Instagram(
+                                    color: Colors.white, width: 24, height: 24),
+                                label: 'Instagram',
+                                onTap: () => _launchURL(
+                                    'https://www.instagram.com/aurora.software'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              // Bottom Close Button
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-                  ),
-                ),
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.white.withValues(alpha: 0.1),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  // Bottom Close Button
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                            color: Colors.white.withValues(alpha: 0.1)),
+                      ),
+                    ),
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        AppLocalizations.of(context).close,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          fontFamily: FontConstants.fontFamily,
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    AppLocalizations.of(context).close,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: FontConstants.fontFamily,
-                    ),
-                  ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'motion/musicfy_motion.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -60,7 +61,8 @@ class _ArtistCardState extends State<ArtistCard>
   }
 
   Future<void> _fetchArtistInfo() async {
-    final String primaryArtist = ArtistCard.splitArtistNames(widget.artistName).first;
+    final String primaryArtist =
+        ArtistCard.splitArtistNames(widget.artistName).first;
 
     // Check cache first
     if (ArtistCard._artistInfoCache.containsKey(primaryArtist)) {
@@ -172,24 +174,31 @@ class _ArtistCardState extends State<ArtistCard>
   Widget build(BuildContext context) {
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
-    final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false).isLowEndDevice;
+    final isLowEnd =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
-    return RepaintBoundary(
+    return Press3D(
+        child: RepaintBoundary(
       child: InkWell(
         onTap: widget.onTap,
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: isLowEnd ? null : LinearGradient(
-              colors: [
-                Colors.white.withValues(alpha: 0.1),
-                Colors.white.withValues(alpha: 0.2),
-              ],
-            ),
+            gradient: isLowEnd
+                ? null
+                : LinearGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.1),
+                      Colors.white.withValues(alpha: 0.2),
+                    ],
+                  ),
             color: isLowEnd ? colorScheme.surfaceContainerHigh : null,
             borderRadius: BorderRadius.circular(15),
             border: Border.all(
-              color: isLowEnd ? colorScheme.outlineVariant : Colors.white.withValues(alpha: 0.1),
+              color: isLowEnd
+                  ? colorScheme.outlineVariant
+                  : Colors.white.withValues(alpha: 0.1),
             ),
             boxShadow: [
               BoxShadow(
@@ -201,7 +210,8 @@ class _ArtistCardState extends State<ArtistCard>
           ),
           child: Row(
             children: [
-              RepaintBoundary(
+              ArtworkHero(
+                  child: RepaintBoundary(
                 child: Container(
                   width: 80,
                   height: 80,
@@ -220,6 +230,7 @@ class _ArtistCardState extends State<ArtistCard>
                     child: _artistImagePath != null
                         ? Image.file(
                             File(_artistImagePath!),
+                            frameBuilder: coverFadeFrameBuilder,
                             fit: BoxFit.cover,
                             width: 80,
                             height: 80,
@@ -232,7 +243,7 @@ class _ArtistCardState extends State<ArtistCard>
                           ),
                   ),
                 ),
-              ),
+              )),
               const SizedBox(width: 20),
               Expanded(
                 child: Column(
@@ -272,7 +283,7 @@ class _ArtistCardState extends State<ArtistCard>
           ),
         ),
       ), // Added closing parenthesis for RepaintBoundary
-    );
+    ));
   }
 
   @override

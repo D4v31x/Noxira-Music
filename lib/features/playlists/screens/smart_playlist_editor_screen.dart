@@ -33,8 +33,7 @@ class _RuleDraft {
       SmartPlaylistRule(field: field, operator: operator, value: value);
 }
 
-class _SmartPlaylistEditorScreenState
-    extends State<SmartPlaylistEditorScreen> {
+class _SmartPlaylistEditorScreenState extends State<SmartPlaylistEditorScreen> {
   late final TextEditingController _nameController;
   late List<_RuleDraft> _rules;
   late SmartPlaylistMatchMode _matchMode;
@@ -264,7 +263,6 @@ class _SmartPlaylistEditorScreenState
               onChanged: (_) => setState(() {}),
             ),
             const SizedBox(height: 20),
-
             Row(
               children: [
                 Expanded(
@@ -283,14 +281,12 @@ class _SmartPlaylistEditorScreenState
               ],
             ),
             const SizedBox(height: 16),
-
             Text(l10n.smartPlaylistRules,
                 style: const TextStyle(
                     color: Colors.white70,
                     fontWeight: FontWeight.w600,
                     fontSize: 13)),
             const SizedBox(height: 8),
-
             ..._rules.asMap().entries.map((entry) {
               final index = entry.key;
               final rule = entry.value;
@@ -342,11 +338,11 @@ class _SmartPlaylistEditorScreenState
                         controller: TextEditingController(text: rule.value)
                           ..selection = TextSelection.collapsed(
                               offset: rule.value.length),
-                        keyboardType: rule.field.kind ==
-                                SmartPlaylistFieldKind.number
-                            ? const TextInputType.numberWithOptions(
-                                decimal: true)
-                            : TextInputType.text,
+                        keyboardType:
+                            rule.field.kind == SmartPlaylistFieldKind.number
+                                ? const TextInputType.numberWithOptions(
+                                    decimal: true)
+                                : TextInputType.text,
                         style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           isDense: true,
@@ -364,7 +360,6 @@ class _SmartPlaylistEditorScreenState
                 ),
               );
             }),
-
             const SizedBox(height: 8),
             OutlinedButton.icon(
               onPressed: () => setState(() => _rules.add(_RuleDraft(
@@ -378,7 +373,6 @@ class _SmartPlaylistEditorScreenState
                 side: const BorderSide(color: Colors.white24),
               ),
             ),
-
             const SizedBox(height: 24),
             Text(AppLocalizations.of(context).sortBy,
                 style: const TextStyle(
@@ -392,7 +386,6 @@ class _SmartPlaylistEditorScreenState
               labelBuilder: _sortLabel,
               onChanged: (s) => setState(() => _sortBy = s),
             ),
-
             const SizedBox(height: 24),
             Text(l10n.limitResultsLabel,
                 style: const TextStyle(
@@ -406,7 +399,6 @@ class _SmartPlaylistEditorScreenState
               labelBuilder: (v) => v == null ? l10n.noLimit : '$v',
               onChanged: (v) => setState(() => _limit = v),
             ),
-
             const SizedBox(height: 24),
             Container(
               padding: const EdgeInsets.all(14),

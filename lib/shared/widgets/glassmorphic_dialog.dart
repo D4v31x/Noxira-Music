@@ -2,8 +2,15 @@ import 'dart:ui';
 
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../providers/performance_mode_provider.dart';
+import 'adaptive_blur.dart';
 
 /// Glassmorphic dialog with BackdropFilter blur.
+///
+/// Falls back to an opaque dark surface when blur is disabled in
+/// [PerformanceModeProvider].
 class GlassmorphicDialog extends StatelessWidget {
   final Widget? title;
   final Widget? content;
@@ -28,9 +35,13 @@ class GlassmorphicDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shouldBlur =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .shouldEnableBlur;
     final dialogContent = DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color:
+            shouldBlur ? Colors.white.withValues(alpha: 0.1) : Colors.grey[900],
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.2),
@@ -92,11 +103,67 @@ class GlassmorphicDialog extends StatelessWidget {
       elevation: 0,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: dialogContent,
-        ),
+        child: shouldBlur
+            ? AdaptiveBackdropFilter(
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+                child: dialogContent,
+              )
+            : dialogContent,
       ),
+    );
+  }
+}
+
+/// Frosted surface for custom dialog layouts; opaque when blur is disabled.
+class GlassDialogSurface extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+  final double borderRadius;
+  final double blur;
+  final bool alwaysDark;
+
+  const GlassDialogSurface({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(24),
+    this.borderRadius = 20,
+    this.blur = 25,
+    this.alwaysDark = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final shouldBlur =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .shouldEnableBlur;
+    final isDark =
+        alwaysDark || Theme.of(context).brightness == Brightness.dark;
+    final surface = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: shouldBlur
+            ? Colors.white.withValues(alpha: 0.1)
+            : (isDark ? Colors.grey.shade900 : Colors.grey.shade100),
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: child,
+    );
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: shouldBlur
+          ? AdaptiveBackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: surface,
+            )
+          : surface,
     );
   }
 }
@@ -217,7 +284,7 @@ class GlassmorphicPopupMenuButton<T> extends StatelessWidget {
             padding: EdgeInsets.zero,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(borderRadius),
-              child: BackdropFilter(
+              child: AdaptiveBackdropFilter(
                 filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
                 child: menuContent,
               ),
@@ -270,9 +337,8 @@ Future<T?> showGlassmorphicBottomSheet<T>({
     ),
     builder: (context) {
       return ClipRRect(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(borderRadius)),
-        child: BackdropFilter(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(borderRadius)),
+        child: AdaptiveBackdropFilter(
           filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
           child: DecoratedBox(
             decoration: BoxDecoration(
@@ -334,4 +400,3 @@ class GlassmorphicTextButton extends StatelessWidget {
     );
   }
 }
-

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import '../models/timed_lyrics.dart';
+import 'local_lyrics_source.dart';
+import 'lyrics_providers/lyrics_provider.dart';
 import 'package:crypto/crypto.dart';
 import 'dart:math' show min, max;
 import 'package:flutter/foundation.dart';
@@ -117,6 +119,8 @@ class TimedLyricsService {
     String artist,
     String title, {
     Duration? songDuration,
+    String? audioPath,
+    String? album,
     void Function(String)? onLog,
     Future<Map<String, dynamic>?> Function(List<Map<String, dynamic>>)?
         onMultipleResults,
@@ -151,6 +155,15 @@ class TimedLyricsService {
         _log('✗ No cached lyrics found');
       }
 
+      // Lyrics shipped with the file (sidecar .lrc or lyrics tag) beat any
+      // online lookup: they are exact for this recording and work offline.
+      final embedded = await LocalLyricsSource.find(audioPath);
+      if (embedded != null) {
+        _log('✓ Using lyrics from the audio file (${embedded.length} lines)');
+        _log('=' * 60);
+        return embedded;
+      }
+
       // Extract the first (primary) artist and clean the title for better
       // API matching. Songs with multi-artist tags like "Artist1, Artist2" or
       // "Artist1 feat. Artist2" confuse lrclib; sending only the primary artist
@@ -177,8 +190,7 @@ class TimedLyricsService {
       final directQueryParams = {
         'artist_name': searchArtist,
         'track_name': searchTitle,
-        if (songDuration != null)
-          'duration': songDuration.inSeconds.toString(),
+        if (songDuration != null) 'duration': songDuration.inSeconds.toString(),
       };
       final directUrl = Uri.parse('$apiBaseUrl/get-cached')
           .replace(queryParameters: directQueryParams);
@@ -215,16 +227,23 @@ class TimedLyricsService {
           final foundTrack = directData['trackName'] ?? 'Unknown';
           final foundArtist = directData['artistName'] ?? 'Unknown';
 
-          final titleScore = _titleSimilarity(searchTitle, foundTrack as String);
-          final artistScore = _artistSimilarity(searchArtist, foundArtist as String);
+          final titleScore =
+              _titleSimilarity(searchTitle, foundTrack as String);
+          final artistScore =
+              _artistSimilarity(searchArtist, foundArtist as String);
 
           _log('✓ Direct match candidate: "$foundTrack" by "$foundArtist"');
-          _log('  Title score: ${titleScore.toStringAsFixed(2)}, Artist score: ${artistScore.toStringAsFixed(2)}');
+          _log(
+              '  Title score: ${titleScore.toStringAsFixed(2)}, Artist score: ${artistScore.toStringAsFixed(2)}');
 
           // Strict: title ≥ 0.85 AND primary-artist ≥ 0.85
           // Relaxed: title ≥ 0.80 AND any individual artist from the tag ≥ 0.75
-          final strictDirect = titleScore >= 0.85 && artistScore >= 0.85;
+          final plausible =
+              _isPlausibleVersion(searchTitle, directData as Map, songDuration);
+          final strictDirect =
+              plausible && titleScore >= 0.85 && artistScore >= 0.85;
           final relaxedDirect = !strictDirect &&
+              plausible &&
               titleScore >= 0.80 &&
               _extractAllArtists(artist).any(
                 (a) => _artistSimilarity(a, foundArtist) >= 0.75,
@@ -282,9 +301,13 @@ class TimedLyricsService {
 
           // Tier 1 – strict: title ≥ 0.85 AND primary-artist ≥ 0.85
           final strictResults = syncedResults.where((r) {
-            final titleScore = _titleSimilarity(searchTitle, r['trackName'] as String? ?? '');
-            final artistScore = _artistSimilarity(searchArtist, r['artistName'] as String? ?? '');
-            return titleScore >= 0.85 && artistScore >= 0.85;
+            final titleScore =
+                _titleSimilarity(searchTitle, r['trackName'] as String? ?? '');
+            final artistScore = _artistSimilarity(
+                searchArtist, r['artistName'] as String? ?? '');
+            return titleScore >= 0.85 &&
+                artistScore >= 0.85 &&
+                _isPlausibleVersion(searchTitle, r, songDuration);
           }).toList();
 
           // Tier 2 – relaxed: title ≥ 0.80 AND any individual artist from the
@@ -292,15 +315,20 @@ class TimedLyricsService {
           final filteredResults = strictResults.isNotEmpty
               ? strictResults
               : syncedResults.where((r) {
-                  final titleScore = _titleSimilarity(searchTitle, r['trackName'] as String? ?? '');
+                  final titleScore = _titleSimilarity(
+                      searchTitle, r['trackName'] as String? ?? '');
                   if (titleScore < 0.80) return false;
+                  if (!_isPlausibleVersion(searchTitle, r, songDuration)) {
+                    return false;
+                  }
                   final resultArtist = r['artistName'] as String? ?? '';
                   return _extractAllArtists(artist).any(
                     (a) => _artistSimilarity(a, resultArtist) >= 0.75,
                   );
                 }).toList();
 
-          _log('  Strict: ${strictResults.length} / Relaxed total: ${filteredResults.length} passing filter');
+          _log(
+              '  Strict: ${strictResults.length} / Relaxed total: ${filteredResults.length} passing filter');
 
           if (filteredResults.isEmpty) {
             _log('✗ No results with synced lyrics');
@@ -308,38 +336,34 @@ class TimedLyricsService {
             _log('Found ${filteredResults.length} results with synced lyrics');
 
             // Sort results by relevance: title match first, then artist match, then duration
-            filteredResults.sort((a, b) {
-              // Score based on artist match
-              final aArtistMatch =
-                  _artistSimilarity(searchArtist, a['artistName'] ?? '');
-              final bArtistMatch =
-                  _artistSimilarity(searchArtist, b['artistName'] ?? '');
-              final aTitleMatch =
-                  _titleSimilarity(searchTitle, a['trackName'] ?? '');
-              final bTitleMatch =
-                  _titleSimilarity(searchTitle, b['trackName'] ?? '');
+            // Best match first: title, artist, how close the track length is
+            // (LRCLIB reports it per result) and whether the album agrees.
+            double rank(Map r) {
+              final title = _titleSimilarity(
+                  searchTitle, r['trackName'] as String? ?? '');
+              final art = _artistSimilarity(
+                  searchArtist, r['artistName'] as String? ?? '');
+              final lrcDuration = r['duration'];
+              final durationScore =
+                  (songDuration == null || lrcDuration is! num)
+                      ? 0.5
+                      : 1 -
+                          ((lrcDuration.toDouble() - songDuration.inSeconds)
+                                  .abs()
+                                  .clamp(0.0, 15.0) /
+                              15.0);
+              final albumScore = (album == null ||
+                      album.isEmpty ||
+                      album == '<unknown>')
+                  ? 0.5
+                  : _titleSimilarity(album, r['albumName'] as String? ?? '');
+              return title * 0.45 +
+                  art * 0.25 +
+                  durationScore * 0.25 +
+                  albumScore * 0.05;
+            }
 
-              // Combined score: title weighted higher than artist
-              final aScore = aTitleMatch * 0.6 + aArtistMatch * 0.4;
-              final bScore = bTitleMatch * 0.6 + bArtistMatch * 0.4;
-
-              if ((aScore - bScore).abs() > 0.05) {
-                return bScore.compareTo(aScore); // Higher score first
-              }
-
-              // If artist scores are equal, sort by duration match
-              if (songDuration != null) {
-                final aDuration =
-                    _parseApproximateDuration(a['syncedLyrics'] as String?);
-                final bDuration =
-                    _parseApproximateDuration(b['syncedLyrics'] as String?);
-                final aDiff = (aDuration - songDuration).abs();
-                final bDiff = (bDuration - songDuration).abs();
-                return aDiff.compareTo(bDiff);
-              }
-
-              return 0;
-            });
+            filteredResults.sort((a, b) => rank(b).compareTo(rank(a)));
 
             _log('After sorting by relevance:');
             for (var i = 0; i < min(5, filteredResults.length); i++) {
@@ -405,9 +429,16 @@ class TimedLyricsService {
               }
             }
 
-            // If no exact duration match but we have strict results, use the best one
-            if (filteredResults.isNotEmpty) {
-              final bestResult = filteredResults[0];
+            // Without a matching length this is probably another version
+            // (live, remix, radio edit) - better no lyrics than the wrong ones.
+            final bestResult = filteredResults[0];
+            final bestDuration = bestResult['duration'];
+            final lengthKnownAndOff = songDuration != null &&
+                bestDuration is num &&
+                (bestDuration - songDuration.inSeconds).abs() > 12;
+            if (lengthKnownAndOff) {
+              _log('✗ Best result has a different length - not using it');
+            } else {
               final lrcContent = bestResult['syncedLyrics'] as String;
               final lyrics = _parseLrc(lrcContent);
               final foundTrack = bestResult['trackName'] ?? 'Unknown';
@@ -424,6 +455,19 @@ class TimedLyricsService {
         }
       }
 
+      _log('✗ No lyrics found on LRCLIB, trying other sources...');
+      final fromProviders = await _fetchFromProviders(
+          artist: searchArtist,
+          title: searchTitle,
+          album: album,
+          songDuration: songDuration,
+          cacheArtist: artist,
+          cacheTitle: title);
+      if (fromProviders != null) {
+        _log('=' * 60);
+        return fromProviders;
+      }
+
       _log('✗ No lyrics found matching title+artist criteria');
       _log('=' * 60);
       return null;
@@ -432,6 +476,58 @@ class TimedLyricsService {
       _log('=' * 60);
       return null;
     }
+  }
+
+  /// Asks the enabled secondary providers (see [LyricsProviders]) in parallel
+  /// and returns the first valid result in priority order.
+  Future<List<TimedLyric>?> _fetchFromProviders({
+    required String artist,
+    required String title,
+    required String? album,
+    required Duration? songDuration,
+    required String cacheArtist,
+    required String cacheTitle,
+  }) async {
+    final providers = await LyricsProviders.enabled();
+    if (providers.isEmpty) return null;
+
+    final query = LyricsQuery(
+      title: title,
+      artist: artist,
+      album: (album == null || album.trim().isEmpty || album == '<unknown>')
+          ? null
+          : album.trim(),
+      durationSeconds: songDuration?.inSeconds,
+    );
+
+    final results = [
+      for (final p in providers)
+        p
+            .fetchLrc(query, _client)
+            .timeout(const Duration(seconds: 15), onTimeout: () => null)
+            .catchError((_) => null),
+    ];
+
+    for (var i = 0; i < providers.length; i++) {
+      final raw = await results[i];
+      if (raw == null) continue;
+      final lrc = sanitizeLrc(raw);
+      final lyrics = _parseLrc(lrc);
+      if (lyrics.isEmpty) continue;
+      if (!lyricsMatchSongLanguage(lrc, query)) {
+        _log(
+            '✗ ${providers[i].name}: lyrics language does not match the song, skipped');
+        continue;
+      }
+      if (!_isLyricsDurationValid(lyrics, songDuration)) {
+        _log('✗ ${providers[i].name}: duration mismatch, skipped');
+        continue;
+      }
+      _log('✓ USING ${providers[i].name} (${lyrics.length} lines)');
+      await _saveLyricsToFile(cacheArtist, cacheTitle, lrc);
+      return lyrics;
+    }
+    return null;
   }
 
   /// Extracts the primary (first) artist from a potentially multi-artist tag.
@@ -539,7 +635,7 @@ class TimedLyricsService {
     _log('  Processing ${lines.length} lines from LRC file');
 
     // Basic LRC format regex
-    final timeRegex = RegExp(r'\[(\d{2}):(\d{2})[\.:]\d{2,3}\]');
+    final timeRegex = RegExp(r'\[(\d{2}):(\d{2})[\.:](\d{2,3})\]');
 
     for (var i = 0; i < lines.length; i++) {
       try {
@@ -572,13 +668,8 @@ class TimedLyricsService {
 
         // Process each time tag in the line
         for (final match in timeMatches) {
-          final minutes = int.parse(match.group(1)!);
-          final seconds = int.parse(match.group(2)!);
-
-          final time = Duration(
-            minutes: minutes,
-            seconds: seconds,
-          );
+          final time = TimedLyric.parseTimestamp(
+              match.group(1)!, match.group(2)!, match.group(3));
 
           timedLyrics.add(TimedLyric(time: time, text: text));
         }
@@ -623,8 +714,19 @@ class TimedLyricsService {
     }
   }
 
-  Future<List<TimedLyric>?> loadLyricsFromFile(
-      String artist, String title) async {
+  /// With [songDuration], cached lyrics whose timing does not fit the song
+  /// (another version, a partial sync) are treated as a miss.
+  Future<List<TimedLyric>?> loadLyricsFromFile(String artist, String title,
+      {Duration? songDuration}) async {
+    final lyrics = await _loadCached(artist, title);
+    if (lyrics == null || _isLyricsDurationValid(lyrics, songDuration)) {
+      return lyrics;
+    }
+    _log('  ✗ Cached lyrics do not fit the song length - ignoring them');
+    return null;
+  }
+
+  Future<List<TimedLyric>?> _loadCached(String artist, String title) async {
     final cacheKey = md5.convert(utf8.encode('$artist-$title')).toString();
 
     // Check memory cache first for instant access
@@ -661,6 +763,33 @@ class TimedLyricsService {
       _log('  ✗ Error loading from cache: $e');
       return null;
     }
+  }
+
+  static final _versionWords = RegExp(
+    r'\b(remix|live|acoustic|instrumental|karaoke|cover|sped up|slowed|reverb|nightcore|8d|demo)\b',
+    caseSensitive: false,
+  );
+
+  /// Rejects LRCLIB entries that are another version of the song (a remix or
+  /// live take the file isn't) or whose track length is clearly different.
+  bool _isPlausibleVersion(String searchTitle, Map<dynamic, dynamic> result,
+      Duration? songDuration) {
+    if (result['instrumental'] == true) return false;
+    final candidate = result['trackName'] as String? ?? '';
+    final wanted = _versionWords
+        .allMatches(searchTitle)
+        .map((m) => m.group(0)!.toLowerCase())
+        .toSet();
+    for (final m in _versionWords.allMatches(candidate)) {
+      if (!wanted.contains(m.group(0)!.toLowerCase())) return false;
+    }
+    final length = result['duration'];
+    if (songDuration != null &&
+        length is num &&
+        (length - songDuration.inSeconds).abs() > 20) {
+      return false;
+    }
+    return true;
   }
 
   bool _isLyricsDurationValid(List<TimedLyric> lyrics, Duration? songDuration) {

@@ -9,6 +9,7 @@ import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/sleep_timer_controller.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/glassmorphic_dialog.dart';
+import '../../../shared/widgets/adaptive_blur.dart';
 
 /// Sleep timer indicator widget for the app bar.
 ///
@@ -189,7 +190,8 @@ class _SleepTimerOptionsSheet extends StatefulWidget {
   const _SleepTimerOptionsSheet();
 
   @override
-  State<_SleepTimerOptionsSheet> createState() => _SleepTimerOptionsSheetState();
+  State<_SleepTimerOptionsSheet> createState() =>
+      _SleepTimerOptionsSheetState();
 }
 
 class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
@@ -199,6 +201,20 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
 
   void _showCustomPicker() {
     int picked = _selectedMinutes ?? 30;
+    // Captured now: the dialog's buttons can fire after this sheet's own
+    // context has been deactivated.
+    final l10n = AppLocalizations.of(context);
+    var dismissed = false;
+
+    // Pops the dialog at most once, and only while it still exists. A second
+    // tap during the exit animation would otherwise look up the Navigator
+    // through unmounted elements, or pop the sheet underneath.
+    void closeDialog(BuildContext dialogContext) {
+      if (dismissed || !dialogContext.mounted) return;
+      dismissed = true;
+      Navigator.of(dialogContext).pop();
+    }
+
     showGlassmorphicDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -219,7 +235,7 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  AppLocalizations.of(context).setMinutes,
+                  l10n.setMinutes,
                   style: const TextStyle(
                     fontFamily: FontConstants.fontFamily,
                     fontSize: 18,
@@ -282,16 +298,17 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
             actionsPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             actions: [
               GlassmorphicTextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(AppLocalizations.of(context).cancel),
+                onPressed: () => closeDialog(ctx),
+                child: Text(l10n.cancel),
               ),
               GlassmorphicTextButton(
                 isPrimary: true,
                 onPressed: () {
-                  setState(() => _selectedMinutes = picked);
-                  Navigator.pop(ctx);
+                  if (!ctx.mounted) return;
+                  if (mounted) setState(() => _selectedMinutes = picked);
+                  closeDialog(ctx);
                 },
-                child: Text(AppLocalizations.of(context).set),
+                child: Text(l10n.set),
               ),
             ],
           );
@@ -354,8 +371,8 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                       ],
                     ),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                        color: cs.primary.withValues(alpha: 0.25)),
+                    border:
+                        Border.all(color: cs.primary.withValues(alpha: 0.25)),
                   ),
                   child: Center(
                     child: iconoir.HalfMoon(
@@ -394,22 +411,20 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                     if (!timer.isActive) return const SizedBox.shrink();
                     final rem = timer.remainingTime!;
                     final m = rem.inMinutes;
-                    final s =
-                        (rem.inSeconds % 60).toString().padLeft(2, '0');
+                    final s = (rem.inSeconds % 60).toString().padLeft(2, '0');
                     return Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
                         color: cs.errorContainer.withValues(alpha: 0.25),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: cs.error.withValues(alpha: 0.45)),
+                        border:
+                            Border.all(color: cs.error.withValues(alpha: 0.45)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          iconoir.Timer(
-                              color: cs.error, width: 13, height: 13),
+                          iconoir.Timer(color: cs.error, width: 13, height: 13),
                           const SizedBox(width: 4),
                           Text(
                             '$m:$s',
@@ -537,9 +552,8 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                                   ? cs.onPrimary
                                   : Colors.white.withValues(alpha: 0.65),
                               fontSize: 13,
-                              fontWeight: selected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
+                              fontWeight:
+                                  selected ? FontWeight.w600 : FontWeight.w400,
                             ),
                           ),
                         ),
@@ -564,8 +578,8 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                 splashColor: cs.primary.withValues(alpha: 0.10),
                 highlightColor: Colors.transparent,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: (_selectedMinutes != null &&
                             !_presets.contains(_selectedMinutes))
@@ -640,16 +654,14 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                           label: Text(
                             l10n.cancel,
                             style: TextStyle(
-                                color: cs.error,
-                                fontWeight: FontWeight.w600),
+                                color: cs.error, fontWeight: FontWeight.w600),
                           ),
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
                                 color: cs.error.withValues(alpha: 0.4)),
                             backgroundColor:
                                 cs.errorContainer.withValues(alpha: 0.12),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 14),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16)),
                           ),
@@ -697,11 +709,10 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
       ),
     );
     return ClipRRect(
-      borderRadius:
-          const BorderRadius.vertical(top: Radius.circular(32)),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       child: isLowEnd
           ? sheetBody
-          : BackdropFilter(
+          : AdaptiveBackdropFilter(
               filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
               child: sheetBody,
             ),

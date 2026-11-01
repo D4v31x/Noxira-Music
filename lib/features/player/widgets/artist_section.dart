@@ -4,6 +4,7 @@
 /// an artist card and navigation to artist details.
 library;
 
+import '../../../shared/widgets/online/online_artist_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -94,6 +95,25 @@ class ArtistSection extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => ArtistDetailsScreen(artistName: artistName),
       ),
+    );
+  }
+}
+
+/// "Fans also like" for the current song's artist; sits at the bottom of Now Playing.
+class SimilarArtistsSection extends StatelessWidget {
+  final AudioPlayerService audioPlayerService;
+
+  const SimilarArtistsSection({super.key, required this.audioPlayerService});
+
+  @override
+  Widget build(BuildContext context) {
+    final artistString = audioPlayerService.currentSong?.artist;
+    if (artistString == null || artistString.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return SimilarArtistsRow(
+      artistName: ArtistSeparatorService().getPrimaryArtist(artistString),
+      centeredTitle: true,
     );
   }
 }
