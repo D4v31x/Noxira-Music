@@ -11,7 +11,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../shared/models/models.dart';
 import '../widgets/lyrics/lyrics_widgets.dart';
 import '../../../shared/services/audio_player_service.dart';
-import '../../../shared/providers/performance_mode_provider.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/lyrics_service.dart';
 import '../../../shared/services/lyrics_providers/lyrics_provider.dart';
@@ -59,7 +58,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   /// Chrome (header and controls) tucked away so the lyrics have the screen.
   bool _immersive = false;
   Timer? _immersiveTimer;
-  bool _autoHideChrome = true;
+  bool _autoHideChrome = false;
   bool _userScrolling = false;
   double _lastScrollPixels = 0;
   double _recenterFrom = 0;
@@ -179,14 +178,12 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   }
 
   Future<void> _loadSettings() async {
-    final lowEnd = Provider.of<PerformanceModeProvider>(context, listen: false)
-        .isLowEndDevice;
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _fontSize = prefs.getDouble(_fontSizeKey) ?? 1.0;
       _syncOffset = prefs.getInt(_syncOffsetKey) ?? 0;
       _blurEnabled = prefs.getBool(_blurKey) ?? true;
-      _autoHideChrome = prefs.getBool(_autoHideKey) ?? !lowEnd;
+      _autoHideChrome = prefs.getBool(_autoHideKey) ?? false;
       _clock.offsetMs = _syncOffset;
     });
     if (_autoHideChrome) _scheduleImmersive();

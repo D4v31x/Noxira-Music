@@ -204,7 +204,8 @@ void main() {
     expect(player.seekedTo, const Duration(seconds: 9));
   });
 
-  testWidgets('auto-hides the chrome when idle', (tester) async {
+  testWidgets('auto-hides the chrome when idle once enabled', (tester) async {
+    SharedPreferences.setMockInitialValues({'lyrics_auto_hide_chrome': true});
     final navKey = GlobalKey<NavigatorState>();
     await tester.pumpWidget(app(navKey));
     await openPage(tester);
@@ -219,6 +220,18 @@ void main() {
     // The header has collapsed away (clipped to nothing) and the controls too.
     final after = tester.getRect(find.text('Test Song', skipOffstage: false));
     expect(after.top, lessThan(before.top));
+  });
+
+  testWidgets('keeps the chrome visible by default', (tester) async {
+    final navKey = GlobalKey<NavigatorState>();
+    await tester.pumpWidget(app(navKey));
+    await openPage(tester);
+
+    final before = tester.getRect(find.text('Test Song'));
+    await tester.pump(const Duration(milliseconds: 6000));
+    expect(tester.takeException(), isNull);
+    expect(tester.getRect(find.text('Test Song')), before);
+    expect(find.byIcon(Icons.skip_next_rounded), findsOneWidget);
   });
 
   testWidgets('pulling the header down closes the page', (tester) async {
