@@ -42,7 +42,7 @@ extension AudioSettingsManagerExtension on AudioPlayerService {
       'automixEnabled': _automixEnabled,
     };
 
-    await file.writeAsString(jsonEncode(json));
+    await writeStringAtomic(file, jsonEncode(json));
   }
 
   Future<void> _applySettings() async {

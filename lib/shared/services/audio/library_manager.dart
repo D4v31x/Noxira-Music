@@ -242,7 +242,7 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
             })
         .toList();
 
-    await file.writeAsString(jsonEncode(json));
+    await writeStringAtomic(file, jsonEncode(json));
     // Update the notifier for reactive widgets
     playlistsNotifier.value = List.from(_playlists);
   }
@@ -392,7 +392,7 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
       'songs': _librarySet.toList(),
     };
 
-    await file.writeAsString(jsonEncode(json));
+    await writeStringAtomic(file, jsonEncode(json));
   }
 
   Future<void> loadLibrary() async {
@@ -432,7 +432,7 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
       'liked_songs': _likedSongs.toList(),
     };
 
-    await file.writeAsString(jsonEncode(json));
+    await writeStringAtomic(file, jsonEncode(json));
   }
 
   void _updateLikedSongsPlaylist() {

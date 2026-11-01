@@ -34,7 +34,7 @@ extension AudioPlayCountsExtension on AudioPlayerService {
       'folders': _folderAccessCounts,
     };
 
-    await file.writeAsString(jsonEncode(json));
+    await writeStringAtomic(file, jsonEncode(json));
   }
 
   /// Number of times [song] has been played, for use in smart-playlist rule

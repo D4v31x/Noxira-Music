@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'folder_filter_service.dart';
 import '../models/artist_utils.dart';
 import '../utils/performance_optimizations.dart';
+import '../utils/atomic_file.dart';
 
 /// Smart suggestion service that analyzes user listening patterns
 /// to provide personalized track and artist recommendations
@@ -580,7 +581,7 @@ class SmartSuggestionsService {
         'recentlyPlayedArtists': _recentlyPlayedArtists,
       };
 
-      await file.writeAsString(jsonEncode(data));
+      await writeStringAtomic(file, jsonEncode(data));
     } catch (e) {
       debugPrint('Error saving smart suggestions data: $e');
     }

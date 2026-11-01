@@ -8,8 +8,30 @@ import 'package:on_audio_query_platform_interface/method_channel_on_audio_query.
 /// ("Reply already submitted") and cannot be caught from Dart. This platform
 /// implementation therefore never forwards a call to the plugin until the
 /// permission is granted; without it queries just come back empty.
+///
+/// It also lets identical queries that overlap share one request. Many parts
+/// of the app ask for the whole library at start-up, and each answer is a
+/// large buffer built on the main thread; on big libraries several of them at
+/// once ran the app out of memory (FLUTTER-96).
 class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
   bool _granted = false;
+  final Map<String, Future<Object?>> _running = {};
+
+  /// Runs [query] unless an identical one ([key]) is already in flight, in
+  /// which case that answer is reused. Each caller gets its own list, since
+  /// callers sort and edit what they get.
+  Future<List<T>> _shared<T>(
+      String key, Future<List<T>> Function() query) async {
+    final running = _running[key];
+    if (running != null) return List<T>.of(await running as List<T>);
+    final future = query();
+    _running[key] = future;
+    try {
+      return List<T>.of(await future);
+    } finally {
+      if (identical(_running[key], future)) _running.remove(key);
+    }
+  }
 
   /// Installs the guard for every [OnAudioQuery] instance in the app.
   static void install() {
@@ -42,12 +64,15 @@ class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
     String? path,
   }) async {
     if (!await _hasPermission()) return <SongModel>[];
-    return super.querySongs(
-      sortType: sortType,
-      orderType: orderType,
-      uriType: uriType,
-      ignoreCase: ignoreCase,
-      path: path,
+    return _shared(
+      'songs|$sortType|$orderType|$uriType|$ignoreCase|$path',
+      () => super.querySongs(
+        sortType: sortType,
+        orderType: orderType,
+        uriType: uriType,
+        ignoreCase: ignoreCase,
+        path: path,
+      ),
     );
   }
 
@@ -59,11 +84,14 @@ class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
     bool? ignoreCase,
   }) async {
     if (!await _hasPermission()) return <AlbumModel>[];
-    return super.queryAlbums(
-      sortType: sortType,
-      orderType: orderType,
-      uriType: uriType,
-      ignoreCase: ignoreCase,
+    return _shared(
+      'albums|$sortType|$orderType|$uriType|$ignoreCase',
+      () => super.queryAlbums(
+        sortType: sortType,
+        orderType: orderType,
+        uriType: uriType,
+        ignoreCase: ignoreCase,
+      ),
     );
   }
 
@@ -75,11 +103,14 @@ class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
     bool? ignoreCase,
   }) async {
     if (!await _hasPermission()) return <ArtistModel>[];
-    return super.queryArtists(
-      sortType: sortType,
-      orderType: orderType,
-      uriType: uriType,
-      ignoreCase: ignoreCase,
+    return _shared(
+      'artists|$sortType|$orderType|$uriType|$ignoreCase',
+      () => super.queryArtists(
+        sortType: sortType,
+        orderType: orderType,
+        uriType: uriType,
+        ignoreCase: ignoreCase,
+      ),
     );
   }
 

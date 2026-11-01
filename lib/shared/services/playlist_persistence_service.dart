@@ -12,6 +12,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/playlist_model.dart';
 import 'audio_constants.dart';
+import '../utils/atomic_file.dart';
 
 // MARK: - Playlist Persistence Service
 
@@ -86,7 +87,7 @@ class PlaylistPersistenceService {
               })
           .toList();
 
-      await file.writeAsString(jsonEncode(json));
+      await writeStringAtomic(file, jsonEncode(json));
       _isDirty = false;
       playlistsNotifier.value = List.from(_playlists);
     } catch (e) {

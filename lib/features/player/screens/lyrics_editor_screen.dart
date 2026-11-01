@@ -311,6 +311,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       widget.onSaved();
       Navigator.pop(context);
     } catch (e) {
+      if (!mounted) return;
       messenger.showSnackBar(SnackBar(
           content: Text(AppLocalizations.of(context).importFailed('$e'))));
     }
@@ -392,6 +393,16 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
 
   // ──────────────────────────── header ─────────────────────────────────────
 
+  bool _closing = false;
+
+  /// Close button: ignores a second tap and taps that arrive once the page is
+  /// already gone (State.context is null by then, FLUTTER-9X).
+  void _close() {
+    if (_closing || !mounted) return;
+    _closing = true;
+    Navigator.of(context).pop();
+  }
+
   Widget _buildHeader(String title, String artist) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(4, 8, 8, 4),
@@ -399,7 +410,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.close, color: Colors.white70),
-            onPressed: () => Navigator.pop(context),
+            onPressed: _close,
           ),
           Expanded(
             child: Column(

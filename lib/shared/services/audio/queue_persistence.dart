@@ -20,7 +20,7 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
         'loopMode': _loopMode.name,
       };
 
-      await file.writeAsString(jsonEncode(json));
+      await writeStringAtomic(file, jsonEncode(json));
     } catch (e) {
       debugPrint('Error saving queue state: $e');
     }

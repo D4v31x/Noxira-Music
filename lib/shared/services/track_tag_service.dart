@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/track_tag_model.dart';
+import '../utils/atomic_file.dart';
 
 class TrackTagService extends ChangeNotifier {
   static const String _fileName = 'track_tags.json';
@@ -72,7 +73,7 @@ class TrackTagService extends ChangeNotifier {
         (songId, tags) =>
             MapEntry(songId, tags.map((t) => t.toJson()).toList()),
       );
-      await file.writeAsString(jsonEncode(json));
+      await writeStringAtomic(file, jsonEncode(json));
     } catch (e) {
       debugPrint('Error saving track tags: $e');
     }

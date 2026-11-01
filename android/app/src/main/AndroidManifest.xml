@@ -92,6 +92,13 @@
                 android:resource="@xml/aurora_music_widget_info" />
         </receiver>
 
+        <!-- Widget taps open the app with a noxira:// URI. Flutter must not
+             treat it as a navigation route (FLUTTER-9W): home_widget reads the
+             URI itself and the app has no routes to open by link. -->
+        <meta-data
+            android:name="flutter_deeplinking_enabled"
+            android:value="false" />
+
         <!-- Android Auto: declare this is a media app -->
         <meta-data
             android:name="com.google.android.gms.car.application"

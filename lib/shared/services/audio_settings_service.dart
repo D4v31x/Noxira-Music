@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
+import '../utils/atomic_file.dart';
 
 // MARK: - Constants
 
@@ -90,7 +91,7 @@ class AudioSettingsService {
         'mediaControls': _mediaControls,
       };
 
-      await file.writeAsString(jsonEncode(json));
+      await writeStringAtomic(file, jsonEncode(json));
     } catch (e) {
       debugPrint('Error saving settings: $e');
     }

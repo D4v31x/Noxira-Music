@@ -17,6 +17,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/playlist_model.dart';
 import '../models/smart_playlist_model.dart';
+import '../utils/atomic_file.dart';
 
 class SmartPlaylistService extends ChangeNotifier {
   static const String _fileName = 'smart_playlists.json';
@@ -52,7 +53,7 @@ class SmartPlaylistService extends ChangeNotifier {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/$_fileName');
       final json = _smartPlaylists.map((p) => p.toJson()).toList();
-      await file.writeAsString(jsonEncode(json));
+      await writeStringAtomic(file, jsonEncode(json));
     } catch (e) {
       debugPrint('Error saving smart playlists: $e');
     }

@@ -64,4 +64,38 @@ void main() {
     expect(await query.permissionsRequest(), isTrue);
     expect(await query.queryArtwork(1, ArtworkType.AUDIO), isNotNull);
   });
+
+  test('identical overlapping queries share one request', () async {
+    granted = true;
+    var songCalls = 0;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+      if (call.method == 'permissionsStatus') return true;
+      if (call.method == 'querySongs') {
+        songCalls++;
+        await Future<void>.delayed(const Duration(milliseconds: 20));
+        return <dynamic>[
+          {'_id': 1, 'title': 'A'},
+        ];
+      }
+      return <dynamic>[];
+    });
+
+    final query = OnAudioQuery();
+    final results = await Future.wait([
+      query.querySongs(),
+      query.querySongs(),
+      query.querySongs(),
+    ]);
+
+    expect(songCalls, 1);
+    expect(results.every((r) => r.length == 1), isTrue);
+    // Each caller owns its list: editing one must not touch the others.
+    results[0].clear();
+    expect(results[1], hasLength(1));
+
+    // A later query asks again, so changes to the library are picked up.
+    await query.querySongs();
+    expect(songCalls, 2);
+  });
 }

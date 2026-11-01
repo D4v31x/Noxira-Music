@@ -14,6 +14,7 @@ import '../models/artist_utils.dart';
 import '../utils/album_sanitizer.dart';
 import 'audio_constants.dart';
 import 'smart_suggestions_service.dart';
+import '../utils/atomic_file.dart';
 
 // MARK: - Play Count Service
 
@@ -126,7 +127,7 @@ class PlayCountService {
         'folders': _folderAccessCounts,
       };
 
-      await file.writeAsString(jsonEncode(json));
+      await writeStringAtomic(file, jsonEncode(json));
       _isDirty = false;
     } catch (e) {
       debugPrint('Error saving play counts: $e');
