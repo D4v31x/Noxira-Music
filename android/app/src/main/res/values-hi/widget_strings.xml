@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">प्लेबैक नियंत्रण, गाने की जानकारी और सुझाव</string>
+    <string name="widget_previous">पिछला</string>
+    <string name="widget_next">अगला</string>
+    <string name="widget_play_pause">चलाएँ या रोकें</string>
+    <string name="widget_nothing_playing">कुछ नहीं चल रहा</string>
+    <string name="widget_tap_to_open">Noxira Music खोलने के लिए टैप करें</string>
+    <string name="widget_recommended">आपके लिए सुझाए गए</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Controles de reproducción, información de la canción y recomendaciones</string>
+    <string name="widget_previous">Anterior</string>
+    <string name="widget_next">Siguiente</string>
+    <string name="widget_play_pause">Reproducir o pausar</string>
+    <string name="widget_nothing_playing">Nada en reproducción</string>
+    <string name="widget_tap_to_open">Toca para abrir Noxira Music</string>
+    <string name="widget_recommended">Recomendado para ti</string>
+</resources>

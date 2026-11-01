@@ -1,6 +1,9 @@
 package com.aurorasoftware.music
 
 import android.app.Activity
+import android.app.ActivityManager
+import android.content.Context
+import android.content.pm.PackageManager
 import android.content.ContentValues
 import android.content.Intent
 import android.media.RingtoneManager
@@ -13,7 +16,10 @@ import androidx.core.view.WindowCompat
 import com.ryanheise.audioservice.AudioServiceActivity
 import android.media.audiofx.Visualizer
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
+import android.os.SystemClock
+import java.util.concurrent.atomic.AtomicReference
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
@@ -26,6 +32,8 @@ class MainActivity : AudioServiceActivity() {
         private const val SAF_CHANNEL = "aurora/saf_write"
         private const val MEDIA_ACTIONS_CHANNEL = "aurora/media_actions"
         private const val VISUALIZER_CHANNEL = "aurora/visualizer"
+        private const val DEVICE_PROBE_CHANNEL = "aurora/device_probe"
+        private const val FFT_POLL_INTERVAL_MS = 16L
         private const val REQUEST_WRITE_PERMISSION = 42
         private const val REQUEST_DELETE_PERMISSION = 43
     }
@@ -47,6 +55,8 @@ class MainActivity : AudioServiceActivity() {
     // the EventChannel's onCancel() was never called (e.g. app force-stopped).
     private var activeVisualizer: Visualizer? = null
     private val visualizerHandler = Handler(Looper.getMainLooper())
+    private var vizThread: HandlerThread? = null
+    private var vizPoller: Handler? = null
     // Set false in onCancel / onDestroy so pending mainHandler posts are
     // dropped before they reach a detached FlutterJNI.
     @Volatile private var isStreamingFft = false
@@ -60,20 +70,71 @@ class MainActivity : AudioServiceActivity() {
         }
     }
 
+    /**
+     * Reads real hardware capabilities. Build.MODEL / BRAND are easily spoofed
+     * by custom ROMs, so RAM, core count and CPU frequency are what we trust.
+     */
+    private fun probeHardware(): Map<String, Any?> {
+        val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memInfo = ActivityManager.MemoryInfo()
+        am.getMemoryInfo(memInfo)
+
+        var maxFreqKHz = 0L
+        try {
+            File("/sys/devices/system/cpu").listFiles()
+                ?.filter { it.name.matches(Regex("cpu\\d+")) }
+                ?.forEach {
+                    val f = File(it, "cpufreq/cpuinfo_max_freq")
+                    if (f.canRead()) {
+                        val v = f.readText().trim().toLongOrNull() ?: 0L
+                        if (v > maxFreqKHz) maxFreqKHz = v
+                    }
+                }
+        } catch (_: Exception) {
+        }
+
+        val socModel = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Build.SOC_MODEL else ""
+        val refreshRate = try {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.refreshRate.toDouble()
+        } catch (_: Exception) {
+            60.0
+        }
+
+        return mapOf(
+            "totalRamMb" to memInfo.totalMem / (1024 * 1024),
+            "isLowRamDevice" to am.isLowRamDevice,
+            "memoryClassMb" to am.memoryClass,
+            "cpuCores" to Runtime.getRuntime().availableProcessors(),
+            "maxCpuFreqMhz" to if (maxFreqKHz > 0) maxFreqKHz / 1000 else null,
+            "hardware" to Build.HARDWARE,
+            "board" to Build.BOARD,
+            "socModel" to socModel,
+            "sdk" to Build.VERSION.SDK_INT,
+            "hasVulkan" to packageManager.hasSystemFeature(PackageManager.FEATURE_VULKAN_HARDWARE_LEVEL),
+            "refreshRate" to refreshRate,
+        )
+    }
+
     override fun onDestroy() {
         // Stop all pending FFT posts and release the Visualizer before the
         // Flutter engine detaches. Without this, mainHandler.post() callbacks
         // keep firing into a dead FlutterJNI, producing hundreds of
         // "Could not send. Channel: aurora/visualizer" warnings.
-        isStreamingFft = false
-        visualizerHandler.removeCallbacksAndMessages(null)
-        activeVisualizer?.release()
-        activeVisualizer = null
+        stopFftPolling()
         super.onDestroy()
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DEVICE_PROBE_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "probe" -> result.success(probeHardware())
+                    else -> result.notImplemented()
+                }
+            }
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SAF_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
@@ -137,9 +198,9 @@ class MainActivity : AudioServiceActivity() {
     }
 
     /**
-     * Streams FFT magnitude and waveform data from the Android [Visualizer]
-     * API to Dart (0x01-prefixed FFT complex pairs, 0x02-prefixed waveform
-     * bytes) for the visualizer engine's Audio Analysis Engine.
+     * Streams FFT data from the Android [Visualizer] API to Dart
+     * (0x01-prefixed FFT frames; a one-off 0x03-prefixed packet carries the
+     * sampling rate in milliHz as a big-endian Int32).
      *
      * The Dart side passes the audio session ID as the [EventChannel] stream
      * argument. When the stream is cancelled the Visualizer is released.
@@ -148,9 +209,7 @@ class MainActivity : AudioServiceActivity() {
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, VISUALIZER_CHANNEL)
             .setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-                    activeVisualizer?.release()
-                    activeVisualizer = null
-                    isStreamingFft = false
+                    stopFftPolling()
 
                     val sessionId = when (arguments) {
                         is Int  -> arguments
@@ -164,62 +223,91 @@ class MainActivity : AudioServiceActivity() {
                         } catch (_: Exception) {
                             1024
                         }
-                        activeVisualizer = Visualizer(sessionId).apply {
+                        val viz = Visualizer(sessionId).apply {
                             captureSize = capSize
-                            setDataCaptureListener(
-                                object : Visualizer.OnDataCaptureListener {
-                                    override fun onWaveFormDataCapture(
-                                        v: Visualizer, waveform: ByteArray, samplingRate: Int
-                                    ) {
-                                        // Prefix 0x02 = waveform PCM-ish data,
-                                        // used by frequency-agnostic waveform
-                                        // visualizer elements.
-                                        val copy = ByteArray(waveform.size + 1)
-                                        copy[0] = 2
-                                        waveform.copyInto(copy, destinationOffset = 1)
-                                        if (isStreamingFft) {
-                                            visualizerHandler.post {
-                                                if (isStreamingFft) events?.success(copy)
-                                            }
-                                        }
-                                    }
-                                    override fun onFftDataCapture(
-                                        v: Visualizer, fft: ByteArray, samplingRate: Int
-                                    ) {
-                                        // Prefix 0x01 = FFT complex-pair data
-                                        val copy = ByteArray(fft.size + 1)
-                                        copy[0] = 1
-                                        fft.copyInto(copy, destinationOffset = 1)
-                                        // Guard: drop the post if the stream was
-                                        // cancelled or the engine has detached.
-                                        if (isStreamingFft) {
-                                            visualizerHandler.post {
-                                                if (isStreamingFft) events?.success(copy)
-                                            }
-                                        }
-                                    }
-                                },
-                                Visualizer.getMaxCaptureRate(),
-                                true,  /* waveform — used by waveform visualizer elements */
-                                true   /* fft */
-                            )
                             enabled = true
                         }
+                        activeVisualizer = viz
                         isStreamingFft = true
+
+                        // Sampling rate (milliHz, big-endian) so Dart can map bins to Hz.
+                        val rate = viz.samplingRate
+                        val rateMsg = byteArrayOf(
+                            3,
+                            (rate shr 24).toByte(), (rate shr 16).toByte(),
+                            (rate shr 8).toByte(), rate.toByte()
+                        )
+                        events?.success(rateMsg)
+
+                        startFftPolling(viz, capSize, events)
                     } catch (e: Exception) {
+                        stopFftPolling()
                         events?.error("VISUALIZER_ERROR", e.message ?: "Visualizer init failed", null)
                     }
                 }
 
                 override fun onCancel(arguments: Any?) {
-                    isStreamingFft = false
-                    // Remove any already-queued FFT posts so they don't fire
-                    // after FlutterJNI has detached.
-                    visualizerHandler.removeCallbacksAndMessages(null)
-                    activeVisualizer?.release()
-                    activeVisualizer = null
+                    stopFftPolling()
                 }
             })
+    }
+
+    /**
+     * Polls the Visualizer on a background thread at ~display rate instead of
+     * relying on the capture listener, which is throttled to ~20 Hz on most
+     * devices. Frames are coalesced: if Dart hasn't consumed the previous
+     * one yet the new one replaces it, so latency never accumulates.
+     */
+    private fun startFftPolling(
+        viz: Visualizer,
+        captureSize: Int,
+        events: EventChannel.EventSink?,
+    ) {
+        val thread = HandlerThread("AuroraVisualizer").also { it.start() }
+        val poller = Handler(thread.looper)
+        vizThread = thread
+        vizPoller = poller
+
+        val scratch = ByteArray(captureSize)
+        val latest = AtomicReference<ByteArray?>(null)
+
+        val task = object : Runnable {
+            override fun run() {
+                if (!isStreamingFft) return
+                val startedAt = SystemClock.uptimeMillis()
+                try {
+                    if (viz.getFft(scratch) == Visualizer.SUCCESS) {
+                        val frame = ByteArray(captureSize + 1)
+                        frame[0] = 1
+                        scratch.copyInto(frame, destinationOffset = 1)
+                        // Only schedule a main-thread delivery if none is queued.
+                        if (latest.getAndSet(frame) == null) {
+                            visualizerHandler.post {
+                                val f = latest.getAndSet(null)
+                                if (isStreamingFft && f != null) events?.success(f)
+                            }
+                        }
+                    }
+                } catch (_: Exception) {
+                    return // Visualizer released while polling.
+                }
+                val elapsed = SystemClock.uptimeMillis() - startedAt
+                poller.postDelayed(this, maxOf(1L, FFT_POLL_INTERVAL_MS - elapsed))
+            }
+        }
+        poller.post(task)
+    }
+
+    private fun stopFftPolling() {
+        isStreamingFft = false
+        vizPoller?.removeCallbacksAndMessages(null)
+        vizThread?.quitSafely()
+        vizThread = null
+        vizPoller = null
+        // Drop queued deliveries so they don't fire after FlutterJNI detached.
+        visualizerHandler.removeCallbacksAndMessages(null)
+        activeVisualizer?.release()
+        activeVisualizer = null
     }
 
     /**
@@ -272,7 +360,7 @@ class MainActivity : AudioServiceActivity() {
     }
 
     /**
-     * Shows the system "Allow Aurora Music to modify this file?" dialog via
+     * Shows the system "Allow Noxira Music to modify this file?" dialog via
      * [MediaStore.createWriteRequest].
      */
     @Suppress("DEPRECATION")

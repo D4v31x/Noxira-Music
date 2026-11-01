@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="widget_description">Glassmorphic music player controls with album art</string>
-    <string name="widget_name">Aurora Music Player</string>
+    <string name="widget_name">Noxira Music</string>
+    <string name="widget_description">Playback controls, track info and recommendations</string>
+    <string name="widget_previous">Previous</string>
+    <string name="widget_next">Next</string>
+    <string name="widget_play_pause">Play or pause</string>
+    <string name="widget_nothing_playing">Nothing playing</string>
+    <string name="widget_tap_to_open">Tap to open Noxira Music</string>
+    <string name="widget_recommended">Recommended for you</string>
+    <string name="widget_source_default">Noxira Music</string>
+
+    <!-- Sample content for the widget picker preview -->
+    <string name="widget_preview_title" translatable="false">Midnight Drive</string>
+    <string name="widget_preview_artist" translatable="false">Noxira Sessions</string>
+    <string name="widget_preview_rec" translatable="false">Track</string>
+    <string name="widget_preview_time_current" translatable="false">1:12</string>
+    <string name="widget_preview_time_total" translatable="false">3:41</string>
 </resources>

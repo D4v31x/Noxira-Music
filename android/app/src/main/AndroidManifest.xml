@@ -28,7 +28,7 @@
 
     <application
         android:enableOnBackInvokedCallback="true"
-        android:label="Aurora Music"
+        android:label="Noxira Music"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:hardwareAccelerated="true"
@@ -73,7 +73,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
         </activity>
 
-        <!-- Aurora Music Home Screen Widget -->
+        <!-- Noxira Music Home Screen Widget -->
         <receiver
             android:name=".AuroraMusicWidgetProvider"
             android:label="@string/widget_name"

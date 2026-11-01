@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Ovládání přehrávání, informace o skladbě a doporučení</string>
+    <string name="widget_previous">Předchozí</string>
+    <string name="widget_next">Další</string>
+    <string name="widget_play_pause">Přehrát nebo pozastavit</string>
+    <string name="widget_nothing_playing">Nic nehraje</string>
+    <string name="widget_tap_to_open">Klepnutím otevřete Noxira Music</string>
+    <string name="widget_recommended">Doporučeno pro tebe</string>
+</resources>

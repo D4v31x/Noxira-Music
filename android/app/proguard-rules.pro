@@ -9,7 +9,7 @@
 ## Audio service
 -keep class com.ryanheise.audioservice.** { *; }
 
-## Aurora Music Widget
+## Noxira Music Widget
 -keep class com.aurorasoftware.music.AuroraMusicWidgetProvider { *; }
 
 ## Just Audio
