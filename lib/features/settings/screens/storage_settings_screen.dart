@@ -12,6 +12,7 @@ import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/cache_manager.dart';
+import '../../../shared/services/local_caching_service.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
@@ -35,13 +36,12 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
       final cacheManager = CacheManager()..initialize();
       cacheManager.clearAllCaches();
       ArtworkCacheService().clearCache();
+      await LocalCachingArtistService().clearCache();
       final dir = await getApplicationDocumentsDirectory();
-      for (final path in ['lyrics', 'artwork_cache', 'cache']) {
-        final d = Directory('${dir.path}/$path');
-        if (await d.exists()) {
-          await d.delete(recursive: true);
-          await d.create();
-        }
+      final lyricsDir = Directory('${dir.path}/lyrics');
+      if (await lyricsDir.exists()) {
+        await lyricsDir.delete(recursive: true);
+        await lyricsDir.create();
       }
     } catch (e) {
       debugPrint('StorageSettings: error clearing caches: $e');
@@ -53,7 +53,7 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
 
     showDialog(
       context: context,
-      builder: (_) => GlassmorphicDialog(
+      builder: (dialogContext) => GlassmorphicDialog(
         title: Text(l10n.settingsClearCacheTitle,
             style: const TextStyle(
                 fontFamily: FontConstants.fontFamily,
@@ -64,9 +64,7 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
                 fontFamily: FontConstants.fontFamily, color: Colors.white70)),
         actions: [
           TextButton(
-            onPressed: () {
-              if (mounted) Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.cancel,
                 style: const TextStyle(
                     fontFamily: FontConstants.fontFamily,
@@ -74,8 +72,7 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
           ),
           TextButton(
             onPressed: () async {
-              if (!mounted) return;
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               await _clearAllCaches();
               if (mounted) {
                 widget.notificationManager.showNotification(
@@ -100,21 +97,8 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
 
     try {
       final dir = await getApplicationDocumentsDirectory();
-      int lyricsSize = 0;
-      int artworkSize = 0;
-
-      final lyricsDir = Directory('${dir.path}/lyrics');
-      if (await lyricsDir.exists()) {
-        await for (final f in lyricsDir.list(recursive: true)) {
-          if (f is File) lyricsSize += await f.length();
-        }
-      }
-      final artworkDir = Directory('${dir.path}/artwork_cache');
-      if (await artworkDir.exists()) {
-        await for (final f in artworkDir.list(recursive: true)) {
-          if (f is File) artworkSize += await f.length();
-        }
-      }
+      final lyricsSize = await _directorySize(Directory('${dir.path}/lyrics'));
+      final artworkSize = await LocalCachingArtistService().diskUsageBytes();
 
       final cacheManager = CacheManager()..initialize();
       final cacheSizes = cacheManager.getCacheSizes();
@@ -123,7 +107,7 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
 
       await showDialog(
         context: context,
-        builder: (_) => GlassmorphicDialog(
+        builder: (dialogContext) => GlassmorphicDialog(
           title: Text(l10n.settingsCacheInfo,
               style: const TextStyle(
                   fontFamily: FontConstants.fontFamily,
@@ -143,7 +127,8 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
                 _infoRow(l10n.lyrics, _fmt(lyricsSize)),
                 _infoRow(l10n.onboardingAlbumArtwork, _fmt(artworkSize)),
                 Divider(color: Colors.white.withValues(alpha: 0.2)),
-                _infoRow('Total', _fmt(lyricsSize + artworkSize), bold: true),
+                _infoRow(l10n.total, _fmt(lyricsSize + artworkSize),
+                    bold: true),
                 const SizedBox(height: 16),
                 Text(l10n.settingsMemoryCache,
                     style: const TextStyle(
@@ -162,8 +147,8 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(l10n.cancel,
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.close,
                   style: const TextStyle(
                       fontFamily: FontConstants.fontFamily,
                       color: Colors.white70)),
@@ -174,6 +159,17 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
     } catch (e) {
       debugPrint('StorageSettings: error getting cache info: $e');
     }
+  }
+
+  Future<int> _directorySize(Directory dir) async {
+    var total = 0;
+    try {
+      if (!await dir.exists()) return 0;
+      await for (final f in dir.list(recursive: true)) {
+        if (f is File) total += await f.length();
+      }
+    } catch (_) {}
+    return total;
   }
 
   Widget _infoRow(String label, String value, {bool bold = false}) => Padding(

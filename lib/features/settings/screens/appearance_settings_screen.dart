@@ -284,7 +284,7 @@ void _showRestartDialog(BuildContext context, bool newIsHighEnd) {
 
   showDialog(
     context: context,
-    builder: (_) => GlassmorphicDialog(
+    builder: (dialogContext) => GlassmorphicDialog(
       title: Text(l10n.restartRequired,
           style: const TextStyle(
               fontFamily: FontConstants.fontFamily,
@@ -295,7 +295,7 @@ void _showRestartDialog(BuildContext context, bool newIsHighEnd) {
               fontFamily: FontConstants.fontFamily, color: Colors.white70)),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(dialogContext),
           child: Text(l10n.cancel,
               style: const TextStyle(
                   fontFamily: FontConstants.fontFamily, color: Colors.white70)),

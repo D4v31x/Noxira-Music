@@ -59,6 +59,32 @@ class LocalCachingArtistService {
     }
   }
 
+  /// Size in bytes of the cached artist images on disk.
+  Future<int> diskUsageBytes() async {
+    try {
+      await _createCacheDirectory();
+      var total = 0;
+      await for (final f in cacheDir.list(recursive: true)) {
+        if (f is File) total += await f.length();
+      }
+      return total;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  /// Deletes every cached artist image and forgets what was cached.
+  Future<void> clearCache() async {
+    try {
+      await _createCacheDirectory();
+      await for (final f in cacheDir.list()) {
+        await f.delete(recursive: true);
+      }
+    } catch (_) {}
+    _imageCache.clear();
+    _cacheTimestamps = {};
+  }
+
   /// Scans the on-disk artist image cache and populates [_imageCache] with
   /// every file that is still within the 30-day TTL.  After this runs, calls
   /// to [fetchArtistImage] for already-cached artists return from the in-memory

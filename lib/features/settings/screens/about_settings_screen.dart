@@ -91,7 +91,7 @@ class AboutSettingsScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (_) => GlassmorphicDialog(
+      builder: (dialogContext) => GlassmorphicDialog(
         title: Text(l10n.updateAvailable,
             style: const TextStyle(
                 fontFamily: FontConstants.fontFamily,
@@ -102,7 +102,7 @@ class AboutSettingsScreen extends StatelessWidget {
                 fontFamily: FontConstants.fontFamily, color: Colors.white70)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.later,
                 style: const TextStyle(
                     fontFamily: FontConstants.fontFamily,
@@ -110,7 +110,7 @@ class AboutSettingsScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               onUpdateCheck?.call();
             },
             child: Text(l10n.updateNow,
