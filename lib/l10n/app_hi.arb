@@ -801,8 +801,5 @@
   },
   "lyricsNextLabel": "अगला",
   "settingsLyricsSources": "बोल के स्रोत",
-  "lyricsProviderDesc": "जब LRCLIB में बोल न हों तब उपयोग होता है। गीत का शीर्षक, कलाकार, एल्बम और अवधि प्राप्त करता है।",
-  "supportShowBanner": "सपोर्ट बैनर दिखाएँ",
-  "supportShowBannerDesc": "सपोर्ट लक्ष्य को होम स्क्रीन पर फिर से दिखाएँ",
-  "supportBannerShown": "सपोर्ट बैनर अब होम स्क्रीन पर है"
+  "lyricsProviderDesc": "जब LRCLIB में बोल न हों तब उपयोग होता है। गीत का शीर्षक, कलाकार, एल्बम और अवधि प्राप्त करता है।"
 }

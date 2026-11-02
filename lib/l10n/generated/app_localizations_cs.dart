@@ -2076,15 +2076,4 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get settingsOnlineSuggestionsDesc =>
       'Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta.';
-
-  @override
-  String get supportShowBanner => 'Zobrazit podpůrný banner';
-
-  @override
-  String get supportShowBannerDesc =>
-      'Vrátit cíl podpory na domovskou obrazovku';
-
-  @override
-  String get supportBannerShown =>
-      'Podpůrný banner je nyní na domovské obrazovce';
 }

@@ -801,8 +801,5 @@
   },
   "lyricsNextLabel": "Next",
   "settingsLyricsSources": "Fuentes de letras",
-  "lyricsProviderDesc": "Se usa cuando LRCLIB no tiene la letra. Recibe el título, el artista, el álbum y la duración.",
-  "supportShowBanner": "Mostrar banner de apoyo",
-  "supportShowBannerDesc": "Volver a mostrar el objetivo de apoyo en la pantalla de inicio",
-  "supportBannerShown": "El banner de apoyo ya está en la pantalla de inicio"
+  "lyricsProviderDesc": "Se usa cuando LRCLIB no tiene la letra. Recibe el título, el artista, el álbum y la duración."
 }

@@ -135,12 +135,5 @@ class SupportGoalService {
     }
   }
 
-  /// Shows the banner on the home app bar right now (from settings), without
-  /// touching the reminder schedule.
-  static Future<void> showNow() async {
-    bannerNotifier.value = true;
-    await refreshGoal();
-  }
-
   static void dismiss() => bannerNotifier.value = false;
 }

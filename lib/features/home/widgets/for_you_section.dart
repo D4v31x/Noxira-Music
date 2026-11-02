@@ -433,38 +433,47 @@ class _FavoriteSongsCard extends StatelessWidget {
             ),
           ),
         ),
-        // Play button
-        Container(
-          margin: const EdgeInsets.only(right: 12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.primary.withValues(alpha: 0.15),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: Icon(
-              Icons.play_arrow_rounded,
-              color: theme.colorScheme.primary,
+        // Play button: a soft rounded square rather than a circle.
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Material(
+            color: theme.colorScheme.primary.withValues(alpha: 0.16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(
+                color: theme.colorScheme.primary.withValues(alpha: 0.35),
+              ),
             ),
-            iconSize: 24,
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(),
-            onPressed: () {
-              if (playlist.songs.isNotEmpty) {
-                final audioService = Provider.of<AudioPlayerService>(
-                  context,
-                  listen: false,
-                );
-                audioService.setPlaylist(
-                  playlist.songs,
-                  0,
-                  source: PlaybackSourceInfo(
-                    source: PlaybackSource.playlist,
-                    name: playlist.name,
-                    playlistId: playlist.id,
-                  ),
-                );
-              }
-            },
+            child: InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () {
+                if (playlist.songs.isNotEmpty) {
+                  final audioService = Provider.of<AudioPlayerService>(
+                    context,
+                    listen: false,
+                  );
+                  audioService.setPlaylist(
+                    playlist.songs,
+                    0,
+                    source: PlaybackSourceInfo(
+                      source: PlaybackSource.playlist,
+                      name: playlist.name,
+                      playlistId: playlist.id,
+                    ),
+                  );
+                }
+              },
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Icon(
+                  Icons.play_arrow_rounded,
+                  color: theme.colorScheme.primary,
+                  size: 26,
+                  semanticLabel: localizations.play,
+                ),
+              ),
+            ),
           ),
         ),
       ],
