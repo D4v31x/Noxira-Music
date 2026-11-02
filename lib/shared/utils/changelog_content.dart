@@ -3,6 +3,29 @@ import 'package:flutter/material.dart' show IconData, Icons;
 class ChangelogContent {
   /// Short, user-facing summaries shown in the post-update popup.
   static const Map<String, List<({IconData icon, String text})>> highlights = {
+    '2.0.0': [
+      (
+        icon: Icons.stars_rounded,
+        text: 'Aurora Music is now Noxira Music, with a new look'
+      ),
+      (
+        icon: Icons.translate_rounded,
+        text: 'Translate lyrics into any language, from more lyric sources'
+      ),
+      (
+        icon: Icons.widgets_rounded,
+        text: 'A redesigned home screen widget with playback controls'
+      ),
+      (icon: Icons.queue_music_rounded, text: 'A redesigned queue'),
+      (
+        icon: Icons.blur_on_rounded,
+        text: 'Glass surfaces that adapt to your phone'
+      ),
+      (
+        icon: Icons.bolt_rounded,
+        text: 'Smoother transitions and faster detail pages'
+      ),
+    ],
     '1.5.0': [
       (
         icon: Icons.open_in_full_rounded,
@@ -46,6 +69,77 @@ class ChangelogContent {
 
   static const Map<String, List<Map<String, List<String>>>> versions = {
     // Latest version at the top
+    '2.0.0': [
+      {
+        '_': ['Noxira Music 2.0'],
+      },
+      {
+        'Welcome to Noxira': [
+          'Aurora Music is now Noxira Music, with a new name, wordmark and app icon',
+          'A new animated splash screen draws the Noxira wordmark',
+          'Existing users get a short welcome page explaining what is new, and you can open it again from Settings',
+        ],
+      },
+      {
+        'New Features': [
+          'Translate lyrics into any language you like, not only the app languages',
+          'Redesigned home screen widget: glass tinted with your artwork, previous / play / next buttons that work without opening the app, and recommended songs when the widget is tall',
+          'Redesigned queue page — see what played and what is next, drag to reorder, swipe to remove; an Up next preview now sits on Now Playing',
+          'A monthly support goal appears on the home app bar from time to time, and in Settings under About',
+          'Pull down in the Library to refresh it',
+        ],
+      },
+      {
+        'Lyrics': [
+          'Redesigned lyrics page: tap a line to jump to it, dots mark instrumental breaks, and the lyrics box on Now Playing follows along',
+          'More lyric sources (BetterLyrics, YouLyPlus and KuGou) are tried when LRCLIB has nothing; choose which ones to use in Settings',
+          'Lyrics stored in the audio file, or in a .lrc file next to the song, are used first and work offline',
+          'Auto-hide controls on the full-screen lyrics is now an option and off by default',
+          'Fixed lyrics that flickered and then disappeared with "no lyrics available", including after a refresh or a manual search',
+        ],
+      },
+      {
+        'Playlists & Library': [
+          'New add-to-playlist sheet: add, remove and create playlists in one place, with songs already in a playlist marked',
+          'A song can no longer be added to the same playlist twice, and a Remove duplicates option cleans up existing ones',
+          'Optional online suggestions: artist info and similar artists from Deezer and Wikipedia (only the artist name is sent)',
+          'The equalizer no longer reports itself as unavailable by mistake; it retries on its own and offers Retry and Open system equalizer',
+          'Cache Information now shows real sizes, its button closes the dialog, and Clear Cache also clears downloaded artist images',
+        ],
+      },
+      {
+        'Setup': [
+          'Redesigned onboarding with glass panels, entrance animations and a flowing background',
+          'Setup recommends the interface style that suits your phone (high-end or lightweight) and the matching background, and lets you try the other one',
+          'The lightweight interface now always uses a plain background; the Animated Blobs option was removed',
+        ],
+      },
+      {
+        'Look & Feel': [
+          'New app font (Cal Sans) and slightly more compact text across the app',
+          'Frosted glass surfaces throughout, drawn as plain solid surfaces on low-end phones',
+          'Artwork flies from cards into album, artist, folder and playlist pages; pressed cards respond, liked songs burst into hearts, and the time labels roll',
+          'Rounded-square play button on Favorite Songs',
+        ],
+      },
+      {
+        'Performance': [
+          'Noxira detects your phone\'s hardware and tunes glass effects, image caches and transitions to it',
+          'Album, artist, folder and playlist pages open smoothly: they load after the opening animation, build a short first page of songs and blur their header artwork ahead of time',
+          'Library queries that overlap are shared instead of repeated, which lowers memory use on big libraries',
+        ],
+      },
+      {
+        'Under the Hood': [
+          'Fixed several crashes: tapping Close in the lyrics editor, the tag editor or the sleep timer after the page was gone, adding to the queue or setting a ringtone from a song menu, translating lyrics, and opening Noxira from the widget',
+          'The app no longer crashes when storage permission is missing',
+          'Playlists, liked songs, play counts and settings are saved safely, so an interrupted save can no longer leave an empty file',
+          'FLAC files whose metadata blocks were left incomplete by a tag editor are repaired when saved, so they play again',
+          'Media notification artwork is downscaled to avoid freezes while the notification is built',
+          'Updated dependencies',
+        ],
+      },
+    ],
     '1.5.0': [
       {
         '_': ['Noxira Music 1.5'],
