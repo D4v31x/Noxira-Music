@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -6,6 +7,7 @@ import '../../core/constants/font_constants.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../services/donation_service.dart';
 import '../services/support_goal_service.dart';
+import 'adaptive_blur.dart';
 import 'glassmorphic_dialog.dart';
 
 /// The monthly goal as a thin accent bar with "€12 of €50 this month · 24%"
@@ -19,7 +21,8 @@ class SupportGoalProgress extends StatelessWidget {
 
   final bool centered;
 
-  /// A hairline bar and smaller caption, for places that should stay quiet.
+  /// A frosted pill bar with a smaller caption, for the app-bar banner where
+  /// there is no card around it.
   final bool compact;
 
   @override
@@ -33,41 +36,104 @@ class SupportGoalProgress extends StatelessWidget {
         crossAxisAlignment:
             centered ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: SizedBox(
-              height: compact ? 3 : 6,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  ColoredBox(color: Colors.white.withValues(alpha: 0.14)),
-                  TweenAnimationBuilder<double>(
-                    tween: Tween(begin: 0, end: goal.progress),
-                    duration: const Duration(milliseconds: 800),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, _) => FractionallySizedBox(
-                      alignment: Alignment.centerLeft,
-                      widthFactor: value,
-                      child: ColoredBox(color: primary),
+          if (compact)
+            _GlassBar(progress: goal.progress, accent: primary)
+          else
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: SizedBox(
+                height: 6,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(color: Colors.white.withValues(alpha: 0.14)),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: goal.progress),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => FractionallySizedBox(
+                        alignment: Alignment.centerLeft,
+                        widthFactor: value,
+                        child: ColoredBox(color: primary),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
+          SizedBox(height: compact ? 10 : 8),
           Text(
             '${l10n.supportGoalProgress(goal.format(goal.raised), goal.format(goal.goal))}  ·  ${(goal.progress * 100).round()}%',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: FontConstants.fontFamily,
-              color: Colors.white.withValues(alpha: compact ? 0.55 : 0.6),
-              fontSize: compact ? 12 : 13,
+              color: Colors.white.withValues(alpha: compact ? 0.7 : 0.6),
+              fontSize: compact ? 12.5 : 13,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// A frosted capsule with the accent filling it from the left.
+class _GlassBar extends StatelessWidget {
+  const _GlassBar({required this.progress, required this.accent});
+
+  final double progress;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    const height = 12.0;
+    final lowEnd = isBlurDisabled(context);
+    final track = DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: lowEnd ? 0.16 : 0.12),
+        borderRadius: BorderRadius.circular(height),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(2),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: progress),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, _) => Align(
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: value.clamp(0.04, 1.0),
+              heightFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: accent,
+                  borderRadius: BorderRadius.circular(height),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accent.withValues(alpha: 0.45),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    return SizedBox(
+      height: height,
+      width: double.infinity,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(height),
+        child: AdaptiveBackdropFilter(
+          filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: track,
+        ),
       ),
     );
   }
@@ -81,35 +147,43 @@ class SupportGlassButton extends StatelessWidget {
     required this.label,
     required this.onTap,
     this.primary = false,
+    this.pill = false,
   });
 
   final String label;
   final VoidCallback onTap;
   final bool primary;
 
+  /// A smaller fully-rounded frosted button, for use without a card behind it.
+  final bool pill;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final radius = BorderRadius.circular(14);
+    final radius = BorderRadius.circular(pill ? 24 : 14);
 
-    return Material(
+    final button = Material(
       color: primary
-          ? scheme.primary.withValues(alpha: 0.9)
-          : Colors.white.withValues(alpha: 0.1),
+          ? scheme.primary.withValues(alpha: pill ? 0.78 : 0.9)
+          : Colors.white.withValues(alpha: pill ? 0.14 : 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: radius,
         side: BorderSide(
           color: primary
-              ? Colors.white.withValues(alpha: 0.18)
-              : Colors.white.withValues(alpha: 0.16),
+              ? Colors.white.withValues(alpha: 0.28)
+              : Colors.white.withValues(alpha: 0.22),
         ),
       ),
       child: InkWell(
         borderRadius: radius,
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: EdgeInsets.symmetric(
+            vertical: pill ? 10 : 12,
+            horizontal: pill ? 22 : 0,
+          ),
           child: Center(
+            widthFactor: pill ? 1 : null,
             child: Text(
               label,
               maxLines: 1,
@@ -117,12 +191,21 @@ class SupportGlassButton extends StatelessWidget {
               style: TextStyle(
                 fontFamily: FontConstants.fontFamily,
                 color: primary ? scheme.onPrimary : Colors.white,
-                fontSize: 15,
+                fontSize: pill ? 14 : 15,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
         ),
+      ),
+    );
+
+    if (!pill) return button;
+    return ClipRRect(
+      borderRadius: radius,
+      child: AdaptiveBackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+        child: button,
       ),
     );
   }
