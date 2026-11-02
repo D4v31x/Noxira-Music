@@ -200,6 +200,10 @@ class _GlassSurfaceState extends State<GlassSurface>
   late final _Entrance _e = _Entrance(this, widget.order ?? 0);
   bool _started = false;
 
+  /// Keeps the content's state when the surface changes between glass and
+  /// solid, so switching the interface style never restarts what is inside.
+  final GlobalKey _contentKey = GlobalKey();
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -222,16 +226,24 @@ class _GlassSurfaceState extends State<GlassSurface>
   @override
   Widget build(BuildContext context) {
     final solid = isGlassSolid(context);
+    final reduce = onboardingReduceMotion(context);
     return AnimatedBuilder(
       animation: _e.listenable,
       builder: (context, _) {
         final a = _e.alpha.clamp(0.0, 1.0);
         final rise = widget.order == null ? 1.0 : _e.rise.value;
+        // 0 = frosted glass, 1 = solid. Changing the interface style eases
+        // between the two instead of swapping the surface.
         final surface = TweenAnimationBuilder<double>(
-          tween: Tween(end: widget.selected ? 1.0 : 0.0),
-          duration: const Duration(milliseconds: 260),
-          curve: Curves.easeOutCubic,
-          builder: (context, sel, _) => solid ? _solid(a, sel) : _glass(a, sel),
+          tween: Tween(end: solid ? 1.0 : 0.0),
+          duration: reduce ? Duration.zero : const Duration(milliseconds: 520),
+          curve: Curves.easeInOutCubic,
+          builder: (context, solidness, _) => TweenAnimationBuilder<double>(
+            tween: Tween(end: widget.selected ? 1.0 : 0.0),
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            builder: (context, sel, _) => _surface(a, sel, solidness),
+          ),
         );
         return Transform.translate(
           offset: Offset(0, (1 - rise) * 22 + _e.lift),
@@ -241,51 +253,52 @@ class _GlassSurfaceState extends State<GlassSurface>
     );
   }
 
-  Widget _content(double a) => Opacity(
-        opacity: a,
-        child: Padding(padding: widget.padding, child: widget.child),
+  Widget _content(double a) => KeyedSubtree(
+        key: _contentKey,
+        child: Opacity(
+          opacity: a,
+          child: Padding(padding: widget.padding, child: widget.child),
+        ),
       );
 
-  Widget _solid(double a, double sel) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color:
-            Color.lerp(const Color(0xFF1E1F25), const Color(0xFF2B2C34), sel)!
-                .withValues(alpha: a),
-        borderRadius: BorderRadius.circular(widget.radius),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: (0.08 + 0.12 * sel) * a),
-        ),
-      ),
-      child: _content(a),
-    );
-  }
-
-  Widget _glass(double a, double sel) {
+  /// One structure for both looks: the blur, the sheen and the edge fade out
+  /// as [solidness] rises while the solid fill and its border fade in.
+  Widget _surface(double a, double sel, double solidness) {
     final r = BorderRadius.circular(widget.radius);
+    final glass = a * (1 - solidness);
+    final solidFill =
+        Color.lerp(const Color(0xFF1E1F25), const Color(0xFF2B2C34), sel)!;
     return ClipRRect(
       borderRadius: r,
       child: BackdropFilter(
+        // No backdrop work at all once it is fully solid.
+        enabled: solidness < 1,
         filter: ui.ImageFilter.blur(
-          sigmaX: 0.01 + 22 * a,
-          sigmaY: 0.01 + 22 * a,
+          sigmaX: 0.01 + 22 * glass,
+          sigmaY: 0.01 + 22 * glass,
         ),
         child: CustomPaint(
           foregroundPainter: _GlassEdgePainter(
             radius: widget.radius,
-            alpha: a,
+            alpha: glass,
             boost: sel,
           ),
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: r,
+              color: solidFill.withValues(alpha: a * solidness),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withValues(alpha: (0.17 + 0.07 * sel) * a),
-                  Colors.white.withValues(alpha: (0.05 + 0.05 * sel) * a),
+                  Colors.white.withValues(alpha: (0.17 + 0.07 * sel) * glass),
+                  Colors.white.withValues(alpha: (0.05 + 0.05 * sel) * glass),
                 ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(
+                  alpha: (0.08 + 0.12 * sel) * a * solidness,
+                ),
               ),
             ),
             child: _content(a),

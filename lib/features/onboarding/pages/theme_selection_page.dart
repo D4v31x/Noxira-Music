@@ -398,10 +398,18 @@ class _BackgroundStyle extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final perf = Provider.of<PerformanceModeProvider>(context);
-    if (perf.isLowEndDevice || !perf.shouldEnableBlur) {
-      return const SizedBox.shrink();
-    }
+    final show = !perf.isLowEndDevice && perf.shouldEnableBlur;
 
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child:
+          show ? _panel(context, l10n) : const SizedBox(width: double.infinity),
+    );
+  }
+
+  Widget _panel(BuildContext context, AppLocalizations l10n) {
     final labels = [l10n.backgroundBlurredArtwork, l10n.backgroundSolid];
     final recommendedIndex = recommended == PerformanceLevel.high ? 0 : 1;
     final selected =
