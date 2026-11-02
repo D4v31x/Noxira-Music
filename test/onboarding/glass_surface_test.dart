@@ -1,7 +1,10 @@
+import 'dart:ui' as ui;
+
 import 'package:aurora_music_v01/features/onboarding/widgets/onboarding_glass.dart';
 import 'package:aurora_music_v01/shared/providers/performance_mode_provider.dart';
 import 'package:aurora_music_v01/shared/services/device_performance_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,5 +81,67 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
     expect(find.text('taps 1'), findsOneWidget);
+  });
+
+  /// The colour actually drawn at the middle of the surface.
+  Future<Color> centrePixel(WidgetTester tester, GlobalKey key) async {
+    late Color colour;
+    await tester.runAsync(() async {
+      final boundary =
+          key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
+      final image = await boundary.toImage();
+      final data =
+          (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+      final x = image.width ~/ 2;
+      final y = image.height ~/ 2;
+      final i = (y * image.width + x) * 4;
+      colour = Color.fromARGB(
+          255, data.getUint8(i), data.getUint8(i + 1), data.getUint8(i + 2));
+    });
+    return colour;
+  }
+
+  testWidgets('the solid surface is really drawn, not just the border',
+      (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    perf = PerformanceModeProvider();
+    await perf.setPerformanceMode(PerformanceLevel.low);
+    final key = GlobalKey();
+    const backdrop = Color(0xFF2A4A7A);
+    await tester.pumpWidget(ChangeNotifierProvider.value(
+      value: perf,
+      child: MaterialApp(
+        home: RepaintBoundary(
+          key: key,
+          child: const ColoredBox(
+            color: backdrop,
+            child: Center(
+              child: GlassSurface(
+                child: SizedBox(width: 300, height: 200),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await tester.pump(const Duration(milliseconds: 800));
+
+    final solid = await centrePixel(tester, key);
+    // The dark solid fill, clearly different from the blue behind it.
+    expect(solid.r, lessThan(0.25));
+    expect(solid.b, lessThan(0.3));
+
+    // And it fades back to see-through glass, then to solid again.
+    await perf.setPerformanceMode(PerformanceLevel.high);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    final glass = await centrePixel(tester, key);
+    expect(glass.b, greaterThan(0.35));
+
+    await perf.setPerformanceMode(PerformanceLevel.low);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 800));
+    final again = await centrePixel(tester, key);
+    expect(again.b, lessThan(0.3));
   });
 }

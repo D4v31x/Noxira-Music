@@ -283,25 +283,33 @@ class _GlassSurfaceState extends State<GlassSurface>
             alpha: glass,
             boost: sel,
           ),
+          // Fill and sheen are separate layers: a gradient in the same
+          // decoration would paint over the fill (it is transparent once the
+          // surface is solid, and the fill would vanish).
           child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: r,
               color: solidFill.withValues(alpha: a * solidness),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Colors.white.withValues(alpha: (0.17 + 0.07 * sel) * glass),
-                  Colors.white.withValues(alpha: (0.05 + 0.05 * sel) * glass),
-                ],
-              ),
               border: Border.all(
                 color: Colors.white.withValues(
                   alpha: (0.08 + 0.12 * sel) * a * solidness,
                 ),
               ),
             ),
-            child: _content(a),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: r,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white.withValues(alpha: (0.17 + 0.07 * sel) * glass),
+                    Colors.white.withValues(alpha: (0.05 + 0.05 * sel) * glass),
+                  ],
+                ),
+              ),
+              child: _content(a),
+            ),
           ),
         ),
       ),
