@@ -563,9 +563,6 @@
   "goToArtist": "Přejít na umělce",
   "deleteFromDevice": "Smazat ze zařízení",
   "checkOutThisSong": "Poslechněte si tuto skladbu!",
-  "backgroundLowEndStyle": "Styl pozadí",
-  "backgroundLowEndStyleDesc": "Jak vypadá pozadí aplikace",
-  "backgroundBlobs": "Animované tvary",
   "backgroundSolid": "Jednobarevné",
   "backgroundHighEndStyle": "Pozadí přehrávání",
   "backgroundHighEndStyleDesc": "Styl pozadí na obrazovce přehrávání",
@@ -786,5 +783,13 @@
     }
   },
   "settingsOnlineSuggestions": "Online návrhy",
-  "settingsOnlineSuggestionsDesc": "Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta."
+  "settingsOnlineSuggestionsDesc": "Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta.",
+  "onboardingUiModeTitle": "Styl rozhraní",
+  "onboardingUiModeDesc": "Kolik skla a animací aplikace používá",
+  "onboardingUiHighEnd": "Výkonné",
+  "onboardingUiLowEnd": "Úsporné",
+  "onboardingRecommendedBadge": "Doporučeno",
+  "onboardingRecommendedForDevice": "Doporučeno pro vaše zařízení.",
+  "onboardingTryNote": "Podle parametrů vašeho zařízení doporučujeme {recommended}, ale klidně můžete zkusit {selected}.",
+  "onboardingHeaviestNote": "{option} je nejnáročnější možnost a na vašem zařízení nemusí běžet tak plynule."
 }

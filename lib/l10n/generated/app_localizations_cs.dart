@@ -1629,15 +1629,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get checkOutThisSong => 'Poslechněte si tuto skladbu!';
 
   @override
-  String get backgroundLowEndStyle => 'Styl pozadí';
-
-  @override
-  String get backgroundLowEndStyleDesc => 'Jak vypadá pozadí aplikace';
-
-  @override
-  String get backgroundBlobs => 'Animované tvary';
-
-  @override
   String get backgroundSolid => 'Jednobarevné';
 
   @override
@@ -2076,4 +2067,32 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get settingsOnlineSuggestionsDesc =>
       'Vyhledá informace o interpretech a podobné interprety na Deezeru a Wikipedii. Odesílá se pouze jméno interpreta.';
+
+  @override
+  String get onboardingUiModeTitle => 'Styl rozhraní';
+
+  @override
+  String get onboardingUiModeDesc => 'Kolik skla a animací aplikace používá';
+
+  @override
+  String get onboardingUiHighEnd => 'Výkonné';
+
+  @override
+  String get onboardingUiLowEnd => 'Úsporné';
+
+  @override
+  String get onboardingRecommendedBadge => 'Doporučeno';
+
+  @override
+  String get onboardingRecommendedForDevice => 'Doporučeno pro vaše zařízení.';
+
+  @override
+  String onboardingTryNote(String recommended, String selected) {
+    return 'Podle parametrů vašeho zařízení doporučujeme $recommended, ale klidně můžete zkusit $selected.';
+  }
+
+  @override
+  String onboardingHeaviestNote(String option) {
+    return '$option je nejnáročnější možnost a na vašem zařízení nemusí běžet tak plynule.';
+  }
 }

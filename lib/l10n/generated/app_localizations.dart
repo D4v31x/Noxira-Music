@@ -3142,24 +3142,6 @@ abstract class AppLocalizations {
   /// **'Check out this song!'**
   String get checkOutThisSong;
 
-  /// No description provided for @backgroundLowEndStyle.
-  ///
-  /// In en, this message translates to:
-  /// **'Background Style'**
-  String get backgroundLowEndStyle;
-
-  /// No description provided for @backgroundLowEndStyleDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'How the app background looks'**
-  String get backgroundLowEndStyleDesc;
-
-  /// No description provided for @backgroundBlobs.
-  ///
-  /// In en, this message translates to:
-  /// **'Animated Blobs'**
-  String get backgroundBlobs;
-
   /// No description provided for @backgroundSolid.
   ///
   /// In en, this message translates to:
@@ -3951,6 +3933,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.'**
   String get settingsOnlineSuggestionsDesc;
+
+  /// No description provided for @onboardingUiModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Interface style'**
+  String get onboardingUiModeTitle;
+
+  /// No description provided for @onboardingUiModeDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'How much glass and animation the app uses'**
+  String get onboardingUiModeDesc;
+
+  /// No description provided for @onboardingUiHighEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'High-end'**
+  String get onboardingUiHighEnd;
+
+  /// No description provided for @onboardingUiLowEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Lightweight'**
+  String get onboardingUiLowEnd;
+
+  /// No description provided for @onboardingRecommendedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended'**
+  String get onboardingRecommendedBadge;
+
+  /// No description provided for @onboardingRecommendedForDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended for your device.'**
+  String get onboardingRecommendedForDevice;
+
+  /// No description provided for @onboardingTryNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on your device\'s specs we recommend {recommended}, but you\'re welcome to try {selected}.'**
+  String onboardingTryNote(String recommended, String selected);
+
+  /// No description provided for @onboardingHeaviestNote.
+  ///
+  /// In en, this message translates to:
+  /// **'{option} is the heaviest option and may feel less smooth on your device.'**
+  String onboardingHeaviestNote(String option);
 }
 
 class _AppLocalizationsDelegate

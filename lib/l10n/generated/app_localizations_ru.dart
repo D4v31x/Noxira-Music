@@ -1647,15 +1647,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get checkOutThisSong => 'Послушайте эту песню!';
 
   @override
-  String get backgroundLowEndStyle => 'Стиль фона';
-
-  @override
-  String get backgroundLowEndStyleDesc => 'Как выглядит фон приложения';
-
-  @override
-  String get backgroundBlobs => 'Анимированные кляксы';
-
-  @override
   String get backgroundSolid => 'Однотонный';
 
   @override
@@ -2098,4 +2089,34 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsOnlineSuggestionsDesc =>
       'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.';
+
+  @override
+  String get onboardingUiModeTitle => 'Стиль интерфейса';
+
+  @override
+  String get onboardingUiModeDesc =>
+      'Сколько стекла и анимации использует приложение';
+
+  @override
+  String get onboardingUiHighEnd => 'Максимальный';
+
+  @override
+  String get onboardingUiLowEnd => 'Лёгкий';
+
+  @override
+  String get onboardingRecommendedBadge => 'Рекомендуется';
+
+  @override
+  String get onboardingRecommendedForDevice =>
+      'Рекомендуется для вашего устройства.';
+
+  @override
+  String onboardingTryNote(String recommended, String selected) {
+    return 'Исходя из характеристик вашего устройства мы рекомендуем «$recommended», но вы можете попробовать «$selected».';
+  }
+
+  @override
+  String onboardingHeaviestNote(String option) {
+    return '«$option» — самый ресурсоёмкий вариант, на вашем устройстве он может работать менее плавно.';
+  }
 }

@@ -571,9 +571,6 @@
   "goToArtist": "Zum Künstler",
   "deleteFromDevice": "Vom Gerät löschen",
   "checkOutThisSong": "Hör dir diesen Song mal an!",
-  "backgroundLowEndStyle": "Hintergrundstil",
-  "backgroundLowEndStyleDesc": "So sieht der Hintergrund der App aus",
-  "backgroundBlobs": "Animierte Kleckse",
   "backgroundSolid": "Einfarbig",
   "backgroundHighEndStyle": "Aktuelle Wiedergabe – Hintergrund",
   "backgroundHighEndStyleDesc": "Hintergrundstil im Bildschirm „Aktuelle Wiedergabe“",
@@ -801,5 +798,13 @@
   },
   "lyricsNextLabel": "Weiter",
   "settingsLyricsSources": "Songtext-Quellen",
-  "lyricsProviderDesc": "Wird verwendet, wenn LRCLIB keine Texte hat. Erhält Titel, Interpret, Album und Länge."
+  "lyricsProviderDesc": "Wird verwendet, wenn LRCLIB keine Texte hat. Erhält Titel, Interpret, Album und Länge.",
+  "onboardingUiModeTitle": "Oberflächenstil",
+  "onboardingUiModeDesc": "Wie viel Glas und Animation die App nutzt",
+  "onboardingUiHighEnd": "High-End",
+  "onboardingUiLowEnd": "Schlank",
+  "onboardingRecommendedBadge": "Empfohlen",
+  "onboardingRecommendedForDevice": "Für dein Gerät empfohlen.",
+  "onboardingTryNote": "Nach den technischen Daten deines Geräts empfehlen wir {recommended}, aber du kannst gern {selected} ausprobieren.",
+  "onboardingHeaviestNote": "{option} ist die aufwendigste Option und läuft auf deinem Gerät eventuell weniger flüssig."
 }

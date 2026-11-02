@@ -4,7 +4,6 @@ import 'package:mesh/mesh.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import '../providers/performance_mode_provider.dart';
-import '../providers/theme_provider.dart';
 
 class GrainyGradientBackground extends HookWidget {
   final Widget child;
@@ -34,15 +33,13 @@ class GrainyGradientBackground extends HookWidget {
   Widget build(BuildContext context) {
     // Check performance mode - use simple background for low-end devices
     final performanceProvider = context.watch<PerformanceModeProvider>();
-    final themeProvider = context.watch<ThemeProvider>();
 
     bool useSimpleBackground;
     if (forceSimple) {
       useSimpleBackground = true;
     } else if (performanceProvider.isLowEndDevice) {
-      // Low-end: respect user's preference (solid by default)
-      useSimpleBackground =
-          themeProvider.lowEndBackground == LowEndBackground.solid;
+      // Low-end: always the plain background
+      useSimpleBackground = true;
     } else {
       // Medium / high-end: show blobs only when animated gradients are enabled
       useSimpleBackground = !performanceProvider.shouldEnableAnimatedGradients;

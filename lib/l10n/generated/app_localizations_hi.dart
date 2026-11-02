@@ -1635,15 +1635,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get checkOutThisSong => 'यह गाना देखो!';
 
   @override
-  String get backgroundLowEndStyle => 'पृष्ठभूमि शैली';
-
-  @override
-  String get backgroundLowEndStyleDesc => 'ऐप का बैकग्राउंड कैसा दिखता है';
-
-  @override
-  String get backgroundBlobs => 'एनिमेटेड ब्लॉब्स';
-
-  @override
   String get backgroundSolid => 'एक रंग';
 
   @override
@@ -2084,4 +2075,32 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsOnlineSuggestionsDesc =>
       'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.';
+
+  @override
+  String get onboardingUiModeTitle => 'इंटरफ़ेस शैली';
+
+  @override
+  String get onboardingUiModeDesc => 'ऐप कितना ग्लास और एनिमेशन इस्तेमाल करे';
+
+  @override
+  String get onboardingUiHighEnd => 'हाई-एंड';
+
+  @override
+  String get onboardingUiLowEnd => 'हल्का';
+
+  @override
+  String get onboardingRecommendedBadge => 'अनुशंसित';
+
+  @override
+  String get onboardingRecommendedForDevice => 'आपके डिवाइस के लिए अनुशंसित।';
+
+  @override
+  String onboardingTryNote(String recommended, String selected) {
+    return 'आपके डिवाइस के स्पेसिफिकेशन के आधार पर हम $recommended की सलाह देते हैं, लेकिन आप $selected भी आज़मा सकते हैं।';
+  }
+
+  @override
+  String onboardingHeaviestNote(String option) {
+    return '$option सबसे भारी विकल्प है और आपके डिवाइस पर कम स्मूद चल सकता है।';
+  }
 }

@@ -638,9 +638,6 @@
   "goToArtist": "Go to artist",
   "deleteFromDevice": "Delete from device",
   "checkOutThisSong": "Check out this song!",
-  "backgroundLowEndStyle": "Background Style",
-  "backgroundLowEndStyleDesc": "How the app background looks",
-  "backgroundBlobs": "Animated Blobs",
   "backgroundSolid": "Solid Color",
   "backgroundHighEndStyle": "Now Playing Background",
   "backgroundHighEndStyleDesc": "Background style in the Now Playing screen",
@@ -890,5 +887,24 @@
     }
   },
   "settingsOnlineSuggestions": "Online suggestions",
-  "settingsOnlineSuggestionsDesc": "Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent."
+  "settingsOnlineSuggestionsDesc": "Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.",
+  "onboardingUiModeTitle": "Interface style",
+  "onboardingUiModeDesc": "How much glass and animation the app uses",
+  "onboardingUiHighEnd": "High-end",
+  "onboardingUiLowEnd": "Lightweight",
+  "onboardingRecommendedBadge": "Recommended",
+  "onboardingRecommendedForDevice": "Recommended for your device.",
+  "onboardingTryNote": "Based on your device's specs we recommend {recommended}, but you're welcome to try {selected}.",
+  "@onboardingTryNote": {
+    "placeholders": {
+      "recommended": {"type": "String"},
+      "selected": {"type": "String"}
+    }
+  },
+  "onboardingHeaviestNote": "{option} is the heaviest option and may feel less smooth on your device.",
+  "@onboardingHeaviestNote": {
+    "placeholders": {
+      "option": {"type": "String"}
+    }
+  }
 }

@@ -571,9 +571,6 @@
   "goToArtist": "Go to artist",
   "deleteFromDevice": "Delete from device",
   "checkOutThisSong": "Check out this song!",
-  "backgroundLowEndStyle": "Background Style",
-  "backgroundLowEndStyleDesc": "How the app background looks",
-  "backgroundBlobs": "Animated Blobs",
   "backgroundSolid": "Solid Color",
   "backgroundHighEndStyle": "Now Playing Background",
   "backgroundHighEndStyleDesc": "Background style in the Now Playing screen",
@@ -801,5 +798,13 @@
   },
   "lyricsNextLabel": "Next",
   "settingsLyricsSources": "Fuentes de letras",
-  "lyricsProviderDesc": "Se usa cuando LRCLIB no tiene la letra. Recibe el título, el artista, el álbum y la duración."
+  "lyricsProviderDesc": "Se usa cuando LRCLIB no tiene la letra. Recibe el título, el artista, el álbum y la duración.",
+  "onboardingUiModeTitle": "Estilo de interfaz",
+  "onboardingUiModeDesc": "Cuánto cristal y animación usa la app",
+  "onboardingUiHighEnd": "Alto rendimiento",
+  "onboardingUiLowEnd": "Ligero",
+  "onboardingRecommendedBadge": "Recomendado",
+  "onboardingRecommendedForDevice": "Recomendado para tu dispositivo.",
+  "onboardingTryNote": "Según las especificaciones de tu dispositivo recomendamos {recommended}, pero puedes probar {selected}.",
+  "onboardingHeaviestNote": "{option} es la opción más pesada y puede ir menos fluida en tu dispositivo."
 }

@@ -571,9 +571,6 @@
   "goToArtist": "Перейти к исполнителю",
   "deleteFromDevice": "Удалить с устройства",
   "checkOutThisSong": "Послушайте эту песню!",
-  "backgroundLowEndStyle": "Стиль фона",
-  "backgroundLowEndStyleDesc": "Как выглядит фон приложения",
-  "backgroundBlobs": "Анимированные кляксы",
   "backgroundSolid": "Однотонный",
   "backgroundHighEndStyle": "Фон для текущего воспроизведения",
   "backgroundHighEndStyleDesc": "Стиль фона на экране «Воспроизведение»",
@@ -801,5 +798,13 @@
   },
   "lyricsNextLabel": "Далее",
   "settingsLyricsSources": "Источники текстов",
-  "lyricsProviderDesc": "Используется, если на LRCLIB нет текста. Получает название, исполнителя, альбом и длительность."
+  "lyricsProviderDesc": "Используется, если на LRCLIB нет текста. Получает название, исполнителя, альбом и длительность.",
+  "onboardingUiModeTitle": "Стиль интерфейса",
+  "onboardingUiModeDesc": "Сколько стекла и анимации использует приложение",
+  "onboardingUiHighEnd": "Максимальный",
+  "onboardingUiLowEnd": "Лёгкий",
+  "onboardingRecommendedBadge": "Рекомендуется",
+  "onboardingRecommendedForDevice": "Рекомендуется для вашего устройства.",
+  "onboardingTryNote": "Исходя из характеристик вашего устройства мы рекомендуем «{recommended}», но вы можете попробовать «{selected}».",
+  "onboardingHeaviestNote": "«{option}» — самый ресурсоёмкий вариант, на вашем устройстве он может работать менее плавно."
 }

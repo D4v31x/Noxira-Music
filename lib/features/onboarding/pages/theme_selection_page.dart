@@ -7,10 +7,17 @@ import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/providers/performance_mode_provider.dart';
 import '../../../shared/providers/theme_provider.dart';
+import '../../../shared/services/device_performance_service.dart';
 import '../widgets/onboarding_kit.dart';
 
-/// Pick the look. A small player preview changes colour as you choose.
-class ThemeSelectionPage extends StatelessWidget {
+/// Lets tests start from a fresh run (see [_ThemeSelectionPageState]).
+@visibleForTesting
+void resetRecommendationForTests() =>
+    _ThemeSelectionPageState._recommendationApplied = false;
+
+/// Pick the look. A small player preview changes colour as you choose, and the
+/// interface and background choices say which option suits this device.
+class ThemeSelectionPage extends StatefulWidget {
   final VoidCallback onContinue;
   final VoidCallback onBack;
 
@@ -21,9 +28,45 @@ class ThemeSelectionPage extends StatelessWidget {
   });
 
   @override
+  State<ThemeSelectionPage> createState() => _ThemeSelectionPageState();
+}
+
+class _ThemeSelectionPageState extends State<ThemeSelectionPage> {
+  /// Applied once per run, so coming back to this step never overrides what
+  /// the user chose in the meantime.
+  static bool _recommendationApplied = false;
+
+  /// What the device's specs call for, independent of what is selected now.
+  PerformanceLevel? _recommended;
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_detect());
+  }
+
+  Future<void> _detect() async {
+    final level = await DevicePerformanceService.instance.getPerformanceLevel();
+    if (!mounted) return;
+    if (!_recommendationApplied) {
+      _recommendationApplied = true;
+      // A device short of the top tier starts on the plain background; the
+      // heavier artwork background stays one tap away.
+      final theme = Provider.of<ThemeProvider>(context, listen: false);
+      if (level != PerformanceLevel.high &&
+          theme.highEndBackground == HighEndBackground.blurredArtwork) {
+        unawaited(theme.setHighEndBackground(HighEndBackground.solid));
+      }
+    }
+    setState(() => _recommended = level);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Provider.of<ThemeProvider>(context);
+    final onContinue = widget.onContinue;
+    final onBack = widget.onBack;
 
     return StepScaffold(
       title: l10n.onboardingThemeTitle,
@@ -84,8 +127,11 @@ class ThemeSelectionPage extends StatelessWidget {
                   ),
                 ),
         ),
-        const SizedBox(height: 14),
-        _BackgroundStyle(theme: theme),
+        if (_recommended != null) ...[
+          const SizedBox(height: 14),
+          _InterfaceStyle(recommended: _recommended!),
+          _BackgroundStyle(theme: theme, recommended: _recommended!),
+        ],
       ],
     );
   }
@@ -291,47 +337,129 @@ class _Swatch extends StatelessWidget {
   }
 }
 
-/// Solid or artwork-based background, depending on the device tier.
-class _BackgroundStyle extends StatelessWidget {
-  const _BackgroundStyle({required this.theme});
+/// High-end (glass and animation) or lightweight (solid) interface. Starts on
+/// what the device was detected as; the other one is offered as a trial.
+class _InterfaceStyle extends StatelessWidget {
+  const _InterfaceStyle({required this.recommended});
 
-  final ThemeProvider theme;
+  final PerformanceLevel recommended;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final perf = Provider.of<PerformanceModeProvider>(context, listen: false);
-    final isLowEnd = perf.isLowEndDevice;
-    if (!isLowEnd && !perf.shouldEnableBlur) return const SizedBox.shrink();
-
-    final title =
-        isLowEnd ? l10n.backgroundLowEndStyle : l10n.backgroundHighEndStyle;
-    final body = isLowEnd
-        ? l10n.backgroundLowEndStyleDesc
-        : l10n.backgroundHighEndStyleDesc;
-    final options = isLowEnd
-        ? [l10n.backgroundBlobs, l10n.backgroundSolid]
-        : [l10n.backgroundBlurredArtwork, l10n.backgroundSolid];
-    final selected = isLowEnd
-        ? (theme.lowEndBackground == LowEndBackground.blobs ? 0 : 1)
-        : (theme.highEndBackground == HighEndBackground.blurredArtwork ? 0 : 1);
+    final perf = Provider.of<PerformanceModeProvider>(context);
+    final labels = [l10n.onboardingUiHighEnd, l10n.onboardingUiLowEnd];
+    final recommendedIndex = recommended == PerformanceLevel.low ? 1 : 0;
+    final selected = perf.isLowEndDevice ? 1 : 0;
 
     void choose(int i) {
-      if (isLowEnd) {
-        theme.setLowEndBackground(
-            i == 0 ? LowEndBackground.blobs : LowEndBackground.solid);
-      } else {
-        theme.setHighEndBackground(i == 0
-            ? HighEndBackground.blurredArtwork
-            : HighEndBackground.solid);
+      if (i == 1) {
+        unawaited(perf.setPerformanceMode(PerformanceLevel.low));
+      } else if (perf.isLowEndDevice) {
+        // A device that was detected as weak gets the gentlest glass level.
+        unawaited(perf.setPerformanceMode(
+          recommended == PerformanceLevel.low
+              ? PerformanceLevel.medium
+              : recommended,
+        ));
       }
     }
 
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: _ChoicePanel(
+        order: 4,
+        title: l10n.onboardingUiModeTitle,
+        body: l10n.onboardingUiModeDesc,
+        options: labels,
+        selected: selected,
+        recommendedIndex: recommendedIndex,
+        notes: [
+          selected == recommendedIndex
+              ? l10n.onboardingRecommendedForDevice
+              : l10n.onboardingTryNote(
+                  labels[recommendedIndex], labels[selected]),
+        ],
+        onChoose: choose,
+      ),
+    );
+  }
+}
+
+/// Artwork or solid background for the high-end interface. The lightweight
+/// interface always uses the plain background, so there is nothing to choose.
+class _BackgroundStyle extends StatelessWidget {
+  const _BackgroundStyle({required this.theme, required this.recommended});
+
+  final ThemeProvider theme;
+  final PerformanceLevel recommended;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final perf = Provider.of<PerformanceModeProvider>(context);
+    if (perf.isLowEndDevice || !perf.shouldEnableBlur) {
+      return const SizedBox.shrink();
+    }
+
+    final labels = [l10n.backgroundBlurredArtwork, l10n.backgroundSolid];
+    final recommendedIndex = recommended == PerformanceLevel.high ? 0 : 1;
+    final selected =
+        theme.highEndBackground == HighEndBackground.blurredArtwork ? 0 : 1;
+
+    return _ChoicePanel(
+      order: 5,
+      title: l10n.backgroundHighEndStyle,
+      body: l10n.backgroundHighEndStyleDesc,
+      options: labels,
+      selected: selected,
+      recommendedIndex: recommendedIndex,
+      notes: [
+        if (selected == recommendedIndex)
+          l10n.onboardingRecommendedForDevice
+        else
+          l10n.onboardingTryNote(labels[recommendedIndex], labels[selected]),
+        // Artwork is the heaviest background: say so on devices it suits less.
+        if (selected == 0 && recommendedIndex == 1)
+          l10n.onboardingHeaviestNote(labels[0]),
+      ],
+      onChoose: (i) => unawaited(theme.setHighEndBackground(
+          i == 0 ? HighEndBackground.blurredArtwork : HighEndBackground.solid)),
+    );
+  }
+}
+
+/// A glass panel with a two-way segmented choice. The option that suits the
+/// device carries a "Recommended" tag, and [notes] explain the selection.
+class _ChoicePanel extends StatelessWidget {
+  const _ChoicePanel({
+    required this.order,
+    required this.title,
+    required this.body,
+    required this.options,
+    required this.selected,
+    required this.recommendedIndex,
+    required this.notes,
+    required this.onChoose,
+  });
+
+  final int order;
+  final String title;
+  final String body;
+  final List<String> options;
+  final int selected;
+  final int recommendedIndex;
+  final List<String> notes;
+  final ValueChanged<int> onChoose;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return GlassPanel(
-      order: 4,
+      order: order,
       padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(title, style: OnboardingText.rowTitle),
           const SizedBox(height: 4),
@@ -348,35 +476,81 @@ class _BackgroundStyle extends StatelessWidget {
               children: [
                 for (var i = 0; i < options.length; i++)
                   Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => choose(i),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
-                        curve: Curves.easeOutCubic,
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        decoration: BoxDecoration(
-                          color:
-                              selected == i ? Colors.white : Colors.transparent,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Center(
-                          child: Text(
-                            options[i],
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: FontConstants.fontFamily,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color:
-                                  selected == i ? Colors.black : Colors.white,
-                            ),
+                    child: Semantics(
+                      button: true,
+                      selected: selected == i,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => onChoose(i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: selected == i
+                                ? Colors.white
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                options[i],
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: FontConstants.fontFamily,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: selected == i
+                                      ? Colors.black
+                                      : Colors.white,
+                                ),
+                              ),
+                              if (i == recommendedIndex) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.onboardingRecommendedBadge,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontFamily: FontConstants.fontFamily,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: selected == i
+                                        ? Colors.black54
+                                        : Colors.white60,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
                     ),
                   ),
               ],
+            ),
+          ),
+          AnimatedSize(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: Column(
+                children: [
+                  for (final note in notes)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        note,
+                        textAlign: TextAlign.center,
+                        style: OnboardingText.rowBody,
+                      ),
+                    ),
+                ],
+              ),
             ),
           ),
         ],

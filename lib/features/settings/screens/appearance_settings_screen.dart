@@ -142,25 +142,6 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     onChanged: (value) => _showRestartDialog(context, value),
                     isFirst: true,
                   ),
-                  // Low-end background style
-                  if (perfProvider.isLowEndDevice)
-                    SettingsTiles.buildSegmentedChoiceTile(
-                      context,
-                      icon: iconoir.MultiWindow(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 20,
-                          height: 20),
-                      title: l10n.backgroundLowEndStyle,
-                      subtitle: l10n.backgroundLowEndStyleDesc,
-                      options: [l10n.backgroundBlobs, l10n.backgroundSolid],
-                      selectedIndex: themeProvider.lowEndBackground ==
-                              LowEndBackground.blobs
-                          ? 0
-                          : 1,
-                      onChanged: (i) => themeProvider.setLowEndBackground(i == 0
-                          ? LowEndBackground.blobs
-                          : LowEndBackground.solid),
-                    ),
                   // High-end background style
                   if (perfProvider.shouldEnableBlur)
                     SettingsTiles.buildSegmentedChoiceTile(

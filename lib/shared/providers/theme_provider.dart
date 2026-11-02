@@ -3,8 +3,6 @@ import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/motion/musicfy_motion.dart';
 
-enum LowEndBackground { blobs, solid }
-
 enum HighEndBackground { blurredArtwork, solid }
 
 class AppThemePreset {
@@ -32,7 +30,6 @@ class ThemeProvider with ChangeNotifier {
   static const String _selectedPresetIndexKey = 'selected_preset_index';
   static const String _blurIntensityKey = 'blur_intensity';
   static const String _overlayOpacityKey = 'overlay_opacity';
-  static const String _lowEndBackgroundKey = 'low_end_background';
   static const String _highEndBackgroundKey = 'high_end_background';
 
   // App is dark mode only
@@ -44,7 +41,6 @@ class ThemeProvider with ChangeNotifier {
   int _selectedPresetIndex = 0; // -1 = custom (no preset)
   double _blurIntensity = 25.0;
   double _overlayOpacity = 0.3;
-  LowEndBackground _lowEndBackground = LowEndBackground.solid;
   HighEndBackground _highEndBackground = HighEndBackground.blurredArtwork;
 
   // Cached ThemeData — invalidated whenever theme-affecting properties change.
@@ -56,7 +52,6 @@ class ThemeProvider with ChangeNotifier {
   int get selectedPresetIndex => _selectedPresetIndex;
   double get blurIntensity => _blurIntensity;
   double get overlayOpacity => _overlayOpacity;
-  LowEndBackground get lowEndBackground => _lowEndBackground;
   HighEndBackground get highEndBackground => _highEndBackground;
 
   ColorScheme? get darkDynamicColorScheme => _darkDynamicColorScheme;
@@ -184,11 +179,6 @@ class ThemeProvider with ChangeNotifier {
     _blurIntensity =
         (prefs.getDouble(_blurIntensityKey) ?? 25.0).clamp(5.0, 40.0);
     _overlayOpacity = prefs.getDouble(_overlayOpacityKey) ?? 0.3;
-    final lowEndBgIndex = prefs.getInt(_lowEndBackgroundKey);
-    if (lowEndBgIndex != null &&
-        lowEndBgIndex < LowEndBackground.values.length) {
-      _lowEndBackground = LowEndBackground.values[lowEndBgIndex];
-    }
     final highEndBgIndex = prefs.getInt(_highEndBackgroundKey);
     if (highEndBgIndex != null &&
         highEndBgIndex < HighEndBackground.values.length) {
@@ -275,13 +265,6 @@ class ThemeProvider with ChangeNotifier {
     _overlayOpacity = value.clamp(0.0, 0.8);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_overlayOpacityKey, _overlayOpacity);
-    notifyListeners();
-  }
-
-  Future<void> setLowEndBackground(LowEndBackground value) async {
-    _lowEndBackground = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_lowEndBackgroundKey, value.index);
     notifyListeners();
   }
 

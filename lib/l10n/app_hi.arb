@@ -571,9 +571,6 @@
   "goToArtist": "कलाकार के पास जाएँ",
   "deleteFromDevice": "डिवाइस से हटाएँ",
   "checkOutThisSong": "यह गाना देखो!",
-  "backgroundLowEndStyle": "पृष्ठभूमि शैली",
-  "backgroundLowEndStyleDesc": "ऐप का बैकग्राउंड कैसा दिखता है",
-  "backgroundBlobs": "एनिमेटेड ब्लॉब्स",
   "backgroundSolid": "एक रंग",
   "backgroundHighEndStyle": "अब पृष्ठभूमि में चल रहा है",
   "backgroundHighEndStyleDesc": "अब चल रहा है स्क्रीन में पृष्ठभूमि शैली",
@@ -801,5 +798,13 @@
   },
   "lyricsNextLabel": "अगला",
   "settingsLyricsSources": "बोल के स्रोत",
-  "lyricsProviderDesc": "जब LRCLIB में बोल न हों तब उपयोग होता है। गीत का शीर्षक, कलाकार, एल्बम और अवधि प्राप्त करता है।"
+  "lyricsProviderDesc": "जब LRCLIB में बोल न हों तब उपयोग होता है। गीत का शीर्षक, कलाकार, एल्बम और अवधि प्राप्त करता है।",
+  "onboardingUiModeTitle": "इंटरफ़ेस शैली",
+  "onboardingUiModeDesc": "ऐप कितना ग्लास और एनिमेशन इस्तेमाल करे",
+  "onboardingUiHighEnd": "हाई-एंड",
+  "onboardingUiLowEnd": "हल्का",
+  "onboardingRecommendedBadge": "अनुशंसित",
+  "onboardingRecommendedForDevice": "आपके डिवाइस के लिए अनुशंसित।",
+  "onboardingTryNote": "आपके डिवाइस के स्पेसिफिकेशन के आधार पर हम {recommended} की सलाह देते हैं, लेकिन आप {selected} भी आज़मा सकते हैं।",
+  "onboardingHeaviestNote": "{option} सबसे भारी विकल्प है और आपके डिवाइस पर कम स्मूद चल सकता है।"
 }

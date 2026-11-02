@@ -39,6 +39,10 @@ class DevicePerformanceService {
   PerformanceLevel? _cachedLevel;
   HardwareProbe? _lastProbe;
 
+  /// Pins the detected level (or clears it with null) for tests.
+  @visibleForTesting
+  void debugOverrideLevel(PerformanceLevel? level) => _cachedLevel = level;
+
   /// The raw hardware facts the last classification was based on (Android).
   HardwareProbe? get lastProbe => _lastProbe;
 
