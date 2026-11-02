@@ -311,10 +311,9 @@ class _SongContextMenu extends StatelessWidget {
   }
 
   void _goToArtist(BuildContext context) {
+    final unknownArtist = AppLocalizations.of(context).unknownArtist;
     Navigator.pop(context);
-    final artist =
-        splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist)
-            .first;
+    final artist = splitArtists(song.artist ?? unknownArtist).first;
     Navigator.push(
       context,
       MaterialPageRoute(
