@@ -11,9 +11,16 @@ import 'glassmorphic_dialog.dart';
 /// The monthly goal as a thin accent bar with "€12 of €50 this month · 24%"
 /// underneath. Shared by the settings card and the home app-bar banner.
 class SupportGoalProgress extends StatelessWidget {
-  const SupportGoalProgress({super.key, this.centered = false});
+  const SupportGoalProgress({
+    super.key,
+    this.centered = false,
+    this.compact = false,
+  });
 
   final bool centered;
+
+  /// A hairline bar and smaller caption, for places that should stay quiet.
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +36,7 @@ class SupportGoalProgress extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(3),
             child: SizedBox(
-              height: 6,
+              height: compact ? 3 : 6,
               width: double.infinity,
               child: Stack(
                 fit: StackFit.expand,
@@ -56,8 +63,8 @@ class SupportGoalProgress extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontFamily: FontConstants.fontFamily,
-              color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 13,
+              color: Colors.white.withValues(alpha: compact ? 0.55 : 0.6),
+              fontSize: compact ? 12 : 13,
             ),
           ),
         ],
