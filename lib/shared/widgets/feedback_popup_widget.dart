@@ -25,7 +25,10 @@ class FeedbackPopupWidget {
   /// Triggers the in-app review unconditionally — use from Settings where
   /// the user explicitly tapped the button.
   // ignore: use_build_context_synchronously
-  static Future<void> show(dynamic context) => _triggerReview();
+  static Future<void> show(dynamic context) =>
+      // The in-app sheet is quota-limited and silently no-ops on explicit taps.
+      InAppReview.instance
+          .openStoreListing(appStoreId: 'com.aurorasoftware.music');
 
   /// Triggers the in-app review only when [FeedbackReminderService] decides
   /// the time is right (7+ days active, not permanently dismissed, etc.).

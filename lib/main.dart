@@ -11,6 +11,8 @@ import 'dart:ui' as ui;
 
 import 'core/constants/app_config.dart';
 import 'shared/services/audio_player_service.dart';
+import 'shared/services/online_discovery_service.dart';
+import 'shared/models/artist_utils.dart';
 import 'shared/services/audio_handler.dart';
 import 'shared/services/error_tracking_service.dart';
 import 'shared/services/notification_manager.dart';
@@ -216,6 +218,16 @@ void main() async {
 
             // Set the background manager in the audio player service
             audioPlayerService.setBackgroundManager(backgroundManager);
+
+            OnlineDiscoveryService.instance.localTracks = (artist) {
+              final wanted = artist.toLowerCase();
+              return [
+                for (final s in audioPlayerService.songs)
+                  if (splitArtists(s.artist ?? '')
+                      .any((a) => a.toLowerCase() == wanted))
+                    OnlineTrack(title: s.title, albumTitle: s.album),
+              ];
+            };
 
             // Give the crossfade engine a way to build an equalizer-equipped
             // pipeline for the standby player used during non-gapless

@@ -68,6 +68,10 @@ class OnlineDiscoveryService {
   final ValueNotifier<bool> enabled = ValueNotifier<bool>(true);
   bool _loaded = false;
 
+  /// The user's own songs by an artist, set at startup. They tell apart
+  /// same-named artists, since the person owning these tracks is the right one.
+  List<OnlineTrack> Function(String artist) localTracks = (_) => const [];
+
   final Map<String, Future<OnlineArtist?>> _artistCache = {};
   final Map<String, Future<OnlineArtistProfile?>> _profileCache = {};
   final Map<int, Future<List<OnlineArtist>>> _relatedCache = {};
@@ -144,18 +148,76 @@ class OnlineDiscoveryService {
           .replace(queryParameters: {'q': name, 'limit': '15'}));
       final list = (data is Map ? data['data'] : null) as List?;
       if (list == null) return null;
-      // Deezer has many artists sharing a name; the most followed is the real one.
-      OnlineArtist? best;
+      // Deezer has many artists sharing a name; the most followed is the real one
+      // unless the user's own songs say otherwise.
+      final candidates = <OnlineArtist>[];
+      // Brackets are part of the identity ("DJ [IVY]" is not "Dj Ivy"), so
+      // names containing them must match exactly, ignoring case and spacing.
+      final exact = RegExp(r'[\[\]{}()<>]').hasMatch(name);
+      String strict(String s) => s.toLowerCase().replaceAll(RegExp(r'\s+'), '');
       for (final item in list) {
         if (item is! Map<String, dynamic>) continue;
         final artist = _artistFrom(item);
         if (artist == null || _norm(artist.name) != key) continue;
-        if (best == null || (artist.fans ?? 0) > (best.fans ?? 0)) {
-          best = artist;
+        if (exact && strict(artist.name) != strict(name)) continue;
+        candidates.add(artist);
+      }
+      candidates.sort((a, b) => (b.fans ?? 0).compareTo(a.fans ?? 0));
+      final local = localTracks(name);
+      if (local.isEmpty) return candidates.firstOrNull;
+      for (final c in candidates.take(6)) {
+        if (await _ownsAny(c, local)) return c;
+      }
+      // No namesake owns the user's songs: better no match than the wrong person.
+      return null;
+    }, (v) => v != null);
+  }
+
+  static bool _sameTitle(String a, String b) {
+    final x = _norm(a), y = _norm(b);
+    if (x.isEmpty || y.isEmpty) return false;
+    return x == y ||
+        (x.length >= 5 && y.length >= 5 && (x.contains(y) || y.contains(x)));
+  }
+
+  /// Whether Deezer credits [artist] with any of [local]: in their top tracks,
+  /// or by a direct track search for the first few.
+  Future<bool> _ownsAny(OnlineArtist artist, List<OnlineTrack> local) async {
+    final top =
+        await _getJson(Uri.parse('$_deezer/artist/${artist.id}/top?limit=50'));
+    final topList = (top is Map ? top['data'] : null) as List? ?? const [];
+    for (final t in topList) {
+      if (t is! Map) continue;
+      final album = t['album'];
+      final albumTitle = album is Map ? album['title'] : null;
+      for (final l in local) {
+        if (_sameTitle('${t['title']}', l.title)) return true;
+        if (l.albumTitle != null &&
+            albumTitle is String &&
+            _norm(l.albumTitle!).length >= 5 &&
+            _norm(albumTitle) == _norm(l.albumTitle!)) {
+          return true;
         }
       }
-      return best;
-    }, (v) => v != null);
+    }
+    for (final l in local.take(3)) {
+      final res = await _getJson(
+          Uri.parse('$_deezer/search/track').replace(queryParameters: {
+        'q': 'artist:"${artist.name.replaceAll('"', '')}" '
+            'track:"${l.title.replaceAll('"', '')}"',
+        'limit': '5',
+      }));
+      final found = (res is Map ? res['data'] : null) as List? ?? const [];
+      for (final f in found) {
+        final a = f is Map ? f['artist'] : null;
+        if (a is Map &&
+            a['id'] == artist.id &&
+            _sameTitle('${f['title']}', l.title)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   Future<List<OnlineArtist>> relatedArtists(String name) async {
@@ -205,31 +267,126 @@ class OnlineDiscoveryService {
     return _cached(_profileCache, key, () async {
       final artist = await findArtist(name);
       if (artist == null) return null;
-      final tracks = await topTracks(name);
+      final tracks = [...localTracks(name), ...await topTracks(name)];
       final hints = [
         for (final t in tracks)
           for (final h in [t.title, t.albumTitle])
             if (h != null && _norm(h).length >= 5) _norm(h),
       ];
-      final wiki = await _wikipedia(name, hints);
-      if (wiki != null) {
-        return OnlineArtistProfile(
-            artist: artist, bio: wiki.$1, wikiUrl: wiki.$2);
-      }
-      // No English article under a guessable title: follow MusicBrainz, which
-      // is matched through the artist's own tracks, to Wikidata and its articles.
-      final mb = await _musicBrainzArtist(name, tracks);
-      final wikidata = await _wikidata(mb, name);
+      // Both routes are verified against the artist's own tracks; keep the fullest.
+      final results = await Future.wait([
+        _wikipedia(name, hints),
+        _musicBrainzArtist(name, tracks).then((mb) async {
+          final wikidata = await _wikidata(mb, name);
+          return (mb, wikidata);
+        }),
+        _audioDbBio(name, tracks),
+        _lastFmBio(name, tracks),
+      ]);
+      final wiki = results[0] as (String, String)?;
+      final (mb, wikidata) = results[1] as (
+        Map?,
+        ({String? description, (String, String)? summary})?
+      );
+      final audioDb = results[2] as String?;
+      final lastFm = results[3] as String?;
       final other = wikidata?.summary;
+      (String, String)? best = wiki;
+      if (other != null && (best == null || other.$1.length > best.$1.length)) {
+        best = other;
+      }
+      // These have no page to link to, so they only supply the text.
+      var text = best?.$1;
+      for (final c in [audioDb, lastFm]) {
+        if (c != null && (text == null || c.length > text.length)) {
+          text = c;
+        }
+      }
+      if (text != null && text != best?.$1) {
+        return OnlineArtistProfile(
+            artist: artist, bio: text, wikiUrl: best?.$2);
+      }
       return OnlineArtistProfile(
         artist: artist,
-        bio: other?.$1 ?? _fallbackBio(name, mb, wikidata?.description),
-        wikiUrl: other?.$2,
+        bio: best?.$1 ?? _fallbackBio(name, mb, wikidata?.description),
+        wikiUrl: best?.$2,
       );
     }, (v) => v != null && v.bio != null);
   }
 
+  static const _lastFmKey = String.fromEnvironment('LASTFM_API_KEY');
+
+  /// English bio from Last.fm, only when one of the artist's own tracks is
+  /// among that Last.fm artist's top tracks. Needs LASTFM_API_KEY.
+  Future<String?> _lastFmBio(String name, List<OnlineTrack> tracks) async {
+    if (_lastFmKey.isEmpty) return null;
+    Future<dynamic> call(String method,
+            [Map<String, String> extra = const {}]) =>
+        _getJson(Uri.parse('https://ws.audioscrobbler.com/2.0/').replace(
+          queryParameters: {
+            'method': method,
+            'artist': name,
+            'autocorrect': '0',
+            'api_key': _lastFmKey,
+            'format': 'json',
+            ...extra,
+          },
+        ));
+    final info = await call('artist.getinfo', {'lang': 'en'});
+    final artist = info is Map ? info['artist'] : null;
+    final bio = artist is Map ? artist['bio'] : null;
+    final raw = bio is Map ? bio['content'] as String? : null;
+    if (artist is! Map || _norm('${artist['name']}') != _norm(name)) {
+      return null;
+    }
+    final text = raw
+        ?.replaceAll(RegExp(r'<[^>]*>'), '')
+        .replaceAll('&quot;', '"')
+        .replaceAll('&amp;', '&')
+        .replaceAll(RegExp(r'Read more on Last\.fm.*', dotAll: true), '')
+        .trim();
+    if (text == null || text.isEmpty || _isAmbiguous(text)) return null;
+    if (tracks.isNotEmpty) {
+      final top = await call('artist.gettoptracks', {'limit': '50'});
+      final list = top is Map && top['toptracks'] is Map
+          ? (top['toptracks'] as Map)['track'] as List?
+          : null;
+      final names = {
+        for (final t in list ?? const [])
+          if (t is Map) _norm('${t['name']}'),
+      };
+      if (!tracks.any((t) => names.contains(_norm(t.title)))) return null;
+    }
+    return '$text\n\nSource: Last.fm (CC BY-SA)';
+  }
+
   DateTime _nextMusicBrainz = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// English biography from TheAudioDB, only when one of the artist's own
+  /// tracks resolves to the same TheAudioDB artist id (keeps namesakes apart).
+  Future<String?> _audioDbBio(String name, List<OnlineTrack> tracks) async {
+    const base = 'https://www.theaudiodb.com/api/v1/json/123';
+    final key = _norm(name);
+    final data = await _getJson(
+        Uri.parse('$base/search.php').replace(queryParameters: {'s': name}));
+    final list = data is Map ? data['artists'] as List? : null;
+    for (final a in list ?? const []) {
+      if (a is! Map || _norm('${a['strArtist']}') != key) continue;
+      final bio = (a['strBiography'] as String?)?.trim();
+      if (bio == null || bio.isEmpty || _isAmbiguous(bio)) continue;
+      if (tracks.isEmpty) return bio;
+      for (final t in tracks.take(3)) {
+        final res = await _getJson(Uri.parse('$base/searchtrack.php')
+            .replace(queryParameters: {'s': name, 't': t.title}));
+        final found = res is Map ? res['track'] as List? : null;
+        if (found != null &&
+            found.any((f) => f is Map && f['idArtist'] == a['idArtist'])) {
+          return bio;
+        }
+      }
+    }
+    return null;
+  }
 
   /// MusicBrainz allows about one request per second.
   Future<dynamic> _musicBrainz(String path, Map<String, String> query) async {
@@ -274,10 +431,8 @@ class OnlineDiscoveryService {
     return null;
   }
 
-  static const _wikiLangs = ['en', 'cs', 'de', 'fr', 'es', 'ru', 'nl', 'it'];
-
   /// The Wikidata entry MusicBrainz links the artist to: its short description,
-  /// plus the summary of its Wikipedia article in any language.
+  /// plus the summary of its English Wikipedia article.
   Future<({String? description, (String, String)? summary})?> _wikidata(
       Map? musicBrainz, String name) async {
     final key = _norm(name);
@@ -309,36 +464,57 @@ class OnlineDiscoveryService {
     final en = descriptions is Map ? descriptions['en'] : null;
     final description = en is Map ? en['value'] as String? : null;
     final links = item['sitelinks'];
-    final candidates = <(String, String)>[];
-    if (links is Map) {
-      for (final e in links.entries) {
-        final m = RegExp(r'^([a-z]{2,3})wiki$').firstMatch('${e.key}');
-        final title = e.value is Map ? (e.value as Map)['title'] : null;
-        if (m != null && title is String) candidates.add((m.group(1)!, title));
+    final enLink = links is Map ? links['enwiki'] : null;
+    final enTitle = enLink is Map ? enLink['title'] : null;
+    (String, String)? longest;
+    if (enTitle is String) {
+      final slug = Uri.encodeComponent(enTitle.replaceAll(' ', '_'));
+      final summary = await _getJson(
+          Uri.parse('https://en.wikipedia.org/api/rest_v1/page/summary/$slug'));
+      final extract = summary is Map ? summary['extract'] : null;
+      // A sitelink can be a redirect to something else (e.g. the artist's label).
+      if (summary is Map &&
+          summary['type'] != 'disambiguation' &&
+          extract is String &&
+          extract.isNotEmpty &&
+          !_isAmbiguous(extract) &&
+          _norm('${summary['title']} $extract').contains(key)) {
+        final urls = summary['content_urls'];
+        final mobile = urls is Map ? urls['mobile'] : null;
+        final url = (mobile is Map ? mobile['page'] as String? : null) ??
+            'https://en.wikipedia.org/wiki/$slug';
+        longest = (await _fullIntro(enTitle, extract), url);
       }
     }
-    int rank((String, String) c) {
-      final i = _wikiLangs.indexOf(c.$1);
-      return i < 0 ? _wikiLangs.length : i;
-    }
+    return (description: description, summary: longest);
+  }
 
-    candidates.sort((a, b) => rank(a).compareTo(rank(b)));
-    for (final (lang, title) in candidates.take(3)) {
-      final slug = Uri.encodeComponent(title.replaceAll(' ', '_'));
-      final summary = await _getJson(Uri.parse(
-          'https://$lang.wikipedia.org/api/rest_v1/page/summary/$slug'));
-      if (summary is! Map || summary['type'] == 'disambiguation') continue;
-      final extract = summary['extract'];
-      if (extract is! String || extract.isEmpty) continue;
-      // A sitelink can be a redirect to something else (e.g. the artist's label).
-      if (!_norm('${summary['title']} $extract').contains(key)) continue;
-      final urls = summary['content_urls'];
-      final mobile = urls is Map ? urls['mobile'] : null;
-      final url = (mobile is Map ? mobile['page'] as String? : null) ??
-          'https://$lang.wikipedia.org/wiki/$slug';
-      return (description: description, summary: (extract, url));
+  /// The whole lead section (several paragraphs) as plain text, falling back
+  /// to the one-paragraph [summary] when it is not longer.
+  Future<String> _fullIntro(String title, String summary) async {
+    final data =
+        await _getJson(Uri.parse('https://en.wikipedia.org/w/api.php').replace(
+      queryParameters: {
+        'action': 'query',
+        'prop': 'extracts',
+        'exintro': '1',
+        'explaintext': '1',
+        'redirects': '1',
+        'titles': title,
+        'format': 'json',
+      },
+    ));
+    final query = data is Map ? data['query'] : null;
+    final pages = query is Map ? query['pages'] : null;
+    final page = pages is Map && pages.isNotEmpty ? pages.values.first : null;
+    final text = page is Map ? page['extract'] : null;
+    if (text is! String || text.trim().length <= summary.length) return summary;
+    var full = text.trim();
+    if (full.length > 1800) {
+      final cut = full.lastIndexOf('\n', 1800);
+      full = full.substring(0, cut > 400 ? cut : 1800).trim();
     }
-    return (description: description, summary: null);
+    return full;
   }
 
   /// Short factual blurb for artists without a Wikipedia article, from the
@@ -409,6 +585,17 @@ class OnlineDiscoveryService {
     return hints.any((h) => haystack.contains(h));
   }
 
+  static final _ambiguous = RegExp(
+      r'(may|can|could) (also )?refer to|there (are|is) (at least |several |many |more than |over )?(\w+ )?(artists|people|musicians|bands|groups|persons|rappers|singers|songs|albums)|disambiguation',
+      caseSensitive: false);
+
+  /// Pages that list several things sharing the name, not one artist.
+  static bool _isAmbiguous(String text) {
+    final head = text.length > 300 ? text.substring(0, 300) : text;
+    return _ambiguous.hasMatch(head) ||
+        head.split('\n').first.trimRight().endsWith(':');
+  }
+
   Future<(String, String)?> _wikiSummary(
       String title, String name, List<String> hints) async {
     final slug = Uri.encodeComponent(title.replaceAll(' ', '_'));
@@ -421,7 +608,9 @@ class OnlineDiscoveryService {
       return null;
     }
     final extract = summary['extract'];
-    if (extract is! String || extract.isEmpty) return null;
+    if (extract is! String || extract.isEmpty || _isAmbiguous(extract)) {
+      return null;
+    }
     final description = summary['description'];
     // The short description says what the page is about; a surname list or an
     // album page may still mention musicians in its text.
@@ -440,7 +629,7 @@ class OnlineDiscoveryService {
     final mobile = urls is Map ? urls['mobile'] : null;
     final url = (mobile is Map ? mobile['page'] as String? : null) ??
         'https://en.wikipedia.org/wiki/$slug';
-    return (extract, url);
+    return (await _fullIntro(title, extract), url);
   }
 
   /// (extract, page url) of the Wikipedia article about the artist [name].

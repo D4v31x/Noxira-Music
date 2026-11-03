@@ -4,11 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/font_constants.dart';
 import '../services/local_caching_service.dart';
+import '../services/online_discovery_service.dart';
 import '../services/performance_manager.dart';
 import '../services/artist_separator_service.dart';
 import '../providers/performance_mode_provider.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class ArtistCard extends StatefulWidget {
   final String artistName;
@@ -89,21 +88,18 @@ class _ArtistCardState extends State<ArtistCard>
     try {
       ArtistCard._pendingRequests.add(primaryArtist);
 
-      final url =
-          'https://en.wikipedia.org/api/rest_v1/page/summary/${Uri.encodeComponent(primaryArtist)}';
-      final response = await http.get(Uri.parse(url));
-
-      if (!mounted) return;
-
       String artistInfo = 'Musical artist'; // Default value
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final String description = data['extract'] ?? '';
+      // The verified profile rejects same-named non-musician pages.
+      final bio = OnlineDiscoveryService.instance.enabled.value
+          ? (await OnlineDiscoveryService.instance.profile(primaryArtist))?.bio
+          : null;
+      if (!mounted) return;
 
+      if (bio != null) {
         final RegExp regExp = RegExp(
             r'(?:is|was) (?:an?|the) ([A-Za-z\s-]+?(singer|musician|rapper|band|group|artist|producer|composer|songwriter|DJ)[A-Za-z\s-]*?)(?:\.|\,|who|from)');
-        final match = regExp.firstMatch(description);
+        final match = regExp.firstMatch(bio);
 
         if (match != null) {
           artistInfo = match.group(1)?.trim() ?? 'Musical artist';

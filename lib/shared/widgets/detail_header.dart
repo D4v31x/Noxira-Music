@@ -159,40 +159,45 @@ class DetailHeader extends StatelessWidget {
                   opacity: (1.0 - collapseProgress * 2.0).clamp(0.0, 1.0),
                   child: _RouteReveal(
                     child: SafeArea(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Badge pill
-                              _buildBadgePill(),
-                              const SizedBox(height: 16),
-                              // Title
-                              _buildTitleText(fontSize: 32),
-                              // Subtitle
-                              _lateLine(
-                                subtitle,
-                                top: 6,
-                                style: TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white.withValues(alpha: 0.85),
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
+                      // OverflowBox: the content is taller than the bar while it collapses.
+                      child: ClipRect(
+                        child: OverflowBox(
+                          minHeight: 0,
+                          maxHeight: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 32),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Badge pill
+                                _buildBadgePill(),
+                                const SizedBox(height: 16),
+                                // Title
+                                _buildTitleText(fontSize: 32),
+                                // Subtitle
+                                _lateLine(
+                                  subtitle,
+                                  top: 6,
+                                  style: TextStyle(
+                                    fontFamily: FontConstants.fontFamily,
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
-                              // Metadata
-                              _lateLine(
-                                metadata,
-                                top: 4,
-                                style: TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white.withValues(alpha: 0.55),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w400,
+                                // Metadata
+                                _lateLine(
+                                  metadata,
+                                  top: 4,
+                                  style: TextStyle(
+                                    fontFamily: FontConstants.fontFamily,
+                                    color: Colors.white.withValues(alpha: 0.55),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

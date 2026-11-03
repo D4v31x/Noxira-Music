@@ -8,6 +8,7 @@ import '../../providers/performance_mode_provider.dart';
 import '../../services/online_discovery_service.dart';
 import '../../utils/responsive_utils.dart';
 import '../glassmorphic_card.dart';
+import '../shimmer_loading.dart';
 import '../motion/musicfy_motion.dart';
 import '../motion/touch_and_reveal.dart';
 
@@ -120,6 +121,12 @@ class OnlineAboutCard extends StatelessWidget {
       builder: (context) => FutureBuilder<OnlineArtistProfile?>(
         future: OnlineDiscoveryService.instance.profile(artistName),
         builder: (context, snap) {
+          if (snap.connectionState != ConnectionState.done) {
+            return const Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: _AboutSkeleton(),
+            );
+          }
           final profile = snap.data;
           if (profile == null ||
               (profile.bio == null && profile.artist.fans == null)) {
@@ -135,6 +142,33 @@ class OnlineAboutCard extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _AboutSkeleton extends StatelessWidget {
+  const _AboutSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(context),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ShimmerLoading(width: 120, height: 18),
+          SizedBox(height: 14),
+          ShimmerLoading(height: 12),
+          SizedBox(height: 8),
+          ShimmerLoading(height: 12),
+          SizedBox(height: 8),
+          ShimmerLoading(height: 12),
+          SizedBox(height: 8),
+          ShimmerLoading(width: 160, height: 12),
+        ],
       ),
     );
   }
