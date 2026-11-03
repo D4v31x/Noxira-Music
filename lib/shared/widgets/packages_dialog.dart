@@ -52,10 +52,10 @@ class PackagesDialog extends StatelessWidget {
       url: 'https://pub.dev/packages/on_audio_query',
     ),
     PackageInfo(
-      name: 'audiotags',
-      version: '^1.4.5',
+      name: 'haudiotagger',
+      version: '^3.1.0',
       description: 'Read and write audio metadata tags',
-      url: 'https://pub.dev/packages/audiotags',
+      url: 'https://pub.dev/packages/haudiotagger',
     ),
     PackageInfo(
       name: 'provider',

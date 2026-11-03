@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:audiotags/audiotags.dart';
+import 'package:haudiotagger/haudiotagger.dart';
 import 'package:flutter/foundation.dart';
 
 import '../models/timed_lyrics.dart';
@@ -40,7 +40,7 @@ class LocalLyricsSource {
 
   static Future<List<TimedLyric>?> _fromTag(String audioPath) async {
     try {
-      final tag = await AudioTags.read(audioPath);
+      final tag = await Haudiotagger.read(audioPath);
       final lyrics = tag?.lyrics;
       return lyrics == null ? null : _parse(lyrics);
     } catch (e) {

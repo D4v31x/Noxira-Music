@@ -3,7 +3,7 @@ import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:flutter/services.dart';
-import 'package:audiotags/audiotags.dart';
+import 'package:haudiotagger/haudiotagger.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:path_provider/path_provider.dart';
@@ -45,7 +45,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
   bool _hasChanges = false;
   bool _isSaving = false;
 
-  // AudioTags instance for reading/writing metadata
+  // Current tags read via Haudiotagger
   Tag? _currentTag;
   Uint8List? _pendingCoverArt;
 
@@ -105,7 +105,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
 
   Future<void> _loadTags() async {
     try {
-      _currentTag = await AudioTags.read(widget.song.data);
+      _currentTag = await Haudiotagger.read(widget.song.data);
       if (_currentTag != null) {
         // Update controllers with loaded tag data if available
         if (_currentTag?.title != null && _currentTag!.title!.isNotEmpty) {
@@ -506,7 +506,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
       }
 
       // 1. Copy the original file to a temp location inside the app's cache.
-      //    AudioTags can write to any path we own without special permissions.
+      //    Haudiotagger can write to any path we own without special permissions.
       final originalFile = File(widget.song.data);
       debugPrint('[META] Step 1 – source: ${widget.song.data}');
       debugPrint('[META] Step 1 – file exists: ${originalFile.existsSync()}');
@@ -538,14 +538,14 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
               ]
             : _currentTag?.pictures ?? [],
       );
-      await AudioTags.write(tempFile.path, updatedTag);
+      await Haudiotagger.write(tempFile.path, updatedTag);
       // The tag writer can leave FLAC files with an unflagged last metadata
       // block, which ExoPlayer refuses to play. Repair before pushing back.
       if (await FlacRepair.ensureLastBlockFlag(tempFile.path)) {
         debugPrint('[META] Step 2 – repaired FLAC last-block flag');
       }
       debugPrint(
-          '[META] Step 2 – AudioTags.write OK, temp size now: ${tempFile.lengthSync()} bytes');
+          '[META] Step 2 – Haudiotagger.write OK, temp size now: ${tempFile.lengthSync()} bytes');
 
       // 3. Push the modified temp file back to the original location via the
       //    MediaStore ContentResolver. On Android 11+ this shows a one-time
@@ -586,7 +586,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
       debugPrint('[META] Step 5 – scan OK');
 
       // 6. Re-read the updated tag from the file (source of truth).
-      _currentTag = await AudioTags.read(widget.song.data);
+      _currentTag = await Haudiotagger.read(widget.song.data);
 
       // 7. Update the controllers so the screen shows the saved values.
       if (_currentTag != null) {

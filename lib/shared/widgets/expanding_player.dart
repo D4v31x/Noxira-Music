@@ -723,6 +723,33 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
     return self.globalToLocal(target.localToGlobal(Offset.zero)) & target.size;
   }
 
+  /// The part of [key]'s text that is visible on the page. The page title sits
+  /// in a horizontal scroll view, so a long title is laid out far wider than
+  /// the space it is shown in; flying to that full width would draw it outside
+  /// the page.
+  (Rect, bool)? _visibleTextRect(GlobalKey key) {
+    final rect = _rectOf(key);
+    if (rect == null) return null;
+    final context = key.currentContext;
+    final viewport = context == null
+        ? null
+        : Scrollable.maybeOf(context)?.context.findRenderObject();
+    final self = this.context.findRenderObject();
+    if (viewport is! RenderBox ||
+        self is! RenderBox ||
+        !viewport.attached ||
+        !viewport.hasSize) {
+      return (rect, false);
+    }
+    final visible =
+        self.globalToLocal(viewport.localToGlobal(Offset.zero)) & viewport.size;
+    if (rect.width <= visible.width + 0.5) return (rect, false);
+    return (
+      Rect.fromLTWH(visible.left, rect.top, visible.width, rect.height),
+      true
+    );
+  }
+
   Widget _flyingText(
     String text,
     TextStyle begin,
@@ -774,7 +801,9 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
     final text = _text;
     final mini = _mini;
     final art = _rectOf(widget.artworkKey);
-    final titleEnd = _rectOf(widget.titleKey);
+    final titleVisible = _visibleTextRect(widget.titleKey);
+    final titleEnd = titleVisible?.$1;
+    final titleEndTruncated = titleVisible?.$2 ?? false;
     final artistEnd = _rectOf(widget.artistKey);
 
     if (text == null ||
@@ -848,8 +877,14 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
                     ),
                   ),
                 ),
-              _flyingText(text.title, titleBeginStyle, titleEndStyle,
-                  mini.title, titleEnd, mini.titleTruncated, t),
+              _flyingText(
+                  text.title,
+                  titleBeginStyle,
+                  titleEndStyle,
+                  mini.title,
+                  titleEnd,
+                  mini.titleTruncated || titleEndTruncated,
+                  t),
               _flyingText(text.artist, artistBeginStyle, artistEndStyle,
                   mini.artist, artistEnd, mini.artistTruncated, t),
             ],

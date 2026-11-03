@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:on_audio_query_platform_interface/method_channel_on_audio_query.dart';
 
+import 'wav_tag_overlay.dart';
+
 /// on_audio_query_android answers a call made without audio permission with an
 /// error and then answers it a second time, which crashes the whole app natively
 /// ("Reply already submitted") and cannot be caught from Dart. This platform
@@ -66,13 +68,13 @@ class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
     if (!await _hasPermission()) return <SongModel>[];
     return _shared(
       'songs|$sortType|$orderType|$uriType|$ignoreCase|$path',
-      () => super.querySongs(
+      () async => WavTagOverlay.apply(await super.querySongs(
         sortType: sortType,
         orderType: orderType,
         uriType: uriType,
         ignoreCase: ignoreCase,
         path: path,
-      ),
+      )),
     );
   }
 
@@ -183,13 +185,17 @@ class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
     int? quality,
   }) async {
     if (!await _hasPermission()) return null;
-    return super.queryArtwork(
+    final artwork = await super.queryArtwork(
       id,
       type,
       format: format,
       size: size,
       quality: quality,
     );
+    if ((artwork == null || artwork.isEmpty) && type == ArtworkType.AUDIO) {
+      return WavTagOverlay.artwork(id);
+    }
+    return artwork;
   }
 
   @override
@@ -200,12 +206,12 @@ class PermissionGuardedAudioQuery extends MethodChannelOnAudioQuery {
     UriType? uriType,
   }) async {
     if (!await _hasPermission()) return <SongModel>[];
-    return super.queryFromFolder(
+    return WavTagOverlay.apply(await super.queryFromFolder(
       path,
       sortType: sortType,
       orderType: orderType,
       uriType: uriType,
-    );
+    ));
   }
 
   @override
