@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
@@ -584,7 +585,7 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                   borderRadius: BorderRadius.circular(10),
                   child: _artworkService.buildCachedAlbumArtwork(
                     album.id,
-                    size: 60,
+                    size: ResponsiveUtils.scaledArtwork(context, 60),
                   ),
                 ),
               ),
@@ -679,7 +680,8 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: _artworkService.buildCachedAlbumArtwork(album.id),
+                      child: _artworkService.buildCachedAlbumArtwork(album.id,
+                          size: ResponsiveUtils.scaledArtwork(context, 50)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(

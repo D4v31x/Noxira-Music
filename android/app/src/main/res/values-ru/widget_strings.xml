@@ -7,4 +7,7 @@
     <string name="widget_nothing_playing">Ничего не играет</string>
     <string name="widget_tap_to_open">Нажмите, чтобы открыть Noxira Music</string>
     <string name="widget_recommended">Рекомендовано для вас</string>
+    <string name="widget_queue">Очередь</string>
+    <string name="widget_next_up">Далее</string>
+    <string name="widget_after">Затем</string>
 </resources>

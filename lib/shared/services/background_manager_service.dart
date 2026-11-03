@@ -66,6 +66,15 @@ class BackgroundManagerService extends ChangeNotifier {
   static const Color _defaultDarkTertiary = Color(0xFF512DA8);
   static const Color _defaultDarkQuaternary = Color(0xFF7B1FA2);
 
+  /// What a song without artwork shows: plain white, never the colours of the
+  /// song before it.
+  static const List<Color> _noArtworkColors = [
+    Colors.white,
+    Colors.white,
+    Colors.white,
+    Colors.white,
+  ];
+
   static const Color _defaultLightPrimary = Color(0xFFE3F2FD);
   static const Color _defaultLightSecondary = Color(0xFFBBDEFB);
   static const Color _defaultLightTertiary = Color(0xFF90CAF9);
@@ -93,6 +102,10 @@ class BackgroundManagerService extends ChangeNotifier {
     _currentArtwork = artwork;
     _currentSong = song;
     _isTransitioning = artwork != null;
+    final hasArtwork = artwork != null && artwork.isNotEmpty;
+    // Without artwork there is nothing to take colours from; drop the previous
+    // song's colours at once instead of leaving them in place.
+    if (!hasArtwork) _currentColors = _noArtworkColors;
     if (kDebugMode) {
       debugPrint(
           '🎨 [BG_MGR] pushArtwork: "${song.title}" (id: ${song.id}) — artwork: ${artwork != null ? '${artwork.length} bytes' : 'null'}, notifying listeners');
@@ -100,7 +113,7 @@ class BackgroundManagerService extends ChangeNotifier {
     notifyListeners();
 
     // Clean up transition state after animation
-    if (artwork != null) {
+    if (hasArtwork) {
       Future.delayed(const Duration(milliseconds: 900), () {
         _isTransitioning = false;
         _previousArtwork = null;
@@ -136,17 +149,25 @@ class BackgroundManagerService extends ChangeNotifier {
 
   /// Update colors based on artwork
   Future<void> updateColorsFromArtwork(Uint8List? artworkData) async {
+    // The song this palette belongs to: if another one has started by the
+    // time it is ready (or even before it runs), the result is thrown away.
+    final updateId = _updateCounter;
     // Throttle updates to prevent excessive rebuilds
     _updateThrottler.call(() async {
-      await _updateColorsFromArtworkSilent(artworkData);
-      notifyListeners();
+      await _updateColorsFromArtworkSilent(artworkData, updateId: updateId);
+      if (updateId == _updateCounter) notifyListeners();
     });
   }
 
-  /// Update colors without notifying listeners (internal use)
-  Future<void> _updateColorsFromArtworkSilent(Uint8List? artworkData) async {
-    if (artworkData == null) {
-      _currentColors = _getDefaultColors();
+  /// Update colors without notifying listeners (internal use). With an
+  /// [updateId], nothing is applied once a newer update has begun.
+  Future<void> _updateColorsFromArtworkSilent(Uint8List? artworkData,
+      {int? updateId}) async {
+    bool stale() => updateId != null && updateId != _updateCounter;
+
+    if (stale()) return;
+    if (artworkData == null || artworkData.isEmpty) {
+      _currentColors = _noArtworkColors;
       return;
     }
 
@@ -176,7 +197,7 @@ class BackgroundManagerService extends ChangeNotifier {
       codec.dispose();
 
       if (rawPixels == null) {
-        _currentColors = _getDefaultColors();
+        if (!stale()) _currentColors = _getDefaultColors();
         return;
       }
 
@@ -191,6 +212,9 @@ class BackgroundManagerService extends ChangeNotifier {
           height: imageHeight,
         ),
       );
+
+      // A newer song may have started while the palette was being computed.
+      if (stale()) return;
 
       // Reconstruct Color objects from isolate-returned ARGB ints.
       // The order matches _computePaletteColors:
@@ -226,7 +250,7 @@ class BackgroundManagerService extends ChangeNotifier {
         _currentColors = _getDefaultColors();
       }
     } catch (e) {
-      _currentColors = _getDefaultColors();
+      if (!stale()) _currentColors = _getDefaultColors();
     }
   }
 
@@ -360,7 +384,8 @@ class BackgroundManagerService extends ChangeNotifier {
       }
 
       // Update colors WITHOUT notifying yet
-      await _updateColorsFromArtworkSilent(artworkData);
+      await _updateColorsFromArtworkSilent(artworkData,
+          updateId: currentUpdateId);
 
       // Single notify after everything is ready
       if (kDebugMode) {

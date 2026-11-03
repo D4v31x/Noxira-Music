@@ -55,8 +55,9 @@ class _PlaylistsState {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     if (other is! _PlaylistsState) return false;
-    if (likedPlaylist?.songs.length != other.likedPlaylist?.songs.length)
+    if (likedPlaylist?.songs.length != other.likedPlaylist?.songs.length) {
       return false;
+    }
     if (autoPlaylists.length != other.autoPlaylists.length) return false;
     if (userPlaylists.length != other.userPlaylists.length) return false;
     for (var i = 0; i < userPlaylists.length; i++) {
@@ -343,7 +344,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                 if (autoPlaylists.isNotEmpty)
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 190,
+                      height: GlassmorphicCard.listHeight(context),
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -408,7 +409,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                             ),
                           ),
                           SizedBox(
-                            height: 190,
+                            height: GlassmorphicCard.listHeight(context),
                             child: ListView.builder(
                               scrollDirection: Axis.horizontal,
                               padding:
@@ -556,22 +557,24 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
         child: Row(
           children: [
             // Icon
-            Container(
-              width: 72,
-              height: 72,
-              decoration: const BoxDecoration(
-                borderRadius:
-                    BorderRadius.horizontal(left: Radius.circular(16)),
-              ),
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.horizontal(left: Radius.circular(16)),
-                child: Image.asset(
-                  'assets/images/UI/liked.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+            ArtworkHero(
+                radius: 16,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: const BoxDecoration(
+                    borderRadius:
+                        BorderRadius.horizontal(left: Radius.circular(16)),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.horizontal(
+                        left: Radius.circular(16)),
+                    child: Image.asset(
+                      'assets/images/UI/liked.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )),
             // Text
             Expanded(
               child: Padding(
@@ -662,13 +665,16 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
         child: Row(
           children: [
             // Artwork
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.horizontal(left: Radius.circular(14)),
-              child: SizedBox(
-                width: 64,
-                height: 64,
-                child: _buildPlaylistArtwork(playlist),
+            ArtworkHero(
+              radius: 14,
+              child: ClipRRect(
+                borderRadius:
+                    const BorderRadius.horizontal(left: Radius.circular(14)),
+                child: SizedBox(
+                  width: 64,
+                  height: 64,
+                  child: _buildPlaylistArtwork(playlist),
+                ),
               ),
             ),
             // Info

@@ -31,17 +31,21 @@ void openPlayerPage(
   required Widget Function(PlayerPageTargets targets) builder,
   bool fromCard = false,
   GlobalKey? sourceKey,
+  List<PlayerPageRowShuttle> rows = const [],
 }) {
   final audio = Provider.of<AudioPlayerService>(context, listen: false);
   final song = audio.currentSong;
 
   final targets = PlayerPageTargets();
+  PlayerPageSources.activeCard =
+      fromCard ? (sourceKey ?? PlayerPageSources.card) : null;
   final image = song == null
       ? null
       : ArtworkCacheService().getCachedImageProviderSync(song.id);
 
   Navigator.of(context).push(PlayerPageRoute<void>(
     targets: targets,
+    rows: rows,
     cardRect: fromCard
         ? _globalRect(context, sourceKey ?? PlayerPageSources.card)
         : null,

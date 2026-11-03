@@ -26,13 +26,34 @@ class ExpandingPlayer extends StatefulWidget {
   /// Height of the mini player
   static const double miniPlayerHeight = 72.0;
 
+  /// Mini player height grown to fit the title and artist at the user's font scale.
+  static double miniPlayerHeightOf(BuildContext context) {
+    final base = Theme.of(context).textTheme.bodyMedium ?? const TextStyle();
+    final scaler = MediaQuery.textScalerOf(context);
+    double lineHeight(TextStyle style) {
+      final painter = TextPainter(
+        text: TextSpan(text: 'Ag', style: base.merge(style)),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      final h = painter.height;
+      painter.dispose();
+      return h;
+    }
+
+    final textBlock =
+        lineHeight(_miniTitleStyle) + 3 + lineHeight(_miniArtistStyle);
+    // 10px padding above and below the row content.
+    return math.max(miniPlayerHeight, textBlock + 20 + 4);
+  }
+
   /// Bottom margin for floating effect
   static const double bottomMargin = 16.0;
 
   /// Get the total height needed for bottom padding in other screens
   static double getMiniPlayerPaddingHeight(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
-    return miniPlayerHeight + bottomMargin + bottomPadding + 8;
+    return miniPlayerHeightOf(context) + bottomMargin + bottomPadding + 8;
   }
 
   /// Global state holder
@@ -141,16 +162,14 @@ class _ExpandingPlayerState extends State<ExpandingPlayer> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     final isTablet = ResponsiveUtils.isTablet(context);
     final margin = isTablet ? 32.0 : 16.0;
+    final miniHeight = ExpandingPlayer.miniPlayerHeightOf(context);
     final width =
         math.min(size.width - margin * 2, isTablet ? 480.0 : size.width);
     return Rect.fromLTWH(
       (size.width - width) / 2,
-      size.height -
-          bottom -
-          ExpandingPlayer.bottomMargin -
-          ExpandingPlayer.miniPlayerHeight,
+      size.height - bottom - ExpandingPlayer.bottomMargin - miniHeight,
       width,
-      ExpandingPlayer.miniPlayerHeight,
+      miniHeight,
     );
   }
 
@@ -675,7 +694,9 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
     final artist =
         layout(text.artist, _baseTextStyle().merge(_miniArtistStyle));
     final columnHeight = title.height + 3 + artist.height;
-    final top = widget.miniRect.top + 10 + (52 - columnHeight) / 2;
+    final top = widget.miniRect.top +
+        10 +
+        (widget.miniRect.height - 20 - columnHeight) / 2;
     final result = (
       title: Rect.fromLTWH(left, top, title.width, title.height),
       artist: Rect.fromLTWH(
@@ -775,7 +796,7 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
     }
 
     _setActive(true);
-    if (t >= 1) return const SizedBox.shrink();
+    if (t >= 1 || t <= 0) return const SizedBox.shrink();
 
     final isTablet = ResponsiveUtils.isTablet(context);
     final base = _baseTextStyle();
@@ -793,9 +814,9 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
       color: const Color(0xB3FFFFFF),
     ));
 
-    // Mini player thumbnail: 10px content padding, 52px square.
-    final artBegin = Rect.fromLTWH(
-        widget.miniRect.left + 10, widget.miniRect.top + 10, 52, 52);
+    // Mini player thumbnail: 10px content padding, 52px square, vertically centred.
+    final artBegin = Rect.fromLTWH(widget.miniRect.left + 10,
+        widget.miniRect.top + (widget.miniRect.height - 52) / 2, 52, 52);
     final artRect = Rect.lerp(artBegin, art, t)!;
     final artRadius = lerpDouble(14, 8, t)!;
 
@@ -912,6 +933,7 @@ class _MiniPlayerWidget extends StatelessWidget {
       );
     }
 
+    final miniHeight = ExpandingPlayer.miniPlayerHeightOf(context);
     // The content row (song info + controls) – changes only when the song changes.
     final contentRow = Padding(
       padding: const EdgeInsets.fromLTRB(10, 10, 8, 10),
@@ -929,24 +951,33 @@ class _MiniPlayerWidget extends StatelessWidget {
           Expanded(
             child: Opacity(
               opacity: sharedOpacity,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    song.title,
-                    style: _miniTitleStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+              // Clips instead of overflowing the fixed 52px row at large font sizes.
+              child: ClipRect(
+                child: SingleChildScrollView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minHeight: miniHeight - 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          song.title,
+                          style: _miniTitleStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          splitArtists(song.artist ?? 'Unknown').join(', '),
+                          style: _miniArtistStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    splitArtists(song.artist ?? 'Unknown').join(', '),
-                    style: _miniArtistStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -988,7 +1019,7 @@ class _MiniPlayerWidget extends StatelessWidget {
     final miniContent = Align(
       alignment: Alignment.topCenter,
       child: SizedBox(
-        height: ExpandingPlayer.miniPlayerHeight,
+        height: miniHeight,
         child: Stack(
           fit: StackFit.expand,
           children: [contentRow, progressBar],
@@ -1032,9 +1063,9 @@ class _MiniPlayerWidget extends StatelessWidget {
           size.height -
               bottomPadding -
               ExpandingPlayer.bottomMargin -
-              ExpandingPlayer.miniPlayerHeight,
+              miniHeight,
           width,
-          ExpandingPlayer.miniPlayerHeight,
+          miniHeight,
         );
         final rect = Rect.lerp(restingRect, Offset.zero & size, t)!;
 

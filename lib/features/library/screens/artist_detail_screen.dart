@@ -1,6 +1,8 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import '../../../shared/services/album_query_cache.dart';
 import '../../../shared/widgets/online/online_artist_widgets.dart';
 import '../../../shared/widgets/motion/touch_and_reveal.dart';
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
@@ -22,8 +24,8 @@ import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/detail_header.dart';
+import '../../../shared/widgets/blurred_image.dart';
 import '../../../shared/widgets/song_context_menu.dart';
-import '../../../shared/utils/responsive_utils.dart';
 import 'album_detail_screen.dart';
 
 class ArtistDetailsScreen extends StatefulWidget {
@@ -45,6 +47,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
   final ArtworkCacheService _artworkService = ArtworkCacheService();
   late ScrollController _scrollController;
   Color _dominantColor = Colors.deepPurple.shade900;
+  // Eases towards [_dominantColor] so the buttons shift gradually once the palette is ready.
+  Color _animatedColor = Colors.deepPurple.shade900;
   late Future<void> _colorFuture;
   final LocalCachingArtistService _artistService = LocalCachingArtistService();
 
@@ -52,7 +56,7 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
   List<SongModel> _allSongs = [];
   final List<SongModel> _displayedSongs = [];
   int _currentPage = 0;
-  final int _songsPerPage = 100;
+  final int _songsPerPage = 40;
   bool _isLoading = false;
   bool _hasMoreSongs = true;
 
@@ -68,16 +72,21 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _colorFuture = whenRouteSettled(context).then((_) {
-      if (!mounted) return null;
-      return widget.artistImagePath != null
-          ? _updateDominantColor()
-          : _artistService
-              .fetchArtistImage(widget.artistName)
-              .then((path) => _updateDominantColor());
+    // The palette work and the rebuild it triggers wait for the header's reveal.
+    _colorFuture = whenRouteSettled(context).then((_) async {
+      if (!mounted) return;
+      if (widget.artistImagePath == null) {
+        await _artistService.fetchArtistImage(widget.artistName);
+      }
+      await Future<void>.delayed(kRevealDuration);
+      if (!mounted) return;
+      await _updateDominantColor();
     });
     _scrollController = ScrollController()..addListener(_scrollListener);
-    whenRouteSettled(context).then((_) {
+    // Short head start for the header reveal, which begins as the route settles.
+    whenRouteSettled(context)
+        .then((_) => Future<void>.delayed(const Duration(milliseconds: 120)))
+        .then((_) {
       if (mounted) _loadSongs();
     });
   }
@@ -91,6 +100,12 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
     if (_audioServiceRef == null) {
       _audioServiceRef = service;
       service.songsNotifier.addListener(_onSongsChanged);
+      // Blur the header artwork while the image is still flying in.
+      final path = widget.artistImagePath;
+      if (path != null) {
+        unawaited(BlurredImage.precache(FileImage(File(path)),
+            sigma: 30, extent: MediaQuery.sizeOf(context).width));
+      }
     }
   }
 
@@ -241,127 +256,139 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
       builder: (context, snapshot) {
         final effectiveImagePath = widget.artistImagePath ?? _artistImagePath;
 
-        return Scaffold(
-          resizeToAvoidBottomInset: false,
-          body: AppBackground(
-            child: CustomScrollView(
-              controller: _scrollController,
-              slivers: [
-                // Blurred artwork header
-                DetailHeader(
-                  artworkFilePath: effectiveImagePath,
-                  fallbackAsset: 'assets/images/UI/unknown.png',
-                  title: widget.artistName,
-                  metadata: _allSongs.isNotEmpty
-                      ? '${_allSongs.length} ${localizations.songs} · ${_albums.length} ${localizations.albums} · ${_formatDuration(_totalDuration)}'
-                      : null,
-                  badge: localizations.artist,
-                  accentColor: _dominantColor == Colors.deepPurple.shade900
-                      ? Colors.cyan
-                      : _dominantColor,
-                ),
-
-                // Action buttons
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionButton(
-                            context,
-                            const iconoir.Play(
-                                color: Colors.white, width: 22, height: 22),
-                            localizations.playAll,
-                            () => _playAllSongs(context),
-                            isPrimary: true,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        _buildActionButton(
-                          context,
-                          const iconoir.Shuffle(
-                              color: Colors.white, width: 22, height: 22),
-                          localizations.shuffle,
-                          () => _shuffleAllSongs(context),
-                          iconOnly: true,
-                        ),
-                        const SizedBox(width: 10),
-                        _buildActionButton(
-                          context,
-                          const iconoir.Playlist(
-                              color: Colors.white, width: 22, height: 22),
-                          'Queue',
-                          () => _addAllToQueue(context),
-                          iconOnly: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Category tabs
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: _buildCategoryTab(
-                            '${localizations.songs} (${_allSongs.length})',
-                            0,
-                            const iconoir.MusicNote(
-                                color: Colors.white, width: 18, height: 18),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildCategoryTab(
-                            '${localizations.albums} (${_albums.length})',
-                            1,
-                            const iconoir.Album(
-                                color: Colors.white, width: 18, height: 18),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Content based on selected category
-                _selectedCategory == 0 ? _buildSongsList() : _buildAlbumsList(),
-
-                SliverToBoxAdapter(
-                  child: OnlinePopularTracks(artistName: widget.artistName),
-                ),
-                SliverToBoxAdapter(
-                  child: OnlineAboutCard(artistName: widget.artistName),
-                ),
-                SliverToBoxAdapter(
-                  child: SimilarArtistsRow(artistName: widget.artistName),
-                ),
-
-                // Bottom padding for mini player
-                SliverToBoxAdapter(
-                  child: Selector<AudioPlayerService, bool>(
-                    selector: (_, service) => service.currentSong != null,
-                    builder: (context, hasCurrentSong, _) {
-                      return SizedBox(
-                        height: hasCurrentSong
-                            ? ExpandingPlayer.getMiniPlayerPaddingHeight(
-                                context)
-                            : 16,
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
+        return TweenAnimationBuilder<Color?>(
+          tween: ColorTween(end: _dominantColor),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+          builder: (context, animated, _) {
+            _animatedColor = animated ?? _dominantColor;
+            return _buildScaffold(context, localizations, effectiveImagePath);
+          },
         );
       },
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, AppLocalizations localizations,
+      String? effectiveImagePath) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      body: AppBackground(
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            // Blurred artwork header
+            DetailHeader(
+              artworkFilePath: effectiveImagePath,
+              fallbackAsset: 'assets/images/UI/unknown.png',
+              title: widget.artistName,
+              metadata: _allSongs.isNotEmpty
+                  ? '${_allSongs.length} ${localizations.songs} · ${_albums.length} ${localizations.albums} · ${_formatDuration(_totalDuration)}'
+                  : null,
+              badge: localizations.artist,
+              accentColor: _dominantColor == Colors.deepPurple.shade900
+                  ? Colors.cyan
+                  : _dominantColor,
+            ),
+
+            // Action buttons
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildActionButton(
+                        context,
+                        const iconoir.Play(
+                            color: Colors.white, width: 22, height: 22),
+                        localizations.playAll,
+                        () => _playAllSongs(context),
+                        isPrimary: true,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    _buildActionButton(
+                      context,
+                      const iconoir.Shuffle(
+                          color: Colors.white, width: 22, height: 22),
+                      localizations.shuffle,
+                      () => _shuffleAllSongs(context),
+                      iconOnly: true,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildActionButton(
+                      context,
+                      const iconoir.Playlist(
+                          color: Colors.white, width: 22, height: 22),
+                      'Queue',
+                      () => _addAllToQueue(context),
+                      iconOnly: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Category tabs
+            SliverToBoxAdapter(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildCategoryTab(
+                        '${localizations.songs} (${_allSongs.length})',
+                        0,
+                        const iconoir.MusicNote(
+                            color: Colors.white, width: 18, height: 18),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildCategoryTab(
+                        '${localizations.albums} (${_albums.length})',
+                        1,
+                        const iconoir.Album(
+                            color: Colors.white, width: 18, height: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Content based on selected category
+            _selectedCategory == 0 ? _buildSongsList() : _buildAlbumsList(),
+
+            SliverToBoxAdapter(
+              child: OnlineAboutCard(artistName: widget.artistName),
+            ),
+            SliverToBoxAdapter(
+              child: OnlinePopularTracks(artistName: widget.artistName),
+            ),
+            SliverToBoxAdapter(
+              child: SimilarArtistsRow(artistName: widget.artistName),
+            ),
+
+            // Bottom padding for mini player
+            SliverToBoxAdapter(
+              child: Selector<AudioPlayerService, bool>(
+                selector: (_, service) => service.currentSong != null,
+                builder: (context, hasCurrentSong, _) {
+                  return SizedBox(
+                    height: hasCurrentSong
+                        ? ExpandingPlayer.getMiniPlayerPaddingHeight(context)
+                        : 16,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -386,8 +413,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
           gradient: isSelected
               ? LinearGradient(
                   colors: [
-                    _dominantColor.withValues(alpha: 0.8),
-                    _dominantColor.withValues(alpha: 0.6),
+                    _animatedColor.withValues(alpha: 0.8),
+                    _animatedColor.withValues(alpha: 0.6),
                   ],
                 )
               : null,
@@ -395,7 +422,7 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
-                ? _dominantColor
+                ? _animatedColor
                 : Colors.white.withValues(alpha: 0.1),
             width: 1.5,
           ),
@@ -470,7 +497,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
             return RevealOnAppear(
                 revealKey:
                     '${identityHashCode(ModalRoute.of(context))}_0_$index',
-                child: GestureDetector(
+                child: Press3D(
+                    child: GestureDetector(
                   onTap: () {
                     Navigator.push(
                       context,
@@ -491,12 +519,14 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                             child: Center(
                               child: AspectRatio(
                                 aspectRatio: 1,
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child:
-                                      _artworkService.buildCachedAlbumArtwork(
-                                    album.id,
-                                    size: artworkSize,
+                                child: ArtworkHero(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child:
+                                        _artworkService.buildCachedAlbumArtwork(
+                                      album.id,
+                                      size: artworkSize,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -527,7 +557,7 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                       ),
                     ),
                   ),
-                ));
+                )));
           },
           childCount: _albums.length,
         ),
@@ -568,7 +598,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: _artworkService.buildCachedAlbumArtwork(album.id),
+                      child: _artworkService.buildCachedAlbumArtwork(album.id,
+                          size: ResponsiveUtils.scaledArtwork(context, 50)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -869,8 +900,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
           gradient: isPrimary
               ? LinearGradient(
                   colors: [
-                    _dominantColor.withValues(alpha: 0.8),
-                    _dominantColor.withValues(alpha: 0.6),
+                    _animatedColor.withValues(alpha: 0.8),
+                    _animatedColor.withValues(alpha: 0.6),
                   ],
                 )
               : null,
@@ -878,7 +909,7 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isPrimary
-                ? _dominantColor
+                ? _animatedColor
                 : Colors.white.withValues(alpha: 0.2),
             width: 1.5,
           ),

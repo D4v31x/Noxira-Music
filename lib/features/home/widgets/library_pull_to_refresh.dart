@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -37,8 +38,13 @@ class LibraryPullToRefresh extends StatefulWidget {
 class _LibraryPullToRefreshState extends State<LibraryPullToRefresh>
     with TickerProviderStateMixin {
   /// Raw finger travel (logical px) needed to trigger a refresh.
-  static const double _threshold = 120;
-  static const double _maxPull = 180;
+  static const double _threshold = 140;
+  static const double _maxPull = 200;
+
+  /// Finger travel ignored before the page starts to follow, so small drags
+  /// at the top don't pull.
+  static const double _deadZone = 36;
+  double _raw = 0;
 
   /// Share of the wordmark animation used while pulling: strokes finish
   /// drawing here, and the fill (the "go" moment) plays on release.
@@ -140,17 +146,21 @@ class _LibraryPullToRefreshState extends State<LibraryPullToRefresh>
 
     if (n is OverscrollNotification && n.overscroll < 0) {
       // Clamping physics (Android): the drag past the top arrives as overscroll.
-      if (n.dragDetails != null) _setPull(_pull.value - n.overscroll);
+      if (n.dragDetails != null) {
+        _raw = math.max(0.0, _raw - n.overscroll);
+        _setPull(_raw - _deadZone);
+      }
     } else if (n is ScrollUpdateNotification) {
       if (m.pixels < m.minScrollExtent - 0.5) {
         // Bouncing physics (iOS): the position itself goes negative.
-        _setPull(m.minScrollExtent - m.pixels);
-      } else if (_pull.value > 0 &&
-          n.scrollDelta != null &&
-          n.scrollDelta! > 0) {
+        _raw = m.minScrollExtent - m.pixels;
+        _setPull(_raw - _deadZone);
+      } else if (_raw > 0 && n.scrollDelta != null && n.scrollDelta! > 0) {
         // Pushing back up through the pull releases it.
-        _setPull(_pull.value - n.scrollDelta!);
-      } else if (!atTop && _pull.value > 0) {
+        _raw = math.max(0.0, _raw - n.scrollDelta!);
+        _setPull(_raw - _deadZone);
+      } else if (!atTop && _raw > 0) {
+        _raw = 0;
         _setPull(0);
       }
     } else if (n is ScrollEndNotification) {
@@ -161,6 +171,7 @@ class _LibraryPullToRefreshState extends State<LibraryPullToRefresh>
 
   /// Finger lifted: refresh if armed, otherwise glide back up.
   void _release() {
+    _raw = 0;
     if (_state == _PullState.armed) {
       unawaited(_refresh());
     } else if (_state == _PullState.pulling) {

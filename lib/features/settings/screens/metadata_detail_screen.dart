@@ -261,28 +261,6 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
     return '${date.day}.${date.month}.${date.year}';
   }
 
-  IconData _getQualityIcon(AppLocalizations loc) {
-    final label = _getQualityLabel(loc);
-    if (label == loc.lossless) return Icons.diamond_outlined;
-    if (label == loc.highQuality) return Icons.stars_outlined;
-    if (label == loc.goodQuality) return Icons.thumb_up_outlined;
-    if (label == loc.standardQuality) {
-      return Icons.check_circle_outline;
-    }
-    return Icons.warning_amber_outlined;
-  }
-
-  Color _getQualityColor(AppLocalizations loc) {
-    final label = _getQualityLabel(loc);
-    if (label == loc.lossless) return const Color(0xFF8B5CF6);
-    if (label == loc.highQuality) return const Color(0xFF10B981);
-    if (label == loc.goodQuality) return const Color(0xFF3B82F6);
-    if (label == loc.standardQuality) {
-      return const Color(0xFFF59E0B);
-    }
-    return const Color(0xFFEF4444);
-  }
-
   Future<void> _runAutoTagSearch() async {
     if (_autoTagSearchController.text.trim().isEmpty) return;
     setState(() {
@@ -1000,76 +978,107 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
 
   Widget _buildQualityCard(
       AppLocalizations loc, bool isLowEnd, ColorScheme colorScheme) {
-    final qualityColor = _getQualityColor(loc);
+    final bitrate = _estimateBitrateValue();
+    final label = _getQualityLabel(loc);
+    final level = label == loc.lossless
+        ? 4
+        : label == loc.highQuality
+            ? 3
+            : label == loc.goodQuality
+                ? 2
+                : label == loc.standardQuality
+                    ? 1
+                    : 0;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 20),
       decoration: BoxDecoration(
-        gradient: isLowEnd
-            ? null
-            : LinearGradient(
-                colors: [
-                  qualityColor.withValues(alpha: 0.3),
-                  qualityColor.withValues(alpha: 0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-        color: isLowEnd ? colorScheme.surfaceContainerHigh : null,
-        borderRadius: BorderRadius.circular(20),
+        color: isLowEnd
+            ? colorScheme.surfaceContainerHigh
+            : Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isLowEnd
               ? colorScheme.outlineVariant
-              : qualityColor.withValues(alpha: 0.3),
+              : Colors.white.withValues(alpha: 0.12),
         ),
       ),
-      // replace two uses of _getQualityColor(loc) below with local variable
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: qualityColor.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              _getQualityIcon(loc),
-              color: qualityColor,
-              size: 32,
+          Row(
+            children: [
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 44,
+                      height: 1.05,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                      fontFamily: FontConstants.fontFamily,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            [
+              _getFileFormat(),
+              if (bitrate > 0) '$bitrate kbps',
+              _getFileSizeFormatted(),
+              _formatDuration(),
+            ].join('  ·  '),
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.65),
+              fontSize: 13,
+              fontFamily: FontConstants.fontFamily,
             ),
           ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 22),
+          SizedBox(
+            height: 16,
+            child: Stack(
+              alignment: Alignment.center,
               children: [
-                Text(
-                  _getQualityLabel(loc),
-                  style: TextStyle(
-                    color: qualityColor,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: FontConstants.fontFamily,
-                  ),
+                Container(
+                  height: 2,
+                  color: Colors.white.withValues(alpha: 0.2),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  '${_getFileFormat()} • ${_estimateBitrateValue()} kbps',
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  loc.qualityDesc,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    fontSize: 11,
+                Align(
+                  alignment: Alignment(-1 + level / 2, 0),
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              for (final t in [loc.lowQuality, loc.lossless])
+                Text(
+                  t,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 11,
+                  ),
+                ),
+            ],
           ),
         ],
       ),

@@ -138,7 +138,7 @@ class OnlineDiscoveryService {
   /// Best Deezer match for [name], only accepted when the names agree.
   Future<OnlineArtist?> findArtist(String name) {
     final key = _norm(name);
-    if (key.isEmpty) return Future.value(null);
+    if (key.isEmpty) return Future.value();
     return _cached(_artistCache, key, () async {
       final data = await _getJson(Uri.parse('$_deezer/search/artist')
           .replace(queryParameters: {'q': name, 'limit': '15'}));
@@ -150,8 +150,9 @@ class OnlineDiscoveryService {
         if (item is! Map<String, dynamic>) continue;
         final artist = _artistFrom(item);
         if (artist == null || _norm(artist.name) != key) continue;
-        if (best == null || (artist.fans ?? 0) > (best.fans ?? 0))
+        if (best == null || (artist.fans ?? 0) > (best.fans ?? 0)) {
           best = artist;
+        }
       }
       return best;
     }, (v) => v != null);
@@ -200,7 +201,7 @@ class OnlineDiscoveryService {
 
   Future<OnlineArtistProfile?> profile(String name) {
     final key = _norm(name);
-    if (key.isEmpty) return Future.value(null);
+    if (key.isEmpty) return Future.value();
     return _cached(_profileCache, key, () async {
       final artist = await findArtist(name);
       if (artist == null) return null;

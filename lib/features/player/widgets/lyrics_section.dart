@@ -17,6 +17,7 @@ import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/services/lyrics_translation_service.dart';
 import 'lyrics_page_launcher.dart';
+import 'translate_language_picker.dart';
 import 'player_page_route.dart';
 
 // MARK: - Constants
@@ -164,13 +165,15 @@ class _LyricsSectionState extends State<LyricsSection>
     WidgetsBinding.instance.addPostFrameCallback((_) => _jumpToCurrentLyric());
   }
 
-  Future<void> _handleTranslateButton() async {
+  final _translateAnchorKey = GlobalKey();
+
+  Future<void> _handleTranslateButton({bool pickLanguage = false}) async {
     if (!mounted) return;
     final lyrics = widget.timedLyrics;
     if (lyrics == null || lyrics.isEmpty) return;
 
     // Already translated — just toggle visibility.
-    if (_translationState == _TranslationState.done) {
+    if (_translationState == _TranslationState.done && !pickLanguage) {
       setState(() => _showTranslated = !_showTranslated);
       return;
     }
@@ -178,11 +181,15 @@ class _LyricsSectionState extends State<LyricsSection>
     // Ignore taps while a request is in flight.
     if (_translationState == _TranslationState.loading) return;
 
+    final targetLang = pickLanguage
+        ? await pickLyricsTranslationLanguage(context)
+        : await chooseLyricsTranslationTarget(context, _translateAnchorKey);
+    if (targetLang == null || !mounted) return;
+
     setState(() => _translationState = _TranslationState.loading);
     unawaited(_pulseController.repeat(reverse: true));
 
     try {
-      final targetLang = Localizations.localeOf(context).languageCode;
       final song = widget.audioPlayerService.currentSong;
       final lyricsTexts = lyrics.map((l) => l.text).toList();
       final lyricsFingerprint = lyricsTexts.join().hashCode;
@@ -332,20 +339,21 @@ class _LyricsSectionState extends State<LyricsSection>
               key: PlayerPageSources.card,
               width: double.infinity,
               height: _kLyricsSectionHeight,
-              decoration: chrome < 1
-                  ? null
-                  : BoxDecoration(
-                      color: isLowEnd
-                          ? colorScheme.surfaceContainerHigh
-                          : Colors.white
-                              .withValues(alpha: _kLyricsContainerOpacity),
-                      borderRadius: BorderRadius.circular(_kBorderRadius),
-                      border: Border.all(
-                        color: isLowEnd
-                            ? colorScheme.outlineVariant
-                            : Colors.white.withValues(alpha: 0.15),
-                      ),
-                    ),
+              decoration:
+                  PlayerPageSources.forCard(PlayerPageSources.card, chrome) < 1
+                      ? null
+                      : BoxDecoration(
+                          color: isLowEnd
+                              ? colorScheme.surfaceContainerHigh
+                              : Colors.white
+                                  .withValues(alpha: _kLyricsContainerOpacity),
+                          borderRadius: BorderRadius.circular(_kBorderRadius),
+                          border: Border.all(
+                            color: isLowEnd
+                                ? colorScheme.outlineVariant
+                                : Colors.white.withValues(alpha: 0.15),
+                          ),
+                        ),
               child: child,
             ),
             child: _cardFade(
@@ -594,8 +602,9 @@ class _LyricsSectionState extends State<LyricsSection>
   Widget _cardFade(Widget child) => ValueListenableBuilder<double>(
         valueListenable: PlayerPageSources.cardReveal,
         child: child,
-        builder: (context, reveal, child) =>
-            Opacity(opacity: reveal, child: child),
+        builder: (context, reveal, child) => Opacity(
+            opacity: PlayerPageSources.forCard(PlayerPageSources.card, reveal),
+            child: child),
       );
 
   // MARK: - Overlay buttons
@@ -676,20 +685,29 @@ class _LyricsSectionState extends State<LyricsSection>
                     ),
                   ),
                 )
-              : IconButton(
-                  icon: isError
-                      ? const iconoir.WarningTriangle(
-                          color: Colors.orangeAccent,
-                          width: 20,
-                          height: 20,
-                        )
-                      : iconoir.Language(
-                          color: isActive ? colorScheme.primary : Colors.white,
-                          width: 20,
-                          height: 20,
-                        ),
-                  onPressed: _handleTranslateButton,
-                  tooltip: tooltip,
+              : Semantics(
+                  key: _translateAnchorKey,
+                  label: tooltip,
+                  button: true,
+                  child: GestureDetector(
+                    onLongPress: () =>
+                        _handleTranslateButton(pickLanguage: true),
+                    child: IconButton(
+                      icon: isError
+                          ? const iconoir.WarningTriangle(
+                              color: Colors.orangeAccent,
+                              width: 20,
+                              height: 20,
+                            )
+                          : iconoir.Language(
+                              color:
+                                  isActive ? colorScheme.primary : Colors.white,
+                              width: 20,
+                              height: 20,
+                            ),
+                      onPressed: _handleTranslateButton,
+                    ),
+                  ),
                 ),
         ),
       )),

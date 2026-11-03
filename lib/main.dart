@@ -330,7 +330,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       final audioService =
           Provider.of<AudioPlayerService>(context, listen: false);
       await audioService.stop();
-      audioService.dispose();
     } catch (e) {
       // Ignore errors during cleanup
     }

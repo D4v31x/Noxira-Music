@@ -21,6 +21,8 @@ import '../../../shared/utils/formatters/duration_formatter.dart';
 import '../../../shared/widgets/optimized_tiles.dart' show NowPlayingBars;
 import '../screens/track_tag_editor_screen.dart';
 
+const double _kTagsBoxHeight = 220;
+
 /// Index of the tag currently playing — the last tag whose position is at
 /// or before [position] — or -1 if [position] precedes every tag.
 int _activeTagIndex(List<TrackTag> tags, Duration position) {
@@ -150,16 +152,12 @@ class _TagsListCard extends StatelessWidget {
               final currentPosition = snapshot.data ?? Duration.zero;
               final activeIndex = _activeTagIndex(tags, currentPosition);
 
-              // A plain Column (no inner Scrollable) — nesting a second
-              // same-axis scrollable inside the Now Playing screen's own
-              // ListView made the outer scroll feel "trapped": drags would
-              // get absorbed by this list until they crossed its extent.
               return ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                child: SizedBox(
+                  height: _kTagsBoxHeight,
+                  child: ListView(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     children: [
                       for (var index = 0; index < tags.length; index++) ...[
                         if (index > 0)

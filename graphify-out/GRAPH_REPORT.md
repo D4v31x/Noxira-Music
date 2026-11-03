@@ -1,1076 +1,984 @@
-# Graph Report - .  (2026-06-10)
+# Graph Report - Aurora-Music  (2026-10-14)
 
 ## Corpus Check
-- 343 files · ~293,477 words
+- 250 files · ~311,956 words
 - Verdict: corpus is large enough that graph structure adds value.
+- Unclassified: 88 file(s) not represented in the graph (top: .xml 38, .ttf 10, (none) 6)
 
 ## Summary
-- 6756 nodes · 9116 edges · 237 communities (204 shown, 33 thin omitted)
+- 9880 nodes · 13094 edges · 220 communities (178 shown, 42 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 33 edges (avg confidence: 0.91)
 - Token cost: 0 input · 0 output
 
+## Graph Freshness
+- Built from commit: `687933fb`
+- Run `git rev-parse HEAD` and compare to check if the graph is stale.
+- Run `graphify update .` after code changes (no API cost).
+
 ## Community Hubs (Navigation)
-- [[_COMMUNITY_Generated Localizations|Generated Localizations]]
-- [[_COMMUNITY_English L10n Strings|English L10n Strings]]
-- [[_COMMUNITY_Czech L10n Strings|Czech L10n Strings]]
-- [[_COMMUNITY_Audio Player Service Core|Audio Player Service Core]]
-- [[_COMMUNITY_Listening Recap Screen|Listening Recap Screen]]
-- [[_COMMUNITY_Home Screen & Onboarding|Home Screen & Onboarding]]
-- [[_COMMUNITY_Detail Screen Mixin|Detail Screen Mixin]]
-- [[_COMMUNITY_Artwork Cache Service|Artwork Cache Service]]
-- [[_COMMUNITY_Metadata Tag Editor|Metadata Tag Editor]]
-- [[_COMMUNITY_Home Screen Widget|Home Screen Widget]]
-- [[_COMMUNITY_Core Models & Widgets|Core Models & Widgets]]
-- [[_COMMUNITY_Responsive Layout Utils|Responsive Layout Utils]]
-- [[_COMMUNITY_Smart Suggestions & Filters|Smart Suggestions & Filters]]
-- [[_COMMUNITY_Music Visualizer|Music Visualizer]]
-- [[_COMMUNITY_Main App & Equalizer|Main App & Equalizer]]
-- [[_COMMUNITY_Fullscreen Lyrics Editor|Fullscreen Lyrics Editor]]
-- [[_COMMUNITY_Listening Insights Screen|Listening Insights Screen]]
-- [[_COMMUNITY_Splash & Onboarding|Splash & Onboarding]]
-- [[_COMMUNITY_Artists Screen|Artists Screen]]
-- [[_COMMUNITY_Screen Mixins|Screen Mixins]]
-- [[_COMMUNITY_App Providers & Feature Entry|App Providers & Feature Entry]]
-- [[_COMMUNITY_Albums Screen|Albums Screen]]
-- [[_COMMUNITY_Tracks Screen|Tracks Screen]]
-- [[_COMMUNITY_Background Manager|Background Manager]]
-- [[_COMMUNITY_Now Playing Screens|Now Playing Screens]]
-- [[_COMMUNITY_Optimised Tile Widgets|Optimised Tile Widgets]]
-- [[_COMMUNITY_Artwork Mixin|Artwork Mixin]]
-- [[_COMMUNITY_Library Feature Shell|Library Feature Shell]]
-- [[_COMMUNITY_Theme Provider|Theme Provider]]
-- [[_COMMUNITY_Locale & L10n Provider|Locale & L10n Provider]]
-- [[_COMMUNITY_Now Playing Controller|Now Playing Controller]]
-- [[_COMMUNITY_Cache Manager|Cache Manager]]
-- [[_COMMUNITY_Lyrics & Translation|Lyrics & Translation]]
-- [[_COMMUNITY_Music Search Service|Music Search Service]]
-- [[_COMMUNITY_Animation Constants|Animation Constants]]
-- [[_COMMUNITY_Responsive Scaffold|Responsive Scaffold]]
-- [[_COMMUNITY_Audio Handler & Firebase|Audio Handler & Firebase]]
-- [[_COMMUNITY_For You Section & Caching|For You Section & Caching]]
-- [[_COMMUNITY_Animated Artwork Background|Animated Artwork Background]]
-- [[_COMMUNITY_Playlist Model|Playlist Model]]
-- [[_COMMUNITY_Module 40|Module 40]]
-- [[_COMMUNITY_Module 41|Module 41]]
-- [[_COMMUNITY_Module 42|Module 42]]
-- [[_COMMUNITY_Module 43|Module 43]]
-- [[_COMMUNITY_Module 44|Module 44]]
-- [[_COMMUNITY_Module 45|Module 45]]
-- [[_COMMUNITY_Module 46|Module 46]]
-- [[_COMMUNITY_Module 47|Module 47]]
-- [[_COMMUNITY_Module 48|Module 48]]
-- [[_COMMUNITY_Module 49|Module 49]]
-- [[_COMMUNITY_Module 50|Module 50]]
-- [[_COMMUNITY_Module 51|Module 51]]
-- [[_COMMUNITY_Module 52|Module 52]]
-- [[_COMMUNITY_Module 53|Module 53]]
-- [[_COMMUNITY_Module 54|Module 54]]
-- [[_COMMUNITY_Module 55|Module 55]]
-- [[_COMMUNITY_Module 56|Module 56]]
-- [[_COMMUNITY_Module 57|Module 57]]
-- [[_COMMUNITY_Module 58|Module 58]]
-- [[_COMMUNITY_Module 59|Module 59]]
-- [[_COMMUNITY_Module 60|Module 60]]
-- [[_COMMUNITY_Module 61|Module 61]]
-- [[_COMMUNITY_Module 62|Module 62]]
-- [[_COMMUNITY_Module 63|Module 63]]
-- [[_COMMUNITY_Module 64|Module 64]]
-- [[_COMMUNITY_Module 65|Module 65]]
-- [[_COMMUNITY_Module 66|Module 66]]
-- [[_COMMUNITY_Module 67|Module 67]]
-- [[_COMMUNITY_Module 68|Module 68]]
-- [[_COMMUNITY_Module 69|Module 69]]
-- [[_COMMUNITY_Module 70|Module 70]]
-- [[_COMMUNITY_Module 71|Module 71]]
-- [[_COMMUNITY_Module 72|Module 72]]
-- [[_COMMUNITY_Module 73|Module 73]]
-- [[_COMMUNITY_Module 74|Module 74]]
-- [[_COMMUNITY_Module 75|Module 75]]
-- [[_COMMUNITY_Module 76|Module 76]]
-- [[_COMMUNITY_Module 77|Module 77]]
-- [[_COMMUNITY_Module 78|Module 78]]
-- [[_COMMUNITY_Module 79|Module 79]]
-- [[_COMMUNITY_Module 80|Module 80]]
-- [[_COMMUNITY_Module 81|Module 81]]
-- [[_COMMUNITY_Module 82|Module 82]]
-- [[_COMMUNITY_Module 83|Module 83]]
-- [[_COMMUNITY_Module 84|Module 84]]
-- [[_COMMUNITY_Module 85|Module 85]]
-- [[_COMMUNITY_Module 86|Module 86]]
-- [[_COMMUNITY_Module 87|Module 87]]
-- [[_COMMUNITY_Module 88|Module 88]]
-- [[_COMMUNITY_Module 89|Module 89]]
-- [[_COMMUNITY_Module 90|Module 90]]
-- [[_COMMUNITY_Module 91|Module 91]]
-- [[_COMMUNITY_Module 92|Module 92]]
-- [[_COMMUNITY_Module 93|Module 93]]
-- [[_COMMUNITY_Module 94|Module 94]]
-- [[_COMMUNITY_Module 95|Module 95]]
-- [[_COMMUNITY_Module 96|Module 96]]
-- [[_COMMUNITY_Module 97|Module 97]]
-- [[_COMMUNITY_Module 98|Module 98]]
-- [[_COMMUNITY_Module 99|Module 99]]
-- [[_COMMUNITY_Module 100|Module 100]]
-- [[_COMMUNITY_Module 101|Module 101]]
-- [[_COMMUNITY_Module 102|Module 102]]
-- [[_COMMUNITY_Module 103|Module 103]]
-- [[_COMMUNITY_Module 104|Module 104]]
-- [[_COMMUNITY_Module 105|Module 105]]
-- [[_COMMUNITY_Module 106|Module 106]]
-- [[_COMMUNITY_Module 107|Module 107]]
-- [[_COMMUNITY_Module 108|Module 108]]
-- [[_COMMUNITY_Module 109|Module 109]]
-- [[_COMMUNITY_Module 110|Module 110]]
-- [[_COMMUNITY_Module 111|Module 111]]
-- [[_COMMUNITY_Module 112|Module 112]]
-- [[_COMMUNITY_Module 113|Module 113]]
-- [[_COMMUNITY_Module 114|Module 114]]
-- [[_COMMUNITY_Module 115|Module 115]]
-- [[_COMMUNITY_Module 116|Module 116]]
-- [[_COMMUNITY_Module 117|Module 117]]
-- [[_COMMUNITY_Module 118|Module 118]]
-- [[_COMMUNITY_Module 119|Module 119]]
-- [[_COMMUNITY_Module 120|Module 120]]
-- [[_COMMUNITY_Module 121|Module 121]]
-- [[_COMMUNITY_Module 122|Module 122]]
-- [[_COMMUNITY_Module 123|Module 123]]
-- [[_COMMUNITY_Module 124|Module 124]]
-- [[_COMMUNITY_Module 125|Module 125]]
-- [[_COMMUNITY_Module 126|Module 126]]
-- [[_COMMUNITY_Module 127|Module 127]]
-- [[_COMMUNITY_Module 128|Module 128]]
-- [[_COMMUNITY_Module 129|Module 129]]
-- [[_COMMUNITY_Module 130|Module 130]]
-- [[_COMMUNITY_Module 131|Module 131]]
-- [[_COMMUNITY_Module 132|Module 132]]
-- [[_COMMUNITY_Module 133|Module 133]]
-- [[_COMMUNITY_Module 134|Module 134]]
-- [[_COMMUNITY_Module 135|Module 135]]
-- [[_COMMUNITY_Module 136|Module 136]]
-- [[_COMMUNITY_Module 137|Module 137]]
-- [[_COMMUNITY_Module 138|Module 138]]
-- [[_COMMUNITY_Module 139|Module 139]]
-- [[_COMMUNITY_Module 140|Module 140]]
-- [[_COMMUNITY_Module 141|Module 141]]
-- [[_COMMUNITY_Module 142|Module 142]]
-- [[_COMMUNITY_Module 143|Module 143]]
-- [[_COMMUNITY_Module 144|Module 144]]
-- [[_COMMUNITY_Module 145|Module 145]]
-- [[_COMMUNITY_Module 146|Module 146]]
-- [[_COMMUNITY_Module 147|Module 147]]
-- [[_COMMUNITY_Module 148|Module 148]]
-- [[_COMMUNITY_Module 149|Module 149]]
-- [[_COMMUNITY_Module 150|Module 150]]
-- [[_COMMUNITY_Module 151|Module 151]]
-- [[_COMMUNITY_Module 152|Module 152]]
-- [[_COMMUNITY_Module 153|Module 153]]
-- [[_COMMUNITY_Module 154|Module 154]]
-- [[_COMMUNITY_Module 155|Module 155]]
-- [[_COMMUNITY_Module 156|Module 156]]
-- [[_COMMUNITY_Module 157|Module 157]]
-- [[_COMMUNITY_Module 158|Module 158]]
-- [[_COMMUNITY_Module 159|Module 159]]
-- [[_COMMUNITY_Module 160|Module 160]]
-- [[_COMMUNITY_Module 161|Module 161]]
-- [[_COMMUNITY_Module 162|Module 162]]
-- [[_COMMUNITY_Module 163|Module 163]]
-- [[_COMMUNITY_Module 164|Module 164]]
-- [[_COMMUNITY_Module 165|Module 165]]
-- [[_COMMUNITY_Module 166|Module 166]]
-- [[_COMMUNITY_Module 167|Module 167]]
-- [[_COMMUNITY_Module 168|Module 168]]
-- [[_COMMUNITY_Module 169|Module 169]]
-- [[_COMMUNITY_Module 170|Module 170]]
-- [[_COMMUNITY_Module 171|Module 171]]
-- [[_COMMUNITY_Module 172|Module 172]]
-- [[_COMMUNITY_Module 173|Module 173]]
-- [[_COMMUNITY_Module 174|Module 174]]
-- [[_COMMUNITY_Module 175|Module 175]]
-- [[_COMMUNITY_Module 176|Module 176]]
-- [[_COMMUNITY_Module 177|Module 177]]
-- [[_COMMUNITY_Module 178|Module 178]]
-- [[_COMMUNITY_Module 179|Module 179]]
-- [[_COMMUNITY_Module 180|Module 180]]
-- [[_COMMUNITY_Module 181|Module 181]]
-- [[_COMMUNITY_Module 182|Module 182]]
-- [[_COMMUNITY_Module 183|Module 183]]
-- [[_COMMUNITY_Module 184|Module 184]]
-- [[_COMMUNITY_Module 185|Module 185]]
-- [[_COMMUNITY_Module 186|Module 186]]
-- [[_COMMUNITY_Module 187|Module 187]]
-- [[_COMMUNITY_Module 188|Module 188]]
-- [[_COMMUNITY_Module 189|Module 189]]
-- [[_COMMUNITY_Module 190|Module 190]]
-- [[_COMMUNITY_Module 191|Module 191]]
-- [[_COMMUNITY_Module 192|Module 192]]
-- [[_COMMUNITY_Module 193|Module 193]]
-- [[_COMMUNITY_Module 194|Module 194]]
-- [[_COMMUNITY_Module 195|Module 195]]
-- [[_COMMUNITY_Module 196|Module 196]]
-- [[_COMMUNITY_Module 197|Module 197]]
-- [[_COMMUNITY_Module 198|Module 198]]
-- [[_COMMUNITY_Module 199|Module 199]]
-- [[_COMMUNITY_Module 200|Module 200]]
-- [[_COMMUNITY_Module 201|Module 201]]
-- [[_COMMUNITY_Module 202|Module 202]]
-- [[_COMMUNITY_Module 203|Module 203]]
-- [[_COMMUNITY_Module 204|Module 204]]
-- [[_COMMUNITY_Module 205|Module 205]]
-- [[_COMMUNITY_Module 206|Module 206]]
-- [[_COMMUNITY_Module 211|Module 211]]
-- [[_COMMUNITY_Module 212|Module 212]]
-- [[_COMMUNITY_Module 213|Module 213]]
-- [[_COMMUNITY_Module 214|Module 214]]
-- [[_COMMUNITY_Module 215|Module 215]]
-- [[_COMMUNITY_Module 216|Module 216]]
-- [[_COMMUNITY_Module 217|Module 217]]
-- [[_COMMUNITY_Module 218|Module 218]]
-- [[_COMMUNITY_Module 219|Module 219]]
-- [[_COMMUNITY_Module 220|Module 220]]
-- [[_COMMUNITY_Module 221|Module 221]]
-- [[_COMMUNITY_Module 222|Module 222]]
-- [[_COMMUNITY_Module 223|Module 223]]
-- [[_COMMUNITY_Module 224|Module 224]]
-- [[_COMMUNITY_Module 225|Module 225]]
-- [[_COMMUNITY_Module 229|Module 229]]
-- [[_COMMUNITY_Module 230|Module 230]]
-- [[_COMMUNITY_Module 232|Module 232]]
-- [[_COMMUNITY_Module 233|Module 233]]
-- [[_COMMUNITY_Module 234|Module 234]]
+- app_localizations.dart
+- app_localizations_en.dart
+- app_localizations_cs.dart
+- audio_player_service.dart
+- listening_recap_screen.dart
+- home_screen.dart
+- AudioPlayerService
+- artwork_cache_service.dart
+- metadata_detail_screen.dart
+- home_screen_widget_service.dart
+- recently_played_section.dart
+- responsive_utils.dart
+- smart_suggestions_service.dart
+- music_visualizer_screen.dart
+- equalizer_screen.dart
+- fullscreen_lyrics.dart
+- listening_insights_screen.dart
+- splash_screen.dart
+- artists_screen.dart
+- PerformanceModeProvider
+- expanding_player.dart
+- albums_screen.dart
+- tracks_screen.dart
+- background_manager_service.dart
+- now_playing.dart
+- optimized_tiles.dart
+- album_detail_screen.dart
+- song_context_menu.dart
+- theme_provider.dart
+- home_layout_settings.dart
+- List
+- cache_manager.dart
+- lyrics_section.dart
+- search_tab.dart
+- animation_constants.dart
+- responsive_scaffold.dart
+- main.dart
+- for_you_section.dart
+- animated_artwork_background.dart
+- package:aurora_music_v01/core/constants/font_constants.dart
+- StatelessWidget
+- playlists_screen.dart
+- artist_detail_screen.dart
+- folders_screen.dart
+- package:provider/provider.dart
+- lyrics_service.dart
+- welcome_page.dart
+- playlist_detail_screen.dart
+- batch_download_service.dart
+- replay_gain_reader.dart
+- app_config.dart
+- permissions_page.dart
+- storage_settings_screen.dart
+- app_localizations_hi.dart
+- README.md
+- local_caching_service.dart
+- library_tab.dart
+- app_localizations_de.dart
+- app_localizations_es.dart
+- fullscreen_artwork.dart
+- Aurora Music App Icon Design
+- artist_separator_service.dart
+- feedback_popup_widget.dart
+- play_count_service.dart
+- optimized_widgets.dart
+- equalizer_service.dart
+- app_localizations_ru.dart
+- audio_handler.dart
+- folder_filter_settings_screen.dart
+- player_dialogs.dart
+- toast_notification.dart
+- performance_manager.dart
+- music_stats_card.dart
+- artist_card.dart
+- audio_constants.dart
+- donation_service.dart
+- error_tracking_service.dart
+- audio_properties_reader.dart
+- artist_separator_settings.dart
+- folder_detail_screen.dart
+- library_screen_header.dart
+- Aurora Music App Icon - Composed Adaptive Icon
+- home_tab.dart
+- performance_optimizations.dart
+- notification_manager.dart
+- static const String
+- lyrics_constants.dart
+- home_layout_service.dart
+- glassmorphic_dialog.dart
+- playlist_persistence_service.dart
+- widgets.dart
+- MainActivity.kt
+- performance_mode_provider.dart
+- device_performance_service.dart
+- artist_aggregator_service.dart
+- liked_songs_service.dart
+- appearance_settings_screen.dart
+- app_info_page.dart
+- language_selection_page.dart
+- sleep_timer_widgets.dart
+- bluetooth_service.dart
+- settings_tab.dart
+- audio_settings_service.dart
+- song_like_button.dart
+- detail_header.dart
+- theme_selection_page.dart
+- insights_promo_service.dart
+- album_card.dart
+- VoidCallback
+- insights_aurora_banner.dart
+- download_progress_monitor.dart
+- library_manager.dart
+- translation_contribution_page.dart
+- share_clip_service.dart
+- onboarding_screen.dart
+- pill_button.dart
+- share_clip_sheet.dart
+- Aurora Music — Website Brief
+- glassmorphic_card.dart
+- scrolling_text.dart
+- player_controls.dart
+- audio_validators.dart
+- player_progress_bar.dart
+- frame_rate_monitor.dart
+- smart_playlist_model.dart
+- Color
+- smart_playlist_editor_screen.dart
+- CustomPainter
+- lazy_loading_mixin.dart
+- about_settings_screen.dart
+- AuroraMusicWidgetProvider.kt
+- now_playing_artwork.dart
+- package:flutter/material.dart
+- track_tag_editor_screen.dart
+- metadata_service.dart
+- play_counts.dart
+- lyric_line_widget.dart
+- track_tag_service.dart
+- ../../l10n/generated/app_localizations.dart
+- dart:convert
+- dart:io
+- Timer?
+- music_metadata_widget.dart
+- Metadata Generation Command arm64-v8a
+- settings_manager.dart
+- track_tags_section.dart
+- smart_playlist_service.dart
+- bool get
+- String?
+- queue_manager.dart
+- Aurora Music Brand Logo (Stylized Music Note)
+- logging_service.dart
+- supported_languages.dart
+- Duration
+- playlist_m3u_sync.dart
+- Aurora Music - Project Structure
+- crossfade_controller.dart
+- playback_controller.dart
+- feedback_reminder_service.dart
+- Core Features
+- Android NDK 27.0.12077973
+- duration_formatter.dart
+- FlutterMultiDexApplication.java
+- .application
+- dart:async
+- Localization System (ARB + flutter gen-l10n)
+- Contributing Translations to Aurora Music
+- AppLocalizations
+- media_artwork.dart
+- Aurora Music
+- TrackTagService
+- _
+- queue_persistence.dart
+- SmartPlaylistService
+- EqualizerService
+- _ExpandClipper
+- ic_stat_music1 xhdpi
+- Splash Screen xhdpi
+- widget_test.dart
+- LaunchImage.imageset/README.md
+- _InteractiveCurveState
+- SmartPlaylistField
+- BuildContext
+- ic_stat_music xhdpi
+- file_size_formatter.dart
+- _ExpandRoute
+- Default Album Art Placeholder
+- _ShuttleLayer
+- SliverGridDelegateWithMaxCrossAxisExtent
+- Liked Playlist Cover Asset
+- widgetBackgroundCallback
+- copilot-instructions.md
+- App Background Drawable (Dark)
+- TargetDirectories arm64-v8a
+- TargetDirectories armeabi-v7a
+- iOS Launch Image README
 
 ## God Nodes (most connected - your core abstractions)
-1. `PerformanceModeProvider` - 88 edges
-2. `_state` - 87 edges
-3. `list` - 60 edges
-4. `ThemeProvider` - 52 edges
-5. `_` - 28 edges
-6. `Aurora Music App Icon Design` - 24 edges
-7. `_animation` - 23 edges
+1. `AudioPlayerService` - 209 edges
+2. `PerformanceModeProvider` - 104 edges
+3. `_state` - 85 edges
+4. `list` - 60 edges
+5. `ThemeProvider` - 49 edges
+6. `_` - 28 edges
+7. `Aurora Music App Icon Design` - 24 edges
 8. `_timer` - 21 edges
-9. `ArtworkCacheService` - 19 edges
-10. `Aurora Music README` - 18 edges
+9. `_animation` - 21 edges
+10. `ArtworkCacheService` - 19 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `didChangeDependencies` --references--> `AudioPlayerService`  [EXTRACTED]
+  lib/features/library/screens/album_detail_screen.dart → lib/shared/services/audio_player_service.dart
+- `didChangeDependencies` --references--> `AudioPlayerService`  [EXTRACTED]
+  lib/features/library/screens/artist_detail_screen.dart → lib/shared/services/audio_player_service.dart
+- `didChangeDependencies` --references--> `AudioPlayerService`  [EXTRACTED]
+  lib/features/library/screens/folder_detail_screen.dart → lib/shared/services/audio_player_service.dart
 - `build` --references--> `ThemeProvider`  [EXTRACTED]
   lib/features/onboarding/pages/app_info_page.dart → lib/shared/providers/theme_provider.dart
 - `build` --references--> `ThemeProvider`  [EXTRACTED]
-  lib/features/onboarding/pages/beta_welcome_page.dart → lib/shared/providers/theme_provider.dart
-- `build` --references--> `ThemeProvider`  [EXTRACTED]
   lib/features/onboarding/pages/completion_page.dart → lib/shared/providers/theme_provider.dart
-- `build` --references--> `ThemeProvider`  [EXTRACTED]
-  lib/features/onboarding/pages/donation_page.dart → lib/shared/providers/theme_provider.dart
-- `build` --references--> `ThemeProvider`  [EXTRACTED]
-  lib/features/onboarding/pages/internet_usage_page.dart → lib/shared/providers/theme_provider.dart
 
 ## Import Cycles
 - None detected.
 
 ## Hyperedges (group relationships)
-- **Localization Pipeline (l10n.yaml + Crowdin + ARB files + AppLocalizations)** — l10n, crowdin, contributing_translations, concept_app_localizations, concept_l10n_system [EXTRACTED 1.00]
 - **Aurora Music Core Feature Set** — feature_local_library, feature_background_playback, feature_synced_lyrics, feature_smart_recommendations, feature_dynamic_theming, feature_metadata_editor [EXTRACTED 1.00]
+- **Localization Pipeline (l10n.yaml + Crowdin + ARB files + AppLocalizations)** — l10n, crowdin, contributing_translations, concept_app_localizations, concept_l10n_system [EXTRACTED 1.00]
 - **Playback Stack (just_audio + audio_service + Background Playback Feature)** — dep_just_audio, dep_audio_service, feature_background_playback [INFERRED 0.95]
 - **Dynamic Theming Stack (dynamic_color + palette_generator + Dynamic Theming Feature)** — dep_dynamic_color, dep_palette_generator, feature_dynamic_theming [INFERRED 0.95]
 
-## Communities (237 total, 33 thin omitted)
+## Communities (220 total, 42 thin omitted)
 
-### Community 0 - "Generated Localizations"
+### Community 0 - "app_localizations.dart"
 Cohesion: 0.00
-Nodes (590): app_localizations_cs.dart, app_localizations_en.dart, aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist (+582 more)
+Nodes (703): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+695 more)
 
-### Community 1 - "English L10n Strings"
+### Community 1 - "app_localizations_en.dart"
 Cohesion: 0.00
-Nodes (578): app_localizations.dart, aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion (+570 more)
+Nodes (695): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+687 more)
 
-### Community 2 - "Czech L10n Strings"
+### Community 2 - "app_localizations_cs.dart"
 Cohesion: 0.00
-Nodes (578): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addSeparator (+570 more)
+Nodes (695): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+687 more)
 
-### Community 3 - "Audio Player Service Core"
-Cohesion: 0.01
-Nodes (193): audio/replay_gain_reader.dart, AudioPlayer get, home_screen_widget_service.dart, likedPlaylistName, likedSongsPlaylist, _likedPlaylistName, _likedSongsPlaylist, LoopMode get (+185 more)
-
-### Community 4 - "Listening Recap Screen"
+### Community 3 - "audio_player_service.dart"
 Cohesion: 0.02
-Nodes (82): _anim, artistArtworks, artists, artwork, artworks, bigNumber, build, _buildEmpty (+74 more)
+Nodes (99): _addError, _albumPlayCounts, _artistPlayCounts, _artworkCache, _audioQuery, _automixEnabled, _backgroundManager, _bindCorePlayerListeners (+91 more)
 
-### Community 5 - "Home Screen & Onboarding"
+### Community 4 - "listening_recap_screen.dart"
+Cohesion: 0.02
+Nodes (81): _anim, artistArtworks, artists, artwork, artworks, bigNumber, build, _buildEmpty (+73 more)
+
+### Community 5 - "home_screen.dart"
 Cohesion: 0.03
-Nodes (77): BluetoothService, package:aurora_music_v01/features/onboarding/screens/onboarding_screen.dart, albums, _animationController, _appBarTextController, _artistAggregator, artists, _artistService (+69 more)
+Nodes (59): albums, _animationController, _appBarTextController, _artistAggregator, artists, _artistService, _audioServiceRef, _auroraCtrl (+51 more)
 
-### Community 6 - "Detail Screen Mixin"
-Cohesion: 0.04
-Nodes (73): AudioPlayerService, addAllToQueue, allSongs, buildActionButton, buildActionButtonsRow, buildMiniPlayerPadding, buildStatDivider, buildStatItem (+65 more)
-
-### Community 7 - "Artwork Cache Service"
+### Community 6 - "AudioPlayerService"
 Cohesion: 0.03
-Nodes (68): LinkedHashSet, _albumAccessOrder, _albumArtworkCache, albumId, _albumImageProviderCache, _artistAccessOrder, _artistArtworkCache, _artistImageProviderCache (+60 more)
+Nodes (102): AudioLibraryManagerExtension, AudioMediaArtworkExtension, AudioPlaybackControllerExtension, AudioPlayCountsExtension, AudioPlaylistM3uExtension, AudioQueueManagerExtension, AudioQueuePersistenceExtension, AudioSettingsManagerExtension (+94 more)
 
-### Community 8 - "Metadata Tag Editor"
+### Community 7 - "artwork_cache_service.dart"
 Cohesion: 0.03
-Nodes (58): package:audiotags/audiotags.dart, _albumController, _applyingIndex, _applyMetadata, _artistController, _artworkService, _audioQuery, _autoTagIsLoading (+50 more)
+Nodes (67): _albumAccessOrder, _albumArtworkCache, albumId, _albumImageProviderCache, _artistAccessOrder, _artistArtworkCache, _artistImageProviderCache, artistName (+59 more)
 
-### Community 9 - "Home Screen Widget"
+### Community 8 - "metadata_detail_screen.dart"
 Cohesion: 0.03
-Nodes (58): package:home_widget/home_widget.dart, _androidWidgetName, _appGroupId, clearWidget, command, dispose, _extractAndSaveColors, _formatDuration (+50 more)
+Nodes (59): _albumController, _applyingIndex, _applyMetadata, _artistController, _artworkService, _audioQuery, _autoTagIsLoading, _autoTagResults (+51 more)
 
-### Community 10 - "Core Models & Widgets"
+### Community 9 - "home_screen_widget_service.dart"
+Cohesion: 0.03
+Nodes (56): _androidWidgetName, _appGroupId, clearWidget, command, dispose, _extractAndSaveColors, _formatDuration, _getArtistName (+48 more)
+
+### Community 10 - "recently_played_section.dart"
+Cohesion: 0.05
+Nodes (31): _artworkService, build, _buildEmptyState, _buildNowPlayingCard, ListeningHistoryCard, _artworkService, build, _getDisplaySongs (+23 more)
+
+### Community 11 - "responsive_utils.dart"
 Cohesion: 0.04
-Nodes (54): package:aurora_music_v01/core/constants/app_config.dart, ../../../shared/models/models.dart, shared/services/background_manager_service.dart, ../../../shared/widgets/glassmorphic_card.dart, ../../../shared/widgets/glassmorphic_container.dart, ../../../shared/widgets/song_context_menu.dart, static final ArtworkCacheService, _artworkService (+46 more)
+Nodes (54): build, cardColumns, child, childAspectRatio, children, crossAxisSpacing, DeviceType, fontScale (+46 more)
 
-### Community 11 - "Responsive Layout Utils"
+### Community 12 - "smart_suggestions_service.dart"
 Cohesion: 0.04
-Nodes (56): DeviceType get, LayoutMode get, build, cardColumns, child, childAspectRatio, children, crossAxisSpacing (+48 more)
+Nodes (51): _artistPlayCounts, artistPlayCountsForPeriod, artists, _audioQuery, _computeSuggestedTracks, estimatedMinutesForPeriod, firstListenTime, fromJson (+43 more)
 
-### Community 12 - "Smart Suggestions & Filters"
+### Community 13 - "music_visualizer_screen.dart"
 Cohesion: 0.04
-Nodes (54): DateTime? get, folder_filter_service.dart, _artistPlayCounts, artistPlayCountsForPeriod, artists, _audioQuery, _computeSuggestedTracks, estimatedMinutesForPeriod (+46 more)
+Nodes (52): _artworkProvider, _artworkService, _attachVisualizer, _audio, _barBinEnd, _barBinStart, barColor, _barHeights (+44 more)
 
-### Community 13 - "Music Visualizer"
+### Community 14 - "equalizer_screen.dart"
 Cohesion: 0.04
-Nodes (53): barSpectrum,
-  circularBars,
-  mirrorBars,, _artworkProvider, _artworkService, _attachVisualizer, _audio, _barBinEnd, _barBinStart, barColor (+45 more)
+Nodes (46): _activeBand, bands, _BandValueRow, botPad, build, color, createState, _curveDragging (+38 more)
 
-### Community 14 - "Main App & Equalizer"
+### Community 15 - "fullscreen_lyrics.dart"
 Cohesion: 0.04
-Nodes (53): main, _activeBand, bands, _BandValueRow, botPad, build, color, createState (+45 more)
+Nodes (51): _autoFollowPaused, _buildControls, _buildFloatingTranslateButton, _buildFontSizeOption, _buildHeader, _buildLoadingView, _buildLyricLine, _buildLyricsView (+43 more)
 
-### Community 15 - "Fullscreen Lyrics Editor"
-Cohesion: 0.04
-Nodes (53): lyrics_editor_screen.dart, build, _buildControls, _buildFloatingTranslateButton, _buildFontSizeOption, _buildHeader, _buildLoadingView, _buildLyricLine (+45 more)
-
-### Community 16 - "Listening Insights Screen"
+### Community 16 - "listening_insights_screen.dart"
 Cohesion: 0.04
 Nodes (53): accentColor, _anim, _artwork, _artworkService, build, _buildBody, color, count (+45 more)
 
-### Community 17 - "Splash & Onboarding"
+### Community 17 - "splash_screen.dart"
 Cohesion: 0.04
-Nodes (51): ../onboarding/screens/onboarding_screen.dart, package:connectivity_plus/connectivity_plus.dart, ../../shared/services/artist_aggregator_service.dart, ../../shared/services/logging_service.dart, _backgroundFadeAnimation, _boundedPreparation, build, _buildBackground (+43 more)
+Nodes (44): _backgroundFadeAnimation, _boundedPreparation, build, _buildBackground, _checkAndTransition, _codeName, _completedTasks, createState (+36 more)
 
-### Community 18 - "Artists Screen"
+### Community 18 - "artists_screen.dart"
 Cohesion: 0.04
-Nodes (50): artist_detail_screen.dart, _allArtists, _applySorting, _artistAggregator, _artistImages, ArtistSortOption, ArtistsScreen, _ArtistsScreenState (+42 more)
+Nodes (46): _allArtists, _applySorting, _artistAggregator, _artistImages, ArtistSortOption, ArtistsScreen, _ArtistsScreenState, _artworkService (+38 more)
 
-### Community 19 - "Screen Mixins"
+### Community 19 - "PerformanceModeProvider"
+Cohesion: 0.06
+Nodes (72): HomeScreen, _HomeScreenState, _HomeTabBar, _HomeTabBarState, _RecapAppBarContent, _RecapAppBarContentState, _GenreRow, _GenreRowState (+64 more)
+
+### Community 20 - "expanding_player.dart"
+Cohesion: 0.02
+Nodes (75): animation, artistKey, artworkKey, _artworkService, _baseTextStyle, bottomMargin, _buildContent, _buildMiniPlayer (+67 more)
+
+### Community 21 - "albums_screen.dart"
+Cohesion: 0.04
+Nodes (53): _addAlbumToQueue, AlbumSortOption, AlbumsScreen, _AlbumsScreenState, _allAlbums, _applySorting, _artworkService, _audioQuery (+45 more)
+
+### Community 22 - "tracks_screen.dart"
+Cohesion: 0.04
+Nodes (47): _allSongs, _applySorting, _artworkService, ascending, _audioQuery, _audioServiceRef, build, buildBody (+39 more)
+
+### Community 23 - "background_manager_service.dart"
+Cohesion: 0.04
+Nodes (42): _adjustColorBrightness, _artworkCache, _artworkRetryDelay, _artworkRetryTimer, byteData, _clearArtwork, _colorCache, _computePaletteColors (+34 more)
+
+### Community 24 - "now_playing.dart"
+Cohesion: 0.03
+Nodes (56): applyBoundaryConditions, applyTo, artistKey, artists, _artistService, artworkKey, _artworkNotifier, _artworkService (+48 more)
+
+### Community 25 - "optimized_tiles.dart"
+Cohesion: 0.04
+Nodes (45): FieldNotifier, amplitude, _amplitudeController, _artworkService, _barPhases, _barsPerGroup, _barWidth, build (+37 more)
+
+### Community 26 - "album_detail_screen.dart"
+Cohesion: 0.04
+Nodes (42): AlbumDetailScreen, albumName, _allSongs, _artistName, _artworkBytes, _artworkService, _audioQuery, _audioServiceRef (+34 more)
+
+### Community 27 - "song_context_menu.dart"
+Cohesion: 0.08
+Nodes (20): _addToPlaylist, _addToQueue, _artworkService, build, _buildHeader, _channel, _clearCachedLyrics, _deleteSong (+12 more)
+
+### Community 28 - "theme_provider.dart"
+Cohesion: 0.04
+Nodes (40): AppThemePreset, _blurIntensity, _blurIntensityKey, _buildDarkTheme, _cachedDarkTheme, _customSeedColor, _customSeedColorKey, _darkDynamicColorScheme (+32 more)
+
+### Community 29 - "home_layout_settings.dart"
+Cohesion: 0.14
+Nodes (11): build, createState, _getSectionIcon, HomeLayoutSettingsScreen, _HomeLayoutSettingsScreenState, isDark, isVisible, onVisibilityChanged (+3 more)
+
+### Community 30 - "List"
+Cohesion: 0.03
+Nodes (58): _artworkService, _audioPlayerService, build, createState, didChangeDependencies, _displaySongs, dispose, _fullPlaylist (+50 more)
+
+### Community 31 - "cache_manager.dart"
+Cohesion: 0.05
+Nodes (40): _artworkCache, _cache, CacheManager, clear, clearAllCaches, clearArtworkCache, clearLyricsCache, clearMetadataCache (+32 more)
+
+### Community 32 - "lyrics_section.dart"
+Cohesion: 0.04
+Nodes (48): audioPlayerService, build, _buildAnimatedLyricLines, _buildExpandButton, _buildLyricLine, _buildLyricsContainer, _buildLyricsContent, _buildNoLyricsPlaceholder (+40 more)
+
+### Community 33 - "search_tab.dart"
+Cohesion: 0.04
+Nodes (48): OnboardingScreen, albums, artist, artists, _artworkService, build, _buildSearchResults, _buildSectionHeader (+40 more)
+
+### Community 34 - "animation_constants.dart"
+Cohesion: 0.05
+Nodes (41): AnimationConstants, bounceIn, decelerate, dimOpacity, easeInOut, easeInOutCubic, easeInOutCurve, easeOutQuart (+33 more)
+
+### Community 35 - "responsive_scaffold.dart"
+Cohesion: 0.05
+Nodes (38): appBar, backgroundColor, body, bottomNavigationBar, build, _buildDefaultPlaceholder, _buildSingleColumn, _buildTwoColumn (+30 more)
+
+### Community 36 - "main.dart"
+Cohesion: 0.05
+Nodes (23): _analytics, _analyticsObserver, _AppShell, _AppShellState, audioHandler, build, createState, dispose (+15 more)
+
+### Community 37 - "for_you_section.dart"
+Cohesion: 0.05
+Nodes (37): artistName, artistService, _artworkService, _audioService, _buildArtwork, _buildFavoriteContent, _buildForYouItems, _buildPlaylistArtwork (+29 more)
+
+### Community 38 - "animated_artwork_background.dart"
+Cohesion: 0.05
+Nodes (37): _areArtworksEqual, _areColorsEqual, artwork, _blobRegions, blurIntensity, _buildBlurredArtwork, _buildColorGradientBackground, child (+29 more)
+
+### Community 39 - "package:aurora_music_v01/core/constants/font_constants.dart"
 Cohesion: 0.07
-Nodes (51): ArtworkMixin, DetailScreenMixin, LazyLoadingMixin, PlaybackMixin, SearchMixin, CompletionPage, _CompletionPageState, FullscreenArtworkScreen (+43 more)
+Nodes (20): build, _controller, createState, dispose, FeedbackDialog, _FeedbackDialogState, _send, _sending (+12 more)
 
-### Community 20 - "App Providers & Feature Entry"
+### Community 40 - "StatelessWidget"
 Cohesion: 0.04
-Nodes (47): ../../features/player/player_feature.dart, ../../features/settings/settings_feature.dart, ../../main.dart, package:provider/provider.dart, ../providers/providers.dart, ../services/background_manager_service.dart, ../services/sleep_timer_controller.dart, SongModel (+39 more)
+Nodes (56): _BlurredNavBar, _AxisLabel, _GenreCard, _HourActivityCard, _QuickStat, _TopItemsCard, _WeekdayActivityCard, _ArtistListSlide (+48 more)
 
-### Community 21 - "Albums Screen"
+### Community 41 - "playlists_screen.dart"
 Cohesion: 0.04
-Nodes (48): _addAlbumToQueue, AlbumSortOption, AlbumsScreen, _AlbumsScreenState, _allAlbums, _applySorting, _artworkService, _audioQuery (+40 more)
+Nodes (55): build, build, _handleItemTap, _buildContent, _navigateToAlbumDetail, _buildAlbumsList, _showAlbumOptions, _navigateToArtistDetail (+47 more)
 
-### Community 22 - "Tracks Screen"
+### Community 42 - "artist_detail_screen.dart"
+Cohesion: 0.05
+Nodes (38): _addAllToQueue, _albums, _albumSongs, _allSongs, ArtistDetailsScreen, _ArtistDetailsScreenState, artistImagePath, artistName (+30 more)
+
+### Community 43 - "folders_screen.dart"
+Cohesion: 0.05
+Nodes (34): _allFolders, _applySorting, build, createState, _currentPage, _debounce, _displayedFolders, dispose (+26 more)
+
+### Community 44 - "package:provider/provider.dart"
+Cohesion: 0.05
+Nodes (38): build, _buildInfoCard, _contentFadeAnimation, _contentSlideAnimation, _controller, createState, dispose, _exitController (+30 more)
+
+### Community 45 - "lyrics_service.dart"
+Cohesion: 0.06
+Nodes (32): _addToMemoryCache, apiBaseUrl, _apiTimeout, _apiTimeoutRetry, _artistSimilarity, _cleanTitleForSearch, _client, deleteCachedLyricsForSong (+24 more)
+
+### Community 46 - "welcome_page.dart"
+Cohesion: 0.06
+Nodes (35): _buttonFadeAnimation, _controller, _countTextLines, createState, _currentLanguageIndex, _cycleText, dispose, _exitController (+27 more)
+
+### Community 47 - "playlist_detail_screen.dart"
 Cohesion: 0.04
-Nodes (48): _allSongs, _applySorting, _artworkService, ascending, _audioQuery, _audioServiceRef, build, buildBody (+40 more)
+Nodes (44): _artworkBytes, _artworkService, _audioServiceRef, _autoPlaylistName, build, _buildActionRow, _buildEmptyState, _buildOptionTile (+36 more)
 
-### Community 23 - "Background Manager"
-Cohesion: 0.04
-Nodes (47): _adjustColorBrightness, _artworkCache, _artworkRetryDelay, _artworkRetryTimer, byteData, _clearArtwork, _colorCache, _computePaletteColors (+39 more)
-
-### Community 24 - "Now Playing Screens"
-Cohesion: 0.05
-Nodes (46): fullscreen_artwork.dart, fullscreen_lyrics.dart, music_visualizer_screen.dart, build, _ArtistInitialAvatar, artists, _ArtistSelectionSheet, _ArtistSelectionSheetState (+38 more)
-
-### Community 25 - "Optimised Tile Widgets"
-Cohesion: 0.05
-Nodes (46): FieldNotifier, ValueListenable, amplitude, _amplitudeController, _artworkService, _barPhases, _barsPerGroup, _barWidth (+38 more)
-
-### Community 26 - "Artwork Mixin"
-Cohesion: 0.05
-Nodes (44): ArtworkCacheService get, Color get, artworkService, buildAlbumArtwork, buildSongArtwork, defaultColor, extractColorFromFile, extractColorFromSong (+36 more)
-
-### Community 27 - "Library Feature Shell"
-Cohesion: 0.05
-Nodes (45): ../../features/library/library_feature.dart, MaterialPageRoute, ../models/models.dart, package:share_plus/share_plus.dart, _navigateToAlbumDetail, _buildAlbumsList, _showAlbumOptions, _navigateToArtistDetail (+37 more)
-
-### Community 28 - "Theme Provider"
-Cohesion: 0.04
-Nodes (44): ColorScheme? get, HighEndBackground get, LowEndBackground get, AppThemePreset, _blurIntensity, _blurIntensityKey, _buildDarkTheme, _cachedDarkTheme (+36 more)
-
-### Community 29 - "Locale & L10n Provider"
-Cohesion: 0.05
-Nodes (40): ../../home/screens/listening_recap_screen.dart, InheritedWidget, ../../l10n/generated/app_localizations.dart, locale, LocaleProvider, of, updateShouldNotify, package:flutter/material.dart (+32 more)
-
-### Community 30 - "Now Playing Controller"
-Cohesion: 0.05
-Nodes (42): _artworkService, _audioPlayerService, currentArtwork, currentLyricIndexNotifier, currentSongId, dispose, hasLyrics, initialize (+34 more)
-
-### Community 31 - "Cache Manager"
-Cohesion: 0.05
-Nodes (43): Iterable, LinkedHashMap, _artworkCache, _cache, CacheManager, clear, clearAllCaches, clearArtworkCache (+35 more)
-
-### Community 32 - "Lyrics & Translation"
-Cohesion: 0.05
-Nodes (43): ../../../shared/services/lyrics_translation_service.dart, _TranslationState, audioPlayerService, build, _buildAnimatedLyricLines, _buildLyricLine, _buildLyricsContent, _buildNoLyricsPlaceholder (+35 more)
-
-### Community 33 - "Music Search Service"
-Cohesion: 0.05
-Nodes (42): AlbumModel?, FocusNode, ../../../shared/services/music_search_service.dart, albums, artist, artists, _artworkService, _buildSearchResults (+34 more)
-
-### Community 34 - "Animation Constants"
-Cohesion: 0.05
-Nodes (42): AnimationConstants, bounceIn, decelerate, dimOpacity, easeInOut, easeInOutCubic, easeInOutCurve, easeOutQuart (+34 more)
-
-### Community 35 - "Responsive Scaffold"
-Cohesion: 0.05
-Nodes (42): package:flutter/rendering.dart, PreferredSizeWidget?, ScrollPhysics?, ../utils/responsive_utils.dart, appBar, backgroundColor, body, bottomNavigationBar (+34 more)
-
-### Community 36 - "Audio Handler & Firebase"
-Cohesion: 0.05
-Nodes (41): AndroidEqualizer, BaseAudioHandler, features/features.dart, firebase_options.dart, FirebaseAnalytics, FirebaseAnalyticsObserver, _analytics, _analyticsObserver (+33 more)
-
-### Community 37 - "For You Section & Caching"
-Cohesion: 0.05
-Nodes (40): LocalCachingArtistService, ../../shared/services/artwork_cache_service.dart, ../../../shared/services/local_caching_service.dart, static final, artistName, artistService, _artworkService, _audioService (+32 more)
-
-### Community 38 - "Animated Artwork Background"
-Cohesion: 0.05
-Nodes (40): Listenable, AnimatedColorPointsBackground, _AnimatedColorPointsBackgroundState, _areArtworksEqual, _areColorsEqual, artwork, _blobRegions, blurIntensity (+32 more)
-
-### Community 39 - "Playlist Model"
-Cohesion: 0.05
-Nodes (35): ../../library/screens/album_detail_screen.dart, ../models/artist_utils.dart, copyWith, fromJson, id, name, Playlist, songs (+27 more)
-
-### Community 40 - "Module 40"
+### Community 48 - "batch_download_service.dart"
 Cohesion: 0.06
-Nodes (38): package:flutter_hooks/flutter_hooks.dart, _AxisLabel, _Divider, _GenreCard, _HourActivityCard, _QuickStat, _QuickStatsRow, _TopItemsCard (+30 more)
+Nodes (34): actions, _artworkService, _audioQuery, completed, _completedCount, currentItem, currentStatus, dispose (+26 more)
 
-### Community 41 - "Module 41"
-Cohesion: 0.05
-Nodes (37): package:file_picker/file_picker.dart, playlist_detail_screen.dart, _artworkService, autoPlaylists, _buildEmptyState, _buildOptionTile, _buildPlaylistArtwork, _chooseSyncFolder (+29 more)
-
-### Community 42 - "Module 42"
+### Community 49 - "replay_gain_reader.dart"
 Cohesion: 0.06
-Nodes (36): album_detail_screen.dart, _addAllToQueue, _albums, _albumSongs, _allSongs, ArtistDetailsScreen, _ArtistDetailsScreenState, artistImagePath (+28 more)
+Nodes (33): _cache, _cacheMaxSize, clearCache, db, _decodeUtf16, getTrackGainDb, getVolumeMultiplier, key (+25 more)
 
-### Community 43 - "Module 43"
+### Community 50 - "app_config.dart"
 Cohesion: 0.06
-Nodes (36): folder_detail_screen.dart, _allFolders, _applySorting, build, createState, _currentPage, _debounce, _displayedFolders (+28 more)
+Nodes (33): androidNotificationChannelId, androidNotificationChannelName, AppConfig, appName, artworkPreloadCount, cacheCleanupInterval, defaultAnimationDuration, defaultBlurSigma (+25 more)
 
-### Community 44 - "Module 44"
-Cohesion: 0.07
-Nodes (34): AlignmentGeometry, dart:math, HookWidget, build, package:mesh/mesh.dart, build, build, ../providers/performance_mode_provider.dart (+26 more)
-
-### Community 45 - "Module 45"
-Cohesion: 0.06
-Nodes (34): dart:convert, ../models/timed_lyrics.dart, package:crypto/crypto.dart, _generateSuggestions, generateSuggestionsInIsolate, LyricsIsolate, _parseLrc, parseLrcInIsolate (+26 more)
-
-### Community 46 - "Module 46"
-Cohesion: 0.06
-Nodes (35): _buttonFadeAnimation, _controller, createState, _currentLanguageIndex, _cycleText, dispose, _exitController, _exitFadeAnimation (+27 more)
-
-### Community 47 - "Module 47"
-Cohesion: 0.06
-Nodes (35): _artworkBytes, _artworkService, _autoPlaylistName, build, _buildActionRow, _buildEmptyState, _buildOptionTile, _buildSongsList (+27 more)
-
-### Community 48 - "Module 48"
-Cohesion: 0.06
-Nodes (35): actions, _artworkService, _audioQuery, completed, _completedCount, currentItem, currentStatus, dispose (+27 more)
-
-### Community 49 - "Module 49"
-Cohesion: 0.06
-Nodes (34): _cache, _cacheMaxSize, clearCache, db, _decodeUtf16, getTrackGainDb, getVolumeMultiplier, key (+26 more)
-
-### Community 50 - "Module 50"
-Cohesion: 0.06
-Nodes (34): androidNotificationChannelId, androidNotificationChannelName, AppConfig, appName, artworkPreloadCount, cacheCleanupInterval, defaultAnimationDuration, defaultBlurSigma (+26 more)
-
-### Community 51 - "Module 51"
+### Community 51 - "permissions_page.dart"
 Cohesion: 0.06
 Nodes (34): _audioPermissionGranted, _bluetoothPermissionGranted, _buildPermissionItem, _checkAndroidVersion, _checkPermissions, _contentFadeAnimation, _contentSlideAnimation, _controller (+26 more)
 
-### Community 52 - "Module 52"
-Cohesion: 0.07
-Nodes (31): NotificationManager, package:iconoir_flutter/iconoir_flutter.dart, package:path_provider/path_provider.dart, PerformanceModeProvider, _BlurredNavBar, build, build, _buildBody (+23 more)
+### Community 52 - "storage_settings_screen.dart"
+Cohesion: 0.14
+Nodes (10): build, _clearAllCaches, createState, _fmt, _infoRow, notificationManager, _showCacheInfo, _showClearCacheDialog (+2 more)
 
-### Community 53 - "Module 53"
+### Community 53 - "app_localizations_hi.dart"
+Cohesion: 0.00
+Nodes (607): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+599 more)
+
+### Community 54 - "README.md"
+Cohesion: 0.14
+Nodes (22): Analysis Options (Dart Linter Config), Aurora Music App, audio_service (^0.18.15), audiotags (^1.4.5), dynamic_color (^1.7.0), Firebase Suite (core ^3.0.0, analytics ^11.0.0, crashlytics ^4.0.0, performance ^0.10.0), flutter_lints (^6.0.0), http (^1.2.1) (+14 more)
+
+### Community 55 - "local_caching_service.dart"
 Cohesion: 0.06
-Nodes (32): build, _buildCard, _buildCtaButton, _buildDismissButton, _buildDivider, _buildDots, _buildIconRing, _buildSubtitle (+24 more)
+Nodes (29): _accessToken, cacheDir, _cacheTimestamps, _cacheTtl, _client, _clientId, _clientSecret, _createCacheDirectory (+21 more)
 
-### Community 54 - "Module 54"
-Cohesion: 0.11
-Nodes (31): Analysis Options (Dart Linter Config), AppLocalizations (generated class), Aurora Music App, Crowdin Translation Management, Localization System (ARB + flutter gen-l10n), Provider + Services Architecture, Contributing Translations Guide, Crowdin Configuration (+23 more)
-
-### Community 55 - "Module 55"
+### Community 56 - "library_tab.dart"
 Cohesion: 0.06
-Nodes (31): Directory, File get, _accessToken, cacheDir, _cacheTimestamps, _cacheTtl, _client, _clientId (+23 more)
+Nodes (20): _albumsFuture, _artistsFuture, _artworkService, build, buildCategorySection, _buildItemCard, _buildItemsList, _buildTabletCategorySection (+12 more)
 
-### Community 56 - "Module 56"
-Cohesion: 0.06
-Nodes (30): Future, home/home_feature.dart, library/library.dart, ../../library/library_feature.dart, onboarding/onboarding_feature.dart, package:flutter_staggered_animations/flutter_staggered_animations.dart, player/player.dart, ../../playlists/playlists_feature.dart (+22 more)
+### Community 57 - "app_localizations_de.dart"
+Cohesion: 0.00
+Nodes (607): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+599 more)
 
-### Community 57 - "Module 57"
-Cohesion: 0.07
-Nodes (31): jsonFile, kind, version, cache-v2, cmakeFiles-v1, codemodel-v2, cmake, generator (+23 more)
+### Community 58 - "app_localizations_es.dart"
+Cohesion: 0.00
+Nodes (607): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+599 more)
 
-### Community 58 - "Module 58"
-Cohesion: 0.07
-Nodes (31): jsonFile, kind, version, cache-v2, cmakeFiles-v1, codemodel-v2, cmake, generator (+23 more)
+### Community 60 - "fullscreen_artwork.dart"
+Cohesion: 0.08
+Nodes (24): _artworkProvider, _artworkService, _buildControls, _buildProgressBar, _buildSongInfo, _buildTopBar, _controlsAnimation, _controlsController (+16 more)
 
-### Community 59 - "Module 59"
-Cohesion: 0.06
-Nodes (30): artwork_cache_service.dart, audio_handler.dart, audio_player_service.dart, audio_settings_service.dart, background_manager_service.dart, bluetooth_service.dart, cache_manager.dart, device_performance_service.dart (+22 more)
-
-### Community 60 - "Module 60"
-Cohesion: 0.06
-Nodes (29): Duration, text, time, TimedLyric, _artworkProvider, _artworkService, build, _buildControls (+21 more)
-
-### Community 61 - "Module 61"
+### Community 61 - "Aurora Music App Icon Design"
 Cohesion: 0.08
 Nodes (30): App Icon 1024x1024@1x (Master), App Icon 20x20@1x, App Icon 20x20@2x, App Icon 20x20@3x, App Icon 29x29@1x, App Icon 29x29@2x, App Icon 29x29@3x, App Icon 40x40@1x (+22 more)
 
-### Community 62 - "Module 62"
+### Community 62 - "artist_separator_service.dart"
 Cohesion: 0.07
-Nodes (29): artist_aggregator_service.dart, addExclusion, addSeparator, defaultExclusions, defaultSeparators, _enabled, _enabledKey, _exclusions (+21 more)
+Nodes (27): addExclusion, addSeparator, defaultExclusions, defaultSeparators, _enabled, _enabledKey, _exclusions, _exclusionsKey (+19 more)
 
-### Community 63 - "Module 63"
-Cohesion: 0.07
-Nodes (29): IconData get, ../services/feedback_email_service.dart, ../services/feedback_reminder_service.dart, _accent, build, createState, _dismissPermanently, dispose (+21 more)
+### Community 63 - "feedback_popup_widget.dart"
+Cohesion: 0.06
+Nodes (29): _accent, build, createState, _dismissPermanently, dispose, _fadeIn, FeedbackPopupWidget, _FeedbackPopupWidgetState (+21 more)
 
-### Community 64 - "Module 64"
+### Community 64 - "play_count_service.dart"
 Cohesion: 0.07
 Nodes (29): _albumPlayCounts, _artistPlayCounts, _audioQuery, dispose, _folderAccessCounts, getAlbumPlayCount, getArtistPlayCount, getFolderAccessCount (+21 more)
 
-### Community 65 - "Module 65"
-Cohesion: 0.07
-Nodes (29): addAutomaticKeepAlive, addRepaintBoundary, build, child, childAspectRatio, children, color, ConstDivider (+21 more)
+### Community 65 - "optimized_widgets.dart"
+Cohesion: 0.06
+Nodes (30): addAutomaticKeepAlive, addRepaintBoundary, build, child, childAspectRatio, children, color, ConstDivider (+22 more)
 
-### Community 66 - "Module 66"
+### Community 66 - "equalizer_service.dart"
 Cohesion: 0.07
-Nodes (28): AndroidEqualizerParameters?, AndroidEqualizerParameters? get, allPresets, _applyGains, applyPreset, builtInPresets, _customPresets, deleteCustomPreset (+20 more)
+Nodes (27): allPresets, _applyGains, applyPreset, builtInPresets, _customPresets, deleteCustomPreset, dispose, _enabled (+19 more)
 
-### Community 67 - "Module 67"
+### Community 67 - "app_localizations_ru.dart"
+Cohesion: 0.00
+Nodes (607): aboutArtist, accentColor, accentColorDesc, add, addedToNamedPlaylist, addedToPlaylist, addExclusion, addRule (+599 more)
+
+### Community 68 - "audio_handler.dart"
+Cohesion: 0.05
+Nodes (32): _aaAlbums, _aaArtists, _aaMediaItemFromSong, _aaPlaylists, _aaSongs, attachAndroidAutoCallbacks, AuroraAudioHandler, _bindPlayerStreams (+24 more)
+
+### Community 69 - "folder_filter_settings_screen.dart"
+Cohesion: 0.07
+Nodes (26): _allFolders, _applyAndPop, _applySearch, _audioQuery, build, _buildEmptyState, createState, displayName (+18 more)
+
+### Community 70 - "player_dialogs.dart"
+Cohesion: 0.06
+Nodes (30): audioPlayerService, build, colorScheme, createState, _dismissibleSongTile, icon, iconColor, InfoRow (+22 more)
+
+### Community 71 - "toast_notification.dart"
+Cohesion: 0.07
+Nodes (24): _animationController, build, createState, _currentOverlay, dismiss, dispose, _fadeAnimation, hide (+16 more)
+
+### Community 72 - "performance_manager.dart"
+Cohesion: 0.07
+Nodes (23): cacheCleanupInterval, _cleanupCallbacks, _cleanupTimer, _currentFps, dispose, _fpsStartTime, _frameCount, getMemoryInfo (+15 more)
+
+### Community 73 - "music_stats_card.dart"
 Cohesion: 0.08
-Nodes (26): Offset, BetaWelcomePage, _BetaWelcomePageState, build, _buildInfoCard, _controller, createState, dispose (+18 more)
+Nodes (24): build, _cachedStats, compute, createState, _formatNumber, _getMemoizedStats, hashCode, isDark (+16 more)
 
-### Community 68 - "Module 68"
+### Community 74 - "artist_card.dart"
 Cohesion: 0.07
-Nodes (27): package:audio_service/audio_service.dart, _aaAlbums, _aaArtists, _aaMediaItemFromSong, _aaPlaylists, _aaSongs, attachAndroidAutoCallbacks, _broadcastState (+19 more)
+Nodes (22): getPrimaryArtist, hasMultipleArtists, splitArtists, ArtistCard, _artistImagePath, _artistInfo, _artistInfoCache, artistName (+14 more)
 
-### Community 69 - "Module 69"
-Cohesion: 0.07
-Nodes (27): _allFolders, _applyAndPop, _applySearch, _audioQuery, build, _buildEmptyState, createState, displayName (+19 more)
-
-### Community 70 - "Module 70"
-Cohesion: 0.07
-Nodes (27): ../../../shared/widgets/music_metadata_widget.dart, static const TextStyle, audioPlayerService, build, colorScheme, createState, _dismissibleSongTile, InfoRow (+19 more)
-
-### Community 71 - "Module 71"
-Cohesion: 0.07
-Nodes (27): static final GlobalKey, static final ToastNotification, static OverlayEntry?, static Timer?, _animationController, build, createState, _currentOverlay (+19 more)
-
-### Community 72 - "Module 72"
-Cohesion: 0.07
-Nodes (26): dart:collection, package:flutter/scheduler.dart, cacheCleanupInterval, _cleanupCallbacks, _cleanupTimer, _currentFps, dispose, _fpsStartTime (+18 more)
-
-### Community 73 - "Module 73"
-Cohesion: 0.08
-Nodes (26): _LibraryStats?, ../screens/listening_insights_screen.dart, build, _cachedStats, compute, createState, _formatNumber, _getMemoizedStats (+18 more)
-
-### Community 74 - "Module 74"
-Cohesion: 0.07
-Nodes (25): getPrimaryArtist, hasMultipleArtists, splitArtists, ../services/artist_separator_service.dart, ../services/local_caching_service.dart, ../services/performance_manager.dart, static final Set, _artistImagePath (+17 more)
-
-### Community 75 - "Module 75"
+### Community 75 - "audio_constants.dart"
 Cohesion: 0.07
 Nodes (26): kAllowedAudioExtensions, kAllowedUriSchemes, kCacheCleanupIntervalHours, kDefaultCacheSize, kDefaultTopItemCount, kErrorAudioLoadFailed, kErrorInvalidPath, kErrorInvalidPlaylist (+18 more)
 
-### Community 76 - "Module 76"
+### Community 76 - "donation_service.dart"
 Cohesion: 0.07
-Nodes (26): build, buyMeCoffeeUrl, buyMeCoffeeUsername, color, _DonationOption, DonationService, isDark, kofiUrl (+18 more)
+Nodes (25): build, buyMeCoffeeUrl, buyMeCoffeeUsername, color, _DonationOption, DonationService, isDark, kofiUrl (+17 more)
 
-### Community 77 - "Module 77"
+### Community 77 - "error_tracking_service.dart"
 Cohesion: 0.08
-Nodes (25): ../../core/constants/app_config.dart, DateTime?, clearPendingErrors, _currentErrors, error, ErrorRecord, errorString, ErrorTrackingService (+17 more)
+Nodes (21): clearPendingErrors, _currentErrors, error, ErrorRecord, errorString, ErrorTrackingService, fromJson, _getPrefs (+13 more)
 
-### Community 78 - "Module 78"
+### Community 78 - "audio_properties_reader.dart"
+Cohesion: 0.06
+Nodes (28): AudioPropertiesReader, _cache, _cacheMaxSize, clearCache, _flac, format, _maxReadBytes, _mp3 (+20 more)
+
+### Community 79 - "artist_separator_settings.dart"
 Cohesion: 0.08
-Nodes (24): Exception, _appOpenCountKey, _dismissedPermanentlyKey, dismissPermanently, FeedbackReminderService, _lastPromptKey, _minDaysBetweenPrompts, _minOpensBeforeFirstPrompt (+16 more)
+Nodes (24): ArtistSeparatorSettingsScreen, build, _chipTag, createState, dispose, _emptyState, _exclusions, _formatSeparatorForDisplay (+16 more)
 
-### Community 79 - "Module 79"
-Cohesion: 0.08
-Nodes (25): ArtistSeparatorSettingsScreen, _ArtistSeparatorSettingsScreenState, build, _chipTag, createState, dispose, _emptyState, _exclusions (+17 more)
+### Community 80 - "folder_detail_screen.dart"
+Cohesion: 0.07
+Nodes (25): _allSongs, _artworkBytes, _artworkService, _audioServiceRef, build, _buildSongsList, createState, _currentPage (+17 more)
 
-### Community 80 - "Module 80"
-Cohesion: 0.08
-Nodes (25): _allSongs, _artworkBytes, _artworkService, build, _buildSongsList, createState, _currentPage, _displayedSongs (+17 more)
-
-### Community 81 - "Module 81"
+### Community 81 - "library_screen_header.dart"
 Cohesion: 0.08
 Nodes (25): accentColor, actions, badge, build, _buildBackButton, _buildBackground, _buildBadgePill, _buildOrbs (+17 more)
 
-### Community 82 - "Module 82"
+### Community 82 - "Aurora Music App Icon - Composed Adaptive Icon"
 Cohesion: 0.09
 Nodes (25): Aurora Music Logo - Stylized Dual Musical Note S-Wave Symbol, App Icon Background Layer - Navy to Purple Gradient, Aurora Music App Icon - Composed Adaptive Icon, App Icon Foreground Layer - White Dual Music Note Logo, App Icon Monochrome Layer - Black Music Note Logo, Icon Background Layer HDPI, Icon Foreground Layer HDPI, App Icon HDPI Composed (72dp) (+17 more)
 
-### Community 83 - "Module 83"
+### Community 83 - "home_tab.dart"
 Cohesion: 0.10
-Nodes (23): for_you_section.dart, home_tab.dart, library_tab.dart, listening_history_card.dart, most_played_section.dart, music_stats_card.dart, recently_added_section.dart, recently_played_section.dart (+15 more)
+Nodes (14): artistService, build, _buildSection, _buildTabletLayout, createState, currentSong, HomeTab, _HomeTabState (+6 more)
 
-### Community 84 - "Module 84"
+### Community 84 - "performance_optimizations.dart"
 Cohesion: 0.08
-Nodes (24): Object?, T get, batchDuration, _batchTimer, _cachedValue, call, clear, computation (+16 more)
+Nodes (22): batchDuration, _batchTimer, _cachedValue, call, clear, computation, Debouncer, delay (+14 more)
 
-### Community 85 - "Module 85"
+### Community 85 - "notification_manager.dart"
 Cohesion: 0.08
-Nodes (24): clearPullProgress, dispose, empty, _isAppBarVisible, isProgress, _isShowingProgress, message, _notificationController (+16 more)
+Nodes (19): clearPullProgress, dispose, empty, _isAppBarVisible, isProgress, _isShowingProgress, message, _notificationController (+11 more)
 
-### Community 86 - "Module 86"
+### Community 86 - "static const String"
 Cohesion: 0.09
-Nodes (21): FontConstants, fontFamily, monospaceFontFamily, package:shared_preferences/shared_preferences.dart, markShown, shouldShowPrompt, _shownKey, TranslationReminderService (+13 more)
+Nodes (17): FontConstants, fontFamily, monospaceFontFamily, getNewLanguages, markAllSeen, NewLanguagesService, _seenLanguagesKey, markShown (+9 more)
 
-### Community 87 - "Module 87"
+### Community 87 - "lyrics_constants.dart"
 Cohesion: 0.08
 Nodes (23): kLyricsAnimationDuration, kLyricsBackgroundBlur, kLyricsCurrentFontSize, kLyricsDialogBgColor, kLyricsDialogBlur, kLyricsFadeDuration, kLyricsFontSizeExtraLarge, kLyricsFontSizeKey (+15 more)
 
-### Community 88 - "Module 88"
-Cohesion: 0.09
-Nodes (23): Map, package:aurora_music_v01/l10n/generated/app_localizations.dart, defaultOrder, HomeSection, HomeSectionExtension, id, initialize, _instance (+15 more)
+### Community 88 - "home_layout_service.dart"
+Cohesion: 0.10
+Nodes (19): defaultOrder, HomeSection, HomeSectionExtension, id, initialize, _instance, _isInitialized, isSectionVisible (+11 more)
 
-### Community 89 - "Module 89"
-Cohesion: 0.08
-Nodes (23): required Widget child,
-  double, actions, actionsPadding, barrierDismissible, blur, borderRadius, build, child (+15 more)
+### Community 89 - "glassmorphic_dialog.dart"
+Cohesion: 0.07
+Nodes (25): actions, actionsPadding, alwaysDark, barrierDismissible, blur, borderRadius, build, child (+17 more)
 
-### Community 90 - "Module 90"
+### Community 90 - "playlist_persistence_service.dart"
 Cohesion: 0.08
 Nodes (23): addSongsToPlaylist, addSongToPlaylist, _audioQuery, createPlaylist, deletePlaylist, dispose, getPlaylist, getTopPlaylists (+15 more)
 
-### Community 91 - "Module 91"
+### Community 91 - "widgets.dart"
+Cohesion: 0.05
+Nodes (11): AppBackground, build, child, enableAnimation, actions, build, CommonScreenScaffold, searchBar (+3 more)
+
+### Community 92 - "MainActivity.kt"
+Cohesion: 0.08
+Nodes (4): MainActivity, StreamHandler, OnDataCaptureListener, PendingWrite
+
+### Community 93 - "performance_mode_provider.dart"
 Cohesion: 0.09
-Nodes (22): about_dialog.dart, album_card.dart, animated_artwork_background.dart, animated_progress_line.dart, artist_card.dart, auto_scroll_text.dart, blur_dialog.dart, common/common.dart (+14 more)
+Nodes (20): _autoDetect, _autoDetectKey, _currentMode, currentModeDisplayName, _currentSettings, enableAutoDetect, getPerformanceModeDescription, getPerformanceModeDisplayName (+12 more)
 
-### Community 92 - "Module 92"
-Cohesion: 0.19
-Nodes (11): FlutterEngine, Int, Intent, String, Uri, AudioServiceActivity, Bundle, MethodChannel (+3 more)
-
-### Community 93 - "Module 93"
+### Community 94 - "device_performance_service.dart"
 Cohesion: 0.09
-Nodes (22): package:aurora_music_v01/shared/services/device_performance_service.dart, PerformanceLevel get, _autoDetect, _autoDetectKey, _currentMode, currentModeDisplayName, _currentSettings, enableAutoDetect (+14 more)
+Nodes (21): AnimationSettings, _cachedLevel, DevicePerformanceService, enableBlur, enableComplexAnimations, enableMeshBackground, _evaluateAndroid, _evaluateAsus (+13 more)
 
-### Community 94 - "Module 94"
+### Community 95 - "artist_aggregator_service.dart"
+Cohesion: 0.06
+Nodes (24): ArtistAggregatorService, _artistMap, _artistSongsMap, _audioQuery, _cachedArtists, _cacheDuration, clearCache, getAlbumsByArtist (+16 more)
+
+### Community 96 - "liked_songs_service.dart"
 Cohesion: 0.09
-Nodes (22): _cachedLevel, DevicePerformanceService, enableBlur, enableComplexAnimations, enableMeshBackground, _evaluateAndroid, _evaluateAsus, _evaluateGenericAndroid (+14 more)
+Nodes (19): dispose, initializeEmptyPlaylist, isLiked, isLikedById, likedSongIds, _likedSongs, likedSongsNotifier, _likedSongsPlaylist (+11 more)
 
-### Community 95 - "Module 95"
-Cohesion: 0.09
-Nodes (21): artist_separator_service.dart, OnAudioQuery, ArtistAggregatorService, _artistMap, _artistSongsMap, _audioQuery, _cachedArtists, _cacheDuration (+13 more)
+### Community 97 - "appearance_settings_screen.dart"
+Cohesion: 0.06
+Nodes (26): AppearanceSettingsScreen, build, currentCode, idx, isFirst, l10n, _LanguagePickerSheet, _LanguageTile (+18 more)
 
-### Community 96 - "Module 96"
-Cohesion: 0.09
-Nodes (21): audio_constants.dart, Playlist? get, dispose, initializeEmptyPlaylist, isLiked, isLikedById, likedSongIds, _likedSongs (+13 more)
+### Community 98 - "app_info_page.dart"
+Cohesion: 0.11
+Nodes (18): AppInfoPage, _AppInfoPageState, build, _buildFeatureItem, _contentFadeAnimation, _contentSlideAnimation, _controller, createState (+10 more)
 
-### Community 97 - "Module 97"
-Cohesion: 0.10
-Nodes (19): l10n/locale_provider.dart, ../../../l10n/supported_languages.dart, AppearanceSettingsScreen, build, idx, isFirst, l10n, _LanguageTile (+11 more)
-
-### Community 98 - "Module 98"
-Cohesion: 0.10
-Nodes (21): AppInfoPage, _AppInfoPageState, build, _buildFeatureItem, _contentFadeAnimation, _contentSlideAnimation, _controller, createState (+13 more)
-
-### Community 99 - "Module 99"
+### Community 99 - "language_selection_page.dart"
 Cohesion: 0.10
 Nodes (21): build, _contentFadeAnimation, _contentSlideAnimation, _controller, createState, dispose, _exitController, _exitFadeAnimation (+13 more)
 
-### Community 100 - "Module 100"
-Cohesion: 0.11
-Nodes (21): SleepTimerController, _openNowPlaying, _autoCollapseTimer, build, _buildPresetTile, _CounterButton, createState, dispose (+13 more)
+### Community 100 - "sleep_timer_widgets.dart"
+Cohesion: 0.07
+Nodes (32): _autoCollapseTimer, _buildPresetTile, colorScheme, _CounterButton, createState, dispose, icon, _isExpanded (+24 more)
 
-### Community 101 - "Module 101"
+### Community 101 - "bluetooth_service.dart"
 Cohesion: 0.10
-Nodes (20): package:audio_session/audio_session.dart, package:device_info_plus/device_info_plus.dart, package:permission_handler/permission_handler.dart, _checkBluetoothPermission, _connectedDeviceName, _devicesSubscription, dispose, _hasBluetoothPermission (+12 more)
+Nodes (15): _checkBluetoothPermission, _connectedDeviceName, _devicesSubscription, dispose, _hasBluetoothPermission, initialize, _instance, _isBluetoothConnected (+7 more)
 
-### Community 102 - "Module 102"
+### Community 102 - "settings_tab.dart"
 Cohesion: 0.10
-Nodes (20): ../screens/about_settings_screen.dart, ../screens/appearance_settings_screen.dart, ../screens/folder_filter_settings_screen.dart, ../screens/insights_settings_screen.dart, ../screens/playback_settings_screen.dart, ../screens/storage_settings_screen.dart, ../../../shared/providers/performance_mode_provider.dart, build (+12 more)
+Nodes (12): build, _buildCategoryCard, _buildSectionWidgets, _categoryRow, createState, _currentVersion, initState, _loadVersionInfo (+4 more)
 
-### Community 103 - "Module 103"
+### Community 103 - "audio_settings_service.dart"
 Cohesion: 0.10
 Nodes (20): AudioSettingsService, _cacheSize, _defaultSortOrder, _gaplessPlayback, _kDefaultCacheSize, _kDefaultPlaybackSpeed, _kDefaultSortOrder, _kSettingsFileName (+12 more)
 
-### Community 104 - "Module 104"
+### Community 104 - "song_like_button.dart"
+Cohesion: 0.04
+Nodes (49): build, CompletionPage, _CompletionPageState, _controller, createState, dispose, _fadeAnimation, initState (+41 more)
+
+### Community 105 - "detail_header.dart"
 Cohesion: 0.10
-Nodes (20): audioPlayerService, build, color, _count, createState, dispose, iconSize, initState (+12 more)
+Nodes (17): accentColor, actions, artworkBytes, artworkFilePath, badge, build, _buildBackButton, _buildBadgePill (+9 more)
 
-### Community 105 - "Module 105"
+### Community 106 - "theme_selection_page.dart"
+Cohesion: 0.06
+Nodes (33): build, _buildDonationOption, _controller, createState, dispose, DonationPage, _DonationPageState, _exitController (+25 more)
+
+### Community 107 - "insights_promo_service.dart"
+Cohesion: 0.11
+Nodes (17): checkAndTriggerBanner, defaultPeriodDays, getMonthlyEnabled, getRecapPeriodDays, getWeeklyEnabled, InsightsPromoService, _kMonthlyEnabled, _kMonthlyLastSeenMonth (+9 more)
+
+### Community 108 - "album_card.dart"
+Cohesion: 0.09
+Nodes (21): ArtworkCacheService, AlbumCard, albumId, albumName, artistName, artworkBytes, _artworkCache, _artworkService (+13 more)
+
+### Community 109 - "VoidCallback"
+Cohesion: 0.05
+Nodes (33): build, icon, _kIconSpacing, _kMenuBorderOpacity, _kMenuBorderRadius, label, _MenuItemRow, PlayerMoreOptionsMenu (+25 more)
+
+### Community 110 - "insights_aurora_banner.dart"
+Cohesion: 0.11
+Nodes (16): _auroraCtrl, _blob, build, _buildBanner, _buildContent, createState, dispose, _entryCtrl (+8 more)
+
+### Community 111 - "download_progress_monitor.dart"
 Cohesion: 0.10
-Nodes (19): dart:typed_data, Uint8List?, accentColor, actions, artworkBytes, artworkFilePath, badge, build (+11 more)
+Nodes (14): BatchDownloadService, DownloadProgress, _currentProgress, dispose, DownloadProgressMonitor, _downloadService, _downloadStatusController, downloadStatusStream (+6 more)
 
-### Community 106 - "Module 106"
+### Community 112 - "library_manager.dart"
+Cohesion: 0.06
+Nodes (32): addSongsToPlaylist, addSongToLibrary, addSongToPlaylist, _checkPermissionStatus, createPlaylist, deletePlaylist, _filterExcludedSongsFromPlaylists, _filterExistingFiles (+24 more)
+
+### Community 113 - "translation_contribution_page.dart"
 Cohesion: 0.11
-Nodes (19): build, _buildAccentColorSection, _buildBackgroundStyleSection, _contentFadeAnimation, _contentSlideAnimation, _controller, createState, dispose (+11 more)
+Nodes (17): build, _continue, _controller, createState, _crowdinProjectUrl, dispose, _exitController, _exitFadeAnimation (+9 more)
 
-### Community 107 - "Module 107"
-Cohesion: 0.10
-Nodes (19): checkAndTriggerBanner, defaultPeriodDays, getMonthlyEnabled, getRecapPeriodDays, getWeeklyEnabled, InsightsPromoService, _kMonthlyEnabled, _kMonthlyLastSeenMonth (+11 more)
+### Community 114 - "share_clip_service.dart"
+Cohesion: 0.07
+Nodes (23): SameLanguageException, _audioQuery, _composeVideo, _decodeImage, _drawCenteredIcon, _drawImageCover, _extractGlowColor, _frameFps (+15 more)
 
-### Community 108 - "Module 108"
-Cohesion: 0.10
-Nodes (19): albumId, albumName, artistName, artworkBytes, _artworkCache, _artworkService, build, _buildArtwork (+11 more)
-
-### Community 109 - "Module 109"
-Cohesion: 0.11
-Nodes (20): _, build, buildActionTile, buildAnimatedTile, buildGlassmorphicCard, buildSectionHeader, buildSegmentedChoiceTile, _buildSliderContent (+12 more)
-
-### Community 110 - "Module 110"
-Cohesion: 0.11
-Nodes (18): AnimationController, _auroraCtrl, _blob, build, _buildBanner, _buildContent, createState, dispose (+10 more)
-
-### Community 111 - "Module 111"
-Cohesion: 0.11
-Nodes (18): batch_download_service.dart, DownloadProgress? get, BatchDownloadService, DownloadProgress, _currentProgress, dispose, DownloadProgressMonitor, _downloadService (+10 more)
-
-### Community 112 - "Module 112"
-Cohesion: 0.11
-Nodes (18): bool get, ChangeNotifier, ArtistSeparatorService, AudioPlayerService, BluetoothService, ensureInitialized, _excludedFolders, filterSongs (+10 more)
-
-### Community 113 - "Module 113"
-Cohesion: 0.11
-Nodes (18): class, build, _continue, _controller, createState, _crowdinProjectUrl, dispose, _exitController (+10 more)
-
-### Community 114 - "Module 114"
-Cohesion: 0.11
-Nodes (18): build, icon, iconColor, max, min, onChanged, onChangeEnd, onTap (+10 more)
-
-### Community 115 - "Module 115"
-Cohesion: 0.12
-Nodes (17): controllers/now_playing_controller.dart, screens/fullscreen_artwork.dart, ../screens/fullscreen_lyrics.dart, screens/now_playing.dart, widgets/album_section.dart, widgets/artist_section.dart, widgets/lyrics_section.dart, widgets/now_playing_artwork.dart (+9 more)
-
-### Community 116 - "Module 116"
+### Community 116 - "onboarding_screen.dart"
 Cohesion: 0.15
-Nodes (17): ../home/screens/home_screen.dart, ../pages/app_info_page.dart, pages/beta_welcome_page.dart, ../pages/completion_page.dart, ../pages/donation_page.dart, ../pages/internet_usage_page.dart, ../pages/language_selection_page.dart, ../pages/permissions_page.dart (+9 more)
+Nodes (3): build, _completeOnboarding, _totalPages
 
-### Community 117 - "Module 117"
-Cohesion: 0.11
-Nodes (18): IconData?, backgroundColor, backText, build, continueText, foregroundColor, icon, iconWidget (+10 more)
+### Community 117 - "pill_button.dart"
+Cohesion: 0.04
+Nodes (40): audioPlayerService, build, _buildArtistName, _buildSongTitle, isTablet, _kArtistFontSizePhone, _kArtistFontSizeTablet, _kDefaultArtistOpacity (+32 more)
 
-### Community 118 - "Module 118"
-Cohesion: 0.11
-Nodes (18): build, _buildInfoCard, _contentFadeAnimation, _contentSlideAnimation, _controller, createState, dispose, _exitController (+10 more)
+### Community 118 - "share_clip_sheet.dart"
+Cohesion: 0.08
+Nodes (22): _artworkService, build, _clipService, createState, _durationSeconds, _error, _formatSeconds, _generateAndSave (+14 more)
 
-### Community 119 - "Module 119"
-Cohesion: 0.11
-Nodes (18): animationDuration, build, _buildDeterminateProgress, child, _controller, createState, determinateProgress, didUpdateWidget (+10 more)
+### Community 119 - "Aurora Music — Website Brief"
+Cohesion: 0.08
+Nodes (24): 1. Identity, 2. Author, 3. Features, 4. Design system, 5. Release timeline, 6. Suggested website structure, 7. Assets to prepare, 8. Things to verify before publishing (+16 more)
 
-### Community 120 - "Module 120"
+### Community 120 - "glassmorphic_card.dart"
 Cohesion: 0.11
 Nodes (18): album, artist, artwork, artworkSize, backgroundColor, badge, build, CardBadge (+10 more)
 
-### Community 121 - "Module 121"
+### Community 121 - "scrolling_text.dart"
 Cohesion: 0.12
-Nodes (17): build, createState, didUpdateWidget, dispose, initState, _isScrolling, pauseDuration, _scrollController (+9 more)
+Nodes (16): build, createState, didUpdateWidget, dispose, initState, _isScrolling, pauseDuration, _scrollController (+8 more)
 
-### Community 122 - "Module 122"
+### Community 122 - "player_controls.dart"
 Cohesion: 0.11
-Nodes (17): package:just_audio/just_audio.dart, _loopMode, audioPlayerService, backgroundColor, build, _buildPlayPauseButton, _buildRepeatButton, _buildShuffleButton (+9 more)
+Nodes (16): audioPlayerService, backgroundColor, build, _buildPlayPauseButton, _buildRepeatButton, _buildShuffleButton, _buildSkipNextButton, _buildSkipPreviousButton (+8 more)
 
-### Community 123 - "Module 123"
+### Community 123 - "audio_validators.dart"
 Cohesion: 0.11
-Nodes (17): return, ../../services/audio_constants.dart, any, hasAllowedAudioExtension, isValidAudioUri, isValidFilePath, isValidPlaylistId, isValidPlaylistName (+9 more)
+Nodes (15): any, hasAllowedAudioExtension, isValidAudioUri, isValidFilePath, isValidPlaylistId, isValidPlaylistName, lowerUri, parsedUri (+7 more)
 
-### Community 124 - "Module 124"
+### Community 124 - "player_progress_bar.dart"
 Cohesion: 0.12
-Nodes (17): ../../../shared/utils/formatters/duration_formatter.dart, Stream, audioService, build, _buildRow, _buildSlider, createState, dragging (+9 more)
+Nodes (15): audioService, build, _buildRow, _buildSlider, createState, dragging, dragPosition, _dragValue (+7 more)
 
-### Community 125 - "Module 125"
+### Community 125 - "frame_rate_monitor.dart"
 Cohesion: 0.12
-Nodes (17): static FrameRateMonitor?, _calculateFps, _currentFps, _frameCount, FrameRateMonitor, _frameTimes, getPerformanceAssessment, _instance (+9 more)
+Nodes (16): _calculateFps, _currentFps, _frameCount, FrameRateMonitor, _frameTimes, getPerformanceAssessment, _instance, _isMonitoring (+8 more)
 
-### Community 126 - "Module 126"
+### Community 126 - "smart_playlist_model.dart"
+Cohesion: 0.08
+Nodes (22): copyWith, createdAt, field, fromJson, id, limit, matches, matchMode (+14 more)
+
+### Community 127 - "Color"
+Cohesion: 0.06
+Nodes (24): actions, backgroundColor, barrierDismissible, blur, BlurDialog, borderRadius, build, _buildActionsSection (+16 more)
+
+### Community 128 - "smart_playlist_editor_screen.dart"
+Cohesion: 0.09
+Nodes (21): build, createState, dispose, existing, field, _fieldLabel, initState, _limit (+13 more)
+
+### Community 129 - "CustomPainter"
 Cohesion: 0.12
-Nodes (16): build, _buildDonationOption, _controller, createState, dispose, DonationPage, _DonationPageState, _exitController (+8 more)
+Nodes (15): _RecapAuroraPainter, _BarChartPainter, _BlobPainter, _BarSpectrumPainter, _CircularBarsPainter, _FrequencyLinePainter, _MirrorBarsPainter, _ParticlePainter (+7 more)
 
-### Community 127 - "Module 127"
+### Community 130 - "lazy_loading_mixin.dart"
 Cohesion: 0.12
-Nodes (16): actions, backgroundColor, barrierDismissible, blur, BlurDialog, borderRadius, build, _buildActionsSection (+8 more)
+Nodes (14): allSongs, buildLoadingIndicator, currentPage, disposeLazyLoading, hasMoreItems, initLazyLoading, isLoadingMore, lazyLoadingScrollController (+6 more)
 
-### Community 128 - "Module 128"
+### Community 131 - "about_settings_screen.dart"
 Cohesion: 0.12
-Nodes (15): @Deprecated, BorderRadius?, BorderRadiusGeometry?, double?, blur, borderRadius, build, buildPerformanceAwareBlur (+7 more)
+Nodes (10): AboutSettingsScreen, build, _checkUpdates, currentVersion, notificationManager, onResetSetup, onUpdateCheck, _showAboutDialog (+2 more)
 
-### Community 129 - "Module 129"
-Cohesion: 0.12
-Nodes (16): CustomPainter, _CurvePainter, _RecapAuroraPainter, _BarChartPainter, _BlobPainter, _BarSpectrumPainter, _CircularBarsPainter, _FrequencyLinePainter (+8 more)
+### Community 133 - "now_playing_artwork.dart"
+Cohesion: 0.09
+Nodes (20): artworkProvider, artworkService, borderRadius, build, _buildArtworkContainer, _buildArtworkImage, _buildFallbackArtwork, heroTag (+12 more)
 
-### Community 130 - "Module 130"
-Cohesion: 0.12
-Nodes (15): double get, allSongs, buildLoadingIndicator, currentPage, disposeLazyLoading, hasMoreItems, initLazyLoading, isLoadingMore (+7 more)
+### Community 134 - "package:flutter/material.dart"
+Cohesion: 0.04
+Nodes (37): locale, LocaleProvider, of, updateShouldNotify, ShaderWarmupService, _warmupPaintOperations, warmupShaders, ChangelogContent (+29 more)
 
-### Community 131 - "Module 131"
-Cohesion: 0.12
-Nodes (15): package:aurora_music_v01/shared/widgets/about_dialog.dart, AboutSettingsScreen, build, _checkUpdates, currentVersion, notificationManager, onResetSetup, onUpdateCheck (+7 more)
+### Community 135 - "track_tag_editor_screen.dart"
+Cohesion: 0.10
+Nodes (19): build, _buildAddTagButton, _buildEmptyState, _buildHeader, _buildPlaybackBar, _buildTagsList, createState, _currentPosition (+11 more)
 
-### Community 132 - "Module 132"
-Cohesion: 0.24
-Nodes (9): Context, Int, Intent, String, AppWidgetManager, AppWidgetProvider, IntArray, AuroraMusicWidgetProvider (+1 more)
-
-### Community 133 - "Module 133"
-Cohesion: 0.13
-Nodes (14): EdgeInsetsGeometry?, ../../../shared/widgets/common/scrolling_text.dart, audioPlayerService, build, _buildArtistName, _buildSongTitle, isTablet, _kArtistFontSizePhone (+6 more)
-
-### Community 134 - "Module 134"
+### Community 136 - "metadata_service.dart"
 Cohesion: 0.14
-Nodes (13): changelog_dialog.dart, ../../core/constants/font_constants.dart, package:url_launcher/url_launcher.dart, packages_dialog.dart, AuroraAboutDialog, build, _buildInfoRow, _buildSocialButton (+5 more)
+Nodes (11): _buildQueryVariants, _cleanQuery, _deezerBaseUrl, downloadImage, _englishHeaders, fetchCoverArt, fetchFullTrackDetails, _itunesBaseUrl (+3 more)
 
-### Community 135 - "Module 135"
+### Community 138 - "play_counts.dart"
+Cohesion: 0.11
+Nodes (17): firstListenTime, getAllMostPlayedTracks, getAllRecentlyAdded, getAllRecentlyPlayed, getMostPlayedAlbums, getMostPlayedArtists, getMostPlayedTracks, getRecentlyPlayed (+9 more)
+
+### Community 139 - "lyric_line_widget.dart"
+Cohesion: 0.17
+Nodes (7): build, fontSize, isCurrent, lineKey, LyricLineWidget, onTap, text
+
+### Community 140 - "track_tag_service.dart"
+Cohesion: 0.11
+Nodes (15): addTag, addTags, deleteTag, dismissSuggestion, _fileName, hasTags, load, _loaded (+7 more)
+
+### Community 141 - "../../l10n/generated/app_localizations.dart"
+Cohesion: 0.05
+Nodes (29): AlbumSection, audioPlayerService, build, _buildAlbumCard, _buildSectionTitle, _kBottomPadding, _kHorizontalMargin, _kSectionTitleFontSize (+21 more)
+
+### Community 142 - "dart:convert"
+Cohesion: 0.10
+Nodes (16): _generateSuggestions, generateSuggestionsInIsolate, LyricsIsolate, _parseLrc, parseLrcInIsolate, buildM3uContent, exportToFile, _fileName (+8 more)
+
+### Community 143 - "dart:io"
+Cohesion: 0.07
+Nodes (19): android, DefaultFirebaseOptions, ensureInitialized, _excludedFolders, filterSongs, hasExclusions, _initialized, _instance (+11 more)
+
+### Community 145 - "Timer?"
 Cohesion: 0.14
-Nodes (13): glassmorphic_container.dart, build, description, _launchURL, name, onTap, package, PackageInfo (+5 more)
+Nodes (10): buildSearchField, clearSearch, debounceMilliseconds, disposeSearch, initSearch, onSearchChanged, onSearchQuery, searchController (+2 more)
 
-### Community 136 - "Module 136"
-Cohesion: 0.14
-Nodes (13): package:http/http.dart, _buildQueryVariants, _cleanQuery, _deezerBaseUrl, downloadImage, _englishHeaders, fetchCoverArt, fetchFullTrackDetails (+5 more)
+### Community 146 - "music_metadata_widget.dart"
+Cohesion: 0.12
+Nodes (12): build, _buildDivider, _buildStatItem, _estimateBitrateValue, _formatDuration, _getFileFormat, _getFileSizeFormatted, _getQualityColor (+4 more)
 
-### Community 137 - "Module 137"
-Cohesion: 0.15
-Nodes (12): album_section.dart, artist_section.dart, lyrics_section.dart, now_playing_artwork.dart, player_controls.dart, player_dialogs.dart, player_menu.dart, player_progress_bar.dart (+4 more)
-
-### Community 138 - "Module 138"
-Cohesion: 0.15
-Nodes (12): BoxPainter, Color, Decoration, Paint, color, createBoxPainter, OutlineIndicator, _OutlinePainter (+4 more)
-
-### Community 139 - "Module 139"
-Cohesion: 0.15
-Nodes (11): GlobalKey, lyric_line_widget.dart, lyrics_constants.dart, build, fontSize, isCurrent, lineKey, LyricLineWidget (+3 more)
-
-### Community 140 - "Module 140"
-Cohesion: 0.15
-Nodes (12): int get, addSong, albumNames, hashCode, name, numberOfAlbums, numberOfTracks, operator (+4 more)
-
-### Community 141 - "Module 141"
-Cohesion: 0.15
-Nodes (12): ../../library/screens/artist_detail_screen.dart, shared/services/artist_separator_service.dart, ../../../shared/widgets/artist_card.dart, ArtistSection, audioPlayerService, build, _buildArtistCard, _buildSectionTitle (+4 more)
-
-### Community 142 - "Module 142"
-Cohesion: 0.15
-Nodes (12): ../models/playlist_model.dart, buildM3uContent, exportToFile, _fileName, _isAbsolute, _joinPath, _normalize, parsePaths (+4 more)
-
-### Community 143 - "Module 143"
-Cohesion: 0.17
-Nodes (11): dart:io, static bool get, static int get, _checkDeviceCapabilities, DeviceCapabilities, _isChecked, _isLowEndDevice, setLowEndDevice (+3 more)
-
-### Community 144 - "Module 144"
-Cohesion: 0.17
-Nodes (11): screens/home_screen.dart, widgets/for_you_section.dart, ../widgets/home_tab.dart, widgets/home_widgets.dart, ../widgets/library_tab.dart, widgets/listening_history_card.dart, widgets/most_played_section.dart, widgets/music_stats_card.dart (+3 more)
-
-### Community 145 - "Module 145"
-Cohesion: 0.17
-Nodes (11): buildSearchField, clearSearch, debounceMilliseconds, disposeSearch, initSearch, onSearchChanged, onSearchQuery, searchController (+3 more)
-
-### Community 146 - "Module 146"
-Cohesion: 0.17
-Nodes (11): shared/services/sleep_timer_controller.dart, Widget, build, icon, _kIconSpacing, _kMenuBorderOpacity, _kMenuBorderRadius, label (+3 more)
-
-### Community 147 - "Module 147"
+### Community 147 - "Metadata Generation Command arm64-v8a"
 Cohesion: 0.22
 Nodes (11): Android NDK Toolchain CMake File, Build File Index arm64-v8a, Metadata Generation Command arm64-v8a, Symbol Folder Index arm64-v8a, Build File Index armeabi-v7a, Metadata Generation Command armeabi-v7a, Symbol Folder Index armeabi-v7a, CXX Debug Object Output arm64-v8a (+3 more)
 
-### Community 148 - "Module 148"
-Cohesion: 0.18
-Nodes (10): app_background.dart, expanding_player.dart, package:flutter/services.dart, actions, build, CommonScreenScaffold, searchBar, showBackButton (+2 more)
+### Community 148 - "settings_manager.dart"
+Cohesion: 0.12
+Nodes (15): _applyNormalizationForCurrentSong, _applySettings, _loadSettings, _manageCacheSize, _saveSettings, setAutomixEnabled, setCacheSize, setCrossfadeDurationMs (+7 more)
 
-### Community 149 - "Module 149"
-Cohesion: 0.18
-Nodes (10): buildFiles, buildTargetsCommandComponents, cFileExtensions, cleanCommandsComponents, cppFileExtensions, libraries, cCompilerExecutable, cppCompilerExecutable (+2 more)
+### Community 149 - "track_tags_section.dart"
+Cohesion: 0.12
+Nodes (10): active, _activeTagIndex, audioPlayerService, build, isTablet, onDismiss, tags, _TagsListCard (+2 more)
 
-### Community 150 - "Module 150"
-Cohesion: 0.18
-Nodes (10): buildFiles, buildTargetsCommandComponents, cFileExtensions, cleanCommandsComponents, cppFileExtensions, libraries, cCompilerExecutable, cppCompilerExecutable (+2 more)
+### Community 150 - "smart_playlist_service.dart"
+Cohesion: 0.14
+Nodes (10): buildPlaylist, createSmartPlaylist, deleteSmartPlaylist, evaluate, _fileName, load, _loaded, _save (+2 more)
 
-### Community 151 - "Module 151"
-Cohesion: 0.18
-Nodes (10): Duration? get, cancelTimer, dispose, duration, isActive, _remainingTime, _sleepTimer, _sleepTimerDuration (+2 more)
+### Community 151 - "bool get"
+Cohesion: 0.17
+Nodes (9): cancelTimer, dispose, duration, isActive, _remainingTime, _sleepTimer, _sleepTimerDuration, startTimer (+1 more)
 
-### Community 152 - "Module 152"
-Cohesion: 0.18
-Nodes (10): package:in_app_update/in_app_update.dart, package:package_info_plus/package_info_plus.dart, checkForNewVersion, getCurrentVersion, isUpdateAvailable, latestVersion, resetChangelog, shouldShowChangelog (+2 more)
+### Community 152 - "String?"
+Cohesion: 0.17
+Nodes (8): checkForNewVersion, getCurrentVersion, isUpdateAvailable, latestVersion, resetChangelog, shouldShowChangelog, VersionCheckResult, VersionService
 
-### Community 153 - "Module 153"
-Cohesion: 0.20
-Nodes (9): assets, ddd, fr, h, ip, layers, op, v (+1 more)
+### Community 153 - "queue_manager.dart"
+Cohesion: 0.14
+Nodes (13): addMultipleToQueue, addToQueue, clearQueue, clearUpcoming, moveInQueue, playNext, _rebuildAudioSourcePreservingPosition, removeFromQueue (+5 more)
 
-### Community 154 - "Module 154"
+### Community 154 - "Aurora Music Brand Logo (Stylized Music Note)"
 Cohesion: 0.33
 Nodes (10): Aurora Music Brand Logo (Stylized Music Note), Aurora Music Android Notification Icon Set, Aurora Music Purple Gradient Design Language, HDPI Notification Status Icon Variant, HDPI Notification Status Icon, HDPI Splash Screen Asset (White on Transparent), Notification Status Icon Variant 1, Widget Aurora Full Logo (White on Transparent) (+2 more)
 
-### Community 155 - "Module 155"
+### Community 155 - "logging_service.dart"
+Cohesion: 0.22
+Nodes (7): _appName, critical, debug, error, info, LoggingService, warning
+
+### Community 156 - "supported_languages.dart"
 Cohesion: 0.20
-Nodes (9): dart:developer, package:flutter/foundation.dart, _appName, critical, debug, error, info, LoggingService (+1 more)
+Nodes (8): all, code, englishName, forCode, nativeName, nativeNameFor, SupportedLanguage, SupportedLanguages
 
-### Community 156 - "Module 156"
-Cohesion: 0.20
-Nodes (9): all, code, englishName, forCode, nativeName, nativeNameFor, SupportedLanguage, SupportedLanguages (+1 more)
+### Community 158 - "Duration"
+Cohesion: 0.15
+Nodes (10): text, time, TimedLyric, copyWith, fromJson, id, name, position (+2 more)
 
-### Community 157 - "Module 157"
-Cohesion: 0.36
-Nodes (8): screens/album_detail_screen.dart, screens/albums_screen.dart, screens/artist_detail_screen.dart, screens/artists_screen.dart, screens/categories.dart, screens/folder_detail_screen.dart, screens/folders_screen.dart, screens/tracks_screen.dart
+### Community 159 - "playlist_m3u_sync.dart"
+Cohesion: 0.15
+Nodes (12): exportPlaylistContent, exportPlaylistToTempFile, _fileBaseName, importPlaylistFromM3uFile, _isSyncExcludedPlaylist, _kSyncFolderPrefKey, _m3uService, playlistSyncFolder (+4 more)
 
-### Community 158 - "Module 158"
-Cohesion: 0.22
-Nodes (8): backtraceGraph, commands, files, nodes, installers, paths, build, source
+### Community 161 - "Aurora Music - Project Structure"
+Cohesion: 0.15
+Nodes (13): 1. Feature-First Architecture, 2. Shared Layer, 3. Core Layer, 4. Barrel Files, Adding New Features, Adding Shared Components, Aurora Music - Project Structure, Directory Structure (+5 more)
 
-### Community 159 - "Module 159"
-Cohesion: 0.22
-Nodes (8): backtraceGraph, commands, files, nodes, installers, paths, build, source
+### Community 162 - "crossfade_controller.dart"
+Cohesion: 0.17
+Nodes (11): attachCrossfadePipelineFactory, AudioCrossfadeControllerExtension, _beginCrossfade, cancelCrossfadeIfActive, _initCrossfadeEngine, kAutomixDurationMs, kMaxCrossfadeMs, kMinCrossfadeMs (+3 more)
 
-### Community 160 - "Module 160"
-Cohesion: 0.22
-Nodes (8): audio_service_selectors.dart, changelog_content.dart, device_capabilities.dart, formatters/formatters.dart, frame_rate_monitor.dart, performance_optimizations.dart, responsive_utils.dart, validators/validators.dart
+### Community 163 - "playback_controller.dart"
+Cohesion: 0.17
+Nodes (11): back, pause, play, _playInternal, resume, setPlaylist, skip, _sortPlaylist (+3 more)
 
-### Community 161 - "Module 161"
-Cohesion: 0.22
-Nodes (9): AutomaticKeepAliveClientMixin, AlbumCard, _AlbumCardState, ArtistCard, _ArtistCardState, LibraryTab, _LibraryTabState, _KeepAliveWrapper (+1 more)
+### Community 164 - "feedback_reminder_service.dart"
+Cohesion: 0.17
+Nodes (11): _appOpenCountKey, _dismissedPermanentlyKey, dismissPermanently, FeedbackReminderService, _lastPromptKey, _minDaysBetweenPrompts, _minOpensBeforeFirstPrompt, _promptCountKey (+3 more)
 
-### Community 162 - "Module 162"
-Cohesion: 0.22
-Nodes (8): inputs, kind, paths, build, source, version, major, minor
+### Community 165 - "Core Features"
+Cohesion: 0.18
+Nodes (11): Core Features, Internationalization, Library, Now Playing, Onboarding & Settings, Personalization & Theming, Playback, Playlists (+3 more)
 
-### Community 163 - "Module 163"
-Cohesion: 0.22
-Nodes (8): inputs, kind, paths, build, source, version, major, minor
-
-### Community 164 - "Module 164"
-Cohesion: 0.22
-Nodes (8): configurations, kind, paths, build, source, version, major, minor
-
-### Community 165 - "Module 165"
-Cohesion: 0.22
-Nodes (8): configurations, kind, paths, build, source, version, major, minor
-
-### Community 166 - "Module 166"
+### Community 166 - "Android NDK 27.0.12077973"
 Cohesion: 0.36
 Nodes (8): Android Gradle Plugin 8.7.3, Android NDK 27.0.12077973, Android Platform API 29, CMakeCache arm64-v8a Debug, CMakeCache armeabi-v7a Debug, CMake 3.22.1, CXX Build Hash Key (6p5f3i11), LLVM Toolchain (NDK prebuilt)
 
-### Community 167 - "Module 167"
+### Community 167 - "duration_formatter.dart"
 Cohesion: 0.25
 Nodes (7): formatDuration, formatDurationCompact, formatDurationWithHours, hours, minutes, seconds, twoDigits
 
-### Community 168 - "Module 168"
-Cohesion: 0.43
-Nodes (5): Context, FlutterMultiDexApplication, Application, CallSuper, Override
+### Community 169 - ".application"
+Cohesion: 0.12
+Nodes (7): AVFoundation, Flutter, AppDelegate, AudioSessionHandler, RunnerTests, UIKit, XCTest
 
-### Community 169 - "Module 169"
+### Community 171 - "dart:async"
 Cohesion: 0.29
-Nodes (5): Any, FlutterAppDelegate, Bool, AppDelegate, UIApplication
+Nodes (4): build, _openCrowdin, showIfNeeded, TranslationReminderDialog
 
-### Community 170 - "Module 170"
+### Community 172 - "Localization System (ARB + flutter gen-l10n)"
+Cohesion: 0.31
+Nodes (8): AppLocalizations (generated class), Crowdin Translation Management, Localization System (ARB + flutter gen-l10n), 4. After translators have worked... download translations, 5. Regenerate Dart files, MY NOTES, Crowdin Configuration, L10n Configuration (l10n.yaml)
+
+### Community 173 - "Contributing Translations to Aurora Music"
+Cohesion: 0.22
+Nodes (9): Contributing Translations to Aurora Music, Keeping translations up to date, Need help?, Prerequisites, Step 1 – Create the translation file, Step 2 – Regenerate the Dart files, Step 3 – Register the language (the only manual step), Step 4 – (Optional) Add a welcome greeting (+1 more)
+
+### Community 174 - "AppLocalizations"
+Cohesion: 0.20
+Nodes (9): AppLocalizations, _AppLocalizationsDelegate, AppLocalizationsCs, AppLocalizationsDe, AppLocalizationsEn, AppLocalizationsEs, AppLocalizationsHi, of (+1 more)
+
+### Community 175 - "media_artwork.dart"
+Cohesion: 0.29
+Nodes (6): _createMediaItem, _createMediaItemSync, getCurrentSongArtwork, _loadRemainingArtworkInBackground, _updateBackgroundColors, updateCurrentArtwork
+
+### Community 176 - "Aurora Music"
 Cohesion: 0.33
-Nodes (5): artwork_mixin.dart, detail_screen_mixin.dart, lazy_loading_mixin.dart, playback_mixin.dart, search_mixin.dart
+Nodes (6): Aurora Music, Building & Running, Platforms, Project Structure, Tech Stack, What it does
 
-### Community 171 - "Module 171"
-Cohesion: 0.33
-Nodes (5): ../../core/constants/animation_constants.dart, dart:async, build, style, text
-
-### Community 172 - "Module 172"
-Cohesion: 0.33
-Nodes (5): dart:ui, package:flutter/painting.dart, ShaderWarmupService, _warmupPaintOperations, warmupShaders
-
-### Community 173 - "Module 173"
-Cohesion: 0.33
-Nodes (5): handle_new_rx_page(), __lldb_init_module(), Intercept NOTIFY_DEBUGGER_ABOUT_RX_PAGES and touch the pages., SBDebugger, SBFrame
-
-### Community 174 - "Module 174"
+### Community 177 - "TrackTagService"
 Cohesion: 0.40
-Nodes (6): AppLocalizations, _AppLocalizationsDelegate, AppLocalizationsCs, AppLocalizationsEn, of, LocalizationsDelegate
+Nodes (5): _deleteTag, _importTimestamps, TrackTagEditorScreen, _TrackTagEditorScreenState, TrackTagService
 
-### Community 175 - "Module 175"
-Cohesion: 0.33
-Nodes (5): entries, kind, version, major, minor
-
-### Community 176 - "Module 176"
-Cohesion: 0.33
-Nodes (5): entries, kind, version, major, minor
-
-### Community 177 - "Module 177"
+### Community 178 - "_"
 Cohesion: 0.40
-Nodes (4): images, info, author, version
+Nodes (5): _, _ascendingKey, _optionKey, save, SortPreferences
 
-### Community 178 - "Module 178"
-Cohesion: 0.40
-Nodes (4): buildFiles, buildTargetsCommandComponents, cleanCommandsComponents, libraries
-
-### Community 179 - "Module 179"
-Cohesion: 0.40
-Nodes (4): buildFiles, buildTargetsCommandComponents, cleanCommandsComponents, libraries
-
-### Community 180 - "Module 180"
-Cohesion: 0.40
-Nodes (4): artist_utils.dart, playlist_model.dart, separated_artist.dart, timed_lyrics.dart
-
-### Community 181 - "Module 181"
-Cohesion: 0.40
-Nodes (4): images, info, author, version
-
-### Community 182 - "Module 182"
-Cohesion: 0.40
-Nodes (4): images, info, author, version
-
-### Community 183 - "Module 183"
-Cohesion: 0.40
-Nodes (4): ChangelogContent, getChangelogForVersion, getLatestVersion, hasVersion
-
-### Community 184 - "Module 184"
+### Community 181 - "queue_persistence.dart"
 Cohesion: 0.50
-Nodes (3): albums_screen.dart, artists_screen.dart, folders_screen.dart
+Nodes (3): loadQueueState, _primeAudioSourceAfterRestore, saveQueueState
 
-### Community 186 - "Module 186"
+### Community 182 - "SmartPlaylistService"
+Cohesion: 0.50
+Nodes (4): _save, SmartPlaylistEditorScreen, _SmartPlaylistEditorScreenState, SmartPlaylistService
+
+### Community 183 - "EqualizerService"
+Cohesion: 0.50
+Nodes (4): EqualizerScreen, _EqualizerScreenState, _maybeInit, EqualizerService
+
+### Community 186 - "ic_stat_music1 xhdpi"
 Cohesion: 0.50
 Nodes (4): ic_stat_music1 mdpi, ic_stat_music1 xhdpi, ic_stat_music1 xxhdpi, ic_stat_music1 xxxhdpi
 
-### Community 187 - "Module 187"
+### Community 187 - "Splash Screen xhdpi"
 Cohesion: 0.50
 Nodes (4): Splash Screen mdpi, Splash Screen xhdpi, Splash Screen xxhdpi, Splash Screen xxxhdpi
 
-### Community 188 - "Module 188"
-Cohesion: 0.50
-Nodes (3): package:aurora_music_v01/shared/services/lyrics_translation_service.dart, package:flutter_test/flutter_test.dart, main
-
-### Community 189 - "Module 189"
-Cohesion: 0.50
-Nodes (3): package:sentry_flutter/sentry_flutter.dart, FeedbackEmailService, sendText
-
-### Community 193 - "Module 193"
-Cohesion: 0.67
-Nodes (3): BuildContext, AudioPlayerServiceSelectors, ResponsiveContext
-
-### Community 195 - "Module 195"
+### Community 195 - "ic_stat_music xhdpi"
 Cohesion: 0.67
 Nodes (3): ic_stat_music mdpi, ic_stat_music xhdpi, ic_stat_music xxhdpi
 
-### Community 199 - "Module 199"
+### Community 199 - "Default Album Art Placeholder"
 Cohesion: 0.67
 Nodes (3): Default Album Art Placeholder, Aurora Music Full Logo (white on white - transparent), Unknown Artist Placeholder Asset
 
-### Community 203 - "Module 203"
-Cohesion: 0.67
-Nodes (3): SliverGridDelegate, SliverGridDelegateWithMaxCrossAxisExtent, ResponsiveSliverGridDelegate
-
-### Community 204 - "Module 204"
+### Community 204 - "Liked Playlist Cover Asset"
 Cohesion: 1.00
 Nodes (3): Liked Playlist Cover Asset, Most Played Playlist Cover Asset, Recently Added Playlist Cover Asset
 
 ## Knowledge Gaps
-- **5298 isolated node(s):** `cmake.sourceDirectory`, `dart.flutterSdkPath`, `version`, `tasks`, `entries` (+5293 more)
-  These have ≤1 connection - possible missing edges or undocumented components.
-- **33 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **8119 isolated node(s):** `XCTest`, `AnimationConstants`, `fastest`, `fast`, `normal` (+8114 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 8557 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **42 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `list` connect `Detail Screen Mixin` to `Module 130`, `Audio Player Service Core`, `Listening Recap Screen`, `Home Screen & Onboarding`, `Metadata Tag Editor`, `Core Models & Widgets`, `Responsive Layout Utils`, `Module 140`, `Music Visualizer`, `Main App & Equalizer`, `Fullscreen Lyrics Editor`, `Listening Insights Screen`, `Smart Suggestions & Filters`, `Artists Screen`, `Splash & Onboarding`, `Module 148`, `Albums Screen`, `Tracks Screen`, `Background Manager`, `Now Playing Screens`, `Artwork Mixin`, `Now Playing Controller`, `Lyrics & Translation`, `Music Search Service`, `Responsive Scaffold`, `Audio Handler & Firebase`, `For You Section & Caching`, `Animated Artwork Background`, `Playlist Model`, `Module 41`, `Module 42`, `Module 43`, `Module 44`, `Module 46`, `Module 47`, `Module 48`, `Module 62`, `Module 65`, `Module 66`, `Module 69`, `Module 72`, `Module 75`, `Module 77`, `Module 79`, `Module 80`, `Module 81`, `Module 83`, `Module 88`, `Module 89`, `Module 90`, `Module 95`, `Module 99`, `Module 105`, `Module 125`, `Module 127`?**
-  _High betweenness centrality (0.082) - this node is a cross-community bridge._
-- **Why does `PerformanceModeProvider` connect `Module 52` to `Module 128`, `Module 131`, `Home Screen & Onboarding`, `Metadata Tag Editor`, `Main App & Equalizer`, `Screen Mixins`, `App Providers & Feature Entry`, `Now Playing Screens`, `Library Feature Shell`, `Lyrics & Translation`, `Module 161`, `Music Search Service`, `Audio Handler & Firebase`, `Animated Artwork Background`, `Module 44`, `Module 47`, `Module 70`, `Module 71`, `Module 74`, `Module 79`, `Module 219`, `Module 93`, `Module 97`, `Module 100`, `Module 102`, `Module 106`, `Module 108`, `Module 109`, `Module 110`, `Module 112`, `Module 120`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `AppLocalizations` connect `Module 174` to `Generated Localizations`, `Listening Recap Screen`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
-- **What connects `cmake.sourceDirectory`, `dart.flutterSdkPath`, `version` to the rest of the system?**
-  _5299 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `Generated Localizations` be split into smaller, more focused modules?**
-  _Cohesion score 0.00338409475465313 - nodes in this community are weakly interconnected._
-- **Should `English L10n Strings` be split into smaller, more focused modules?**
-  _Cohesion score 0.0034542314335060447 - nodes in this community are weakly interconnected._
-- **Should `Czech L10n Strings` be split into smaller, more focused modules?**
-  _Cohesion score 0.0034542314335060447 - nodes in this community are weakly interconnected._
+- **Why does `list` connect `List` to `lazy_loading_mixin.dart`, `audio_player_service.dart`, `listening_recap_screen.dart`, `home_screen.dart`, `AudioPlayerService`, `metadata_detail_screen.dart`, `recently_played_section.dart`, `responsive_utils.dart`, `smart_suggestions_service.dart`, `music_visualizer_screen.dart`, `equalizer_screen.dart`, `fullscreen_lyrics.dart`, `listening_insights_screen.dart`, `splash_screen.dart`, `artists_screen.dart`, `albums_screen.dart`, `tracks_screen.dart`, `background_manager_service.dart`, `now_playing.dart`, `album_detail_screen.dart`, `lyrics_section.dart`, `search_tab.dart`, `responsive_scaffold.dart`, `main.dart`, `for_you_section.dart`, `animated_artwork_background.dart`, `playlists_screen.dart`, `artist_detail_screen.dart`, `folders_screen.dart`, `package:provider/provider.dart`, `welcome_page.dart`, `playlist_detail_screen.dart`, `batch_download_service.dart`, `artist_separator_service.dart`, `optimized_widgets.dart`, `equalizer_service.dart`, `folder_filter_settings_screen.dart`, `performance_manager.dart`, `audio_constants.dart`, `error_tracking_service.dart`, `artist_separator_settings.dart`, `folder_detail_screen.dart`, `library_screen_header.dart`, `home_tab.dart`, `home_layout_service.dart`, `glassmorphic_dialog.dart`, `playlist_persistence_service.dart`, `widgets.dart`, `artist_aggregator_service.dart`, `language_selection_page.dart`, `detail_header.dart`, `frame_rate_monitor.dart`, `Color`?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+- **What connects `XCTest`, `AnimationConstants`, `fastest` to the rest of the system?**
+  _8119 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `app_localizations.dart` be split into smaller, more focused modules?**
+  _Cohesion score 0.002805049088359046 - nodes in this community are weakly interconnected._
+- **Why does `AudioPlayerService` connect `AudioPlayerService` to `smart_playlist_editor_screen.dart`, `audio_player_service.dart`, `listening_recap_screen.dart`, `home_screen.dart`, `track_tag_editor_screen.dart`, `metadata_detail_screen.dart`, `recently_played_section.dart`, `music_visualizer_screen.dart`, `../../l10n/generated/app_localizations.dart`, `fullscreen_lyrics.dart`, `listening_insights_screen.dart`, `splash_screen.dart`, `artists_screen.dart`, `PerformanceModeProvider`, `expanding_player.dart`, `albums_screen.dart`, `tracks_screen.dart`, `track_tags_section.dart`, `now_playing.dart`, `album_detail_screen.dart`, `song_context_menu.dart`, `List`, `lyrics_section.dart`, `search_tab.dart`, `crossfade_controller.dart`, `main.dart`, `for_you_section.dart`, `playlists_screen.dart`, `artist_detail_screen.dart`, `playlist_detail_screen.dart`, `TrackTagService`, `SmartPlaylistService`, `library_tab.dart`, `fullscreen_artwork.dart`, `player_dialogs.dart`, `music_stats_card.dart`, `folder_detail_screen.dart`, `appearance_settings_screen.dart`, `sleep_timer_widgets.dart`, `song_like_button.dart`, `pill_button.dart`, `player_controls.dart`, `player_progress_bar.dart`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Should `app_localizations_en.dart` be split into smaller, more focused modules?**
+  _Cohesion score 0.0028735632183908046 - nodes in this community are weakly interconnected._
+- **Why does `PerformanceModeProvider` connect `PerformanceModeProvider` to `about_settings_screen.dart`, `home_screen.dart`, `AudioPlayerService`, `package:flutter/material.dart`, `metadata_detail_screen.dart`, `music_metadata_widget.dart`, `expanding_player.dart`, `now_playing.dart`, `lyrics_section.dart`, `search_tab.dart`, `main.dart`, `animated_artwork_background.dart`, `StatelessWidget`, `playlists_screen.dart`, `dart:async`, `package:provider/provider.dart`, `playlist_detail_screen.dart`, `storage_settings_screen.dart`, `player_dialogs.dart`, `toast_notification.dart`, `artist_card.dart`, `artist_separator_settings.dart`, `glassmorphic_dialog.dart`, `performance_mode_provider.dart`, `appearance_settings_screen.dart`, `sleep_timer_widgets.dart`, `settings_tab.dart`, `theme_selection_page.dart`, `album_card.dart`, `VoidCallback`, `insights_aurora_banner.dart`, `pill_button.dart`, `glassmorphic_card.dart`, `Color`?**
+  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+- **Should `app_localizations_cs.dart` be split into smaller, more focused modules?**
+  _Cohesion score 0.0028735632183908046 - nodes in this community are weakly interconnected._

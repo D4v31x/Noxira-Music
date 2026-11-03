@@ -97,6 +97,13 @@ class _QueuePageState extends State<QueuePage> {
                     subtitle: '${l10n.queue} · $count '
                         '${count == 1 ? 'song' : 'songs'}',
                     onCoverTap: () => Navigator.pop(context),
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          color: Colors.white70, size: 24),
+                      tooltip:
+                          MaterialLocalizations.of(context).backButtonTooltip,
+                      onPressed: () => Navigator.pop(context),
+                    ),
                     trailing: [
                       if (_audio.hasUpcoming)
                         IconButton(
@@ -191,6 +198,8 @@ class _QueuePageState extends State<QueuePage> {
                     song: history[i],
                     dimmed: true,
                     onTap: () => _play(i),
+                    onPlayNext: () => _audio.playNext(history[i]),
+                    onRemove: () => _remove(i),
                   ),
                 ),
               ),
@@ -231,6 +240,7 @@ class _QueuePageState extends State<QueuePage> {
                       child: _SongRow(
                         song: queued[i],
                         onTap: () => _play(index),
+                        rowKeys: _keysFor(i),
                         handleIndex: i,
                       ),
                     ),
@@ -254,6 +264,9 @@ class _QueuePageState extends State<QueuePage> {
                     child: _SongRow(
                       song: source[i],
                       onTap: () => _play(index),
+                      rowKeys: _keysFor(queued.length + i),
+                      onPlayNext: () => _audio.moveInQueue(index, current + 1),
+                      onRemove: () => _remove(index),
                     ),
                   );
                 },
@@ -280,6 +293,10 @@ class _QueuePageState extends State<QueuePage> {
       );
     });
   }
+
+  /// Landing spot for the card's row [position] (0 = next song), if it has one.
+  RowKeys? _keysFor(int position) =>
+      position < kPlayerPageRows ? widget.targets.rows[position] : null;
 
   Widget _header(String title) {
     return SliverToBoxAdapter(
@@ -339,8 +356,14 @@ class _SongRow extends StatelessWidget {
     this.nowPlaying = false,
     this.playing = false,
     this.handleIndex,
+    this.onPlayNext,
+    this.onRemove,
+    this.rowKeys,
   });
 
+  final RowKeys? rowKeys;
+  final VoidCallback? onPlayNext;
+  final VoidCallback? onRemove;
   final SongModel song;
   final VoidCallback onTap;
   final bool dimmed;
@@ -353,6 +376,9 @@ class _SongRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fade = dimmed ? 0.6 : 1.0;
+    final route = PlayerPageScope.maybeOf(context)?.route;
+    Widget landing(GlobalKey? key, Widget child) =>
+        key == null ? child : playerPageSharedTarget(route, key, child);
     final artist = ArtistSeparatorService()
         .splitArtists(song.artist ?? 'Unknown Artist')
         .join(', ');
@@ -380,32 +406,35 @@ class _SongRow extends StatelessWidget {
                 children: [
                   Opacity(
                     opacity: fade,
-                    child: SizedBox(
-                      width: _kRowArt,
-                      height: _kRowArt,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            ColoredBox(
-                                color: Colors.white.withValues(alpha: 0.1)),
-                            ArtworkCacheService()
-                                .buildCachedArtwork(song.id, size: _kRowArt),
-                            if (nowPlaying)
-                              ColoredBox(
-                                color: Colors.black.withValues(alpha: 0.45),
-                                child: Center(
-                                  child: NowPlayingBars(
-                                    isPlaying: playing,
-                                    size: 28,
+                    child: landing(
+                        rowKeys?.art,
+                        SizedBox(
+                          width: _kRowArt,
+                          height: _kRowArt,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                ColoredBox(
+                                    color: Colors.white.withValues(alpha: 0.1)),
+                                ArtworkCacheService().buildCachedArtwork(
+                                    song.id,
+                                    size: _kRowArt),
+                                if (nowPlaying)
+                                  ColoredBox(
+                                    color: Colors.black.withValues(alpha: 0.45),
+                                    child: Center(
+                                      child: NowPlayingBars(
+                                        isPlaying: playing,
+                                        size: 28,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
+                              ],
+                            ),
+                          ),
+                        )),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -415,29 +444,33 @@ class _SongRow extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            song.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontFamily: FontConstants.fontFamily,
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              height: 1.25,
-                            ),
-                          ),
-                          Text(
-                            artist,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontFamily: FontConstants.fontFamily,
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 13,
-                              height: 1.3,
-                            ),
-                          ),
+                          landing(
+                              rowKeys?.title,
+                              Text(
+                                song.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FontConstants.fontFamily,
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.25,
+                                ),
+                              )),
+                          landing(
+                              rowKeys?.artist,
+                              Text(
+                                artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: FontConstants.fontFamily,
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  fontSize: 13,
+                                  height: 1.3,
+                                ),
+                              )),
                         ],
                       ),
                     ),
@@ -457,6 +490,8 @@ class _SongRow extends StatelessWidget {
                         ),
                       ),
                     )
+                  else if (onPlayNext != null || onRemove != null)
+                    _RowMenu(onPlayNext: onPlayNext, onRemove: onRemove)
                   else
                     const SizedBox(width: _kHandleSize),
                 ],
@@ -465,6 +500,37 @@ class _SongRow extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _RowMenu extends StatelessWidget {
+  const _RowMenu({this.onPlayNext, this.onRemove});
+
+  final VoidCallback? onPlayNext;
+  final VoidCallback? onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    const style = TextStyle(
+      fontFamily: FontConstants.fontFamily,
+      color: Colors.white,
+      fontSize: 14,
+    );
+    return PopupMenuButton<int>(
+      color: const Color(0xFF24242B),
+      icon: Icon(Icons.more_vert_rounded,
+          color: Colors.white.withValues(alpha: 0.5), size: 22),
+      constraints: const BoxConstraints(minWidth: 160),
+      padding: EdgeInsets.zero,
+      onSelected: (v) => v == 0 ? onPlayNext?.call() : onRemove?.call(),
+      itemBuilder: (_) => [
+        if (onPlayNext != null)
+          PopupMenuItem(value: 0, child: Text(l10n.playNext, style: style)),
+        if (onRemove != null)
+          PopupMenuItem(value: 1, child: Text(l10n.remove, style: style)),
+      ],
     );
   }
 }

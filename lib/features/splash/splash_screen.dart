@@ -5,12 +5,14 @@ import '../../shared/services/audio_player_service.dart';
 import '../../shared/services/artist_aggregator_service.dart';
 import '../../shared/services/artwork_cache_service.dart';
 import '../../shared/services/user_preferences.dart';
+import '../../shared/services/rebrand_notice_service.dart';
 import '../../shared/services/logging_service.dart';
 import '../../core/constants/font_constants.dart';
 import 'animated_logo.dart';
-import 'splash_backdrop.dart';
+import '../onboarding/widgets/onboarding_background.dart';
 import '../onboarding/screens/onboarding_screen.dart';
 import '../home/screens/home_screen.dart';
+import '../rebrand/rebrand_welcome_screen.dart';
 import 'package:provider/provider.dart';
 import '../../shared/providers/performance_mode_provider.dart';
 import 'dart:io';
@@ -374,10 +376,16 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _performActualTransition() async {
     final bool isFirstTime = await UserPreferences.isFirstTimeUser();
+    final bool showRebrand =
+        !isFirstTime && !await RebrandNoticeService.hasBeenHandled();
+    // Marked now: fresh installs never see the page, updaters see it once.
+    await RebrandNoticeService.markHandled();
 
     if (mounted) {
       if (isFirstTime) {
         _navigateToScreenWithHero(const OnboardingScreen());
+      } else if (showRebrand) {
+        _navigateToScreenWithHero(const RebrandWelcomeScreen());
       } else {
         _navigateToScreenWithHero(const HomeScreen());
       }
@@ -454,7 +462,9 @@ class _SplashScreenState extends State<SplashScreen>
             child: Stack(
               children: [
                 // ── Background ──────────────────────────────────────────────
-                const Positioned.fill(child: SplashBackdrop()),
+                const Positioned.fill(
+                  child: OnboardingBackground(child: SizedBox.expand()),
+                ),
 
                 // ── Logo (centre) ─────────────────────────────────────────
                 Center(

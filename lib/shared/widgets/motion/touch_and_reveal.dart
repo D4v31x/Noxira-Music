@@ -34,6 +34,29 @@ Future<void> whenRouteSettled(BuildContext context) async {
   );
 }
 
+/// How many songs a detail page (album, folder, playlist, artist) builds first.
+/// The first page decides how long the opening transition keeps the UI thread
+/// busy; the rest follows as the user scrolls.
+const int kDetailPageSize = 40;
+
+/// How long the header's reveal runs alone before a detail page starts loading.
+const Duration kDetailHeadStart = Duration(milliseconds: 120);
+
+/// [whenRouteSettled] plus a short head start: the header's reveal begins as
+/// the route settles, and loading the songs right then would stall its first
+/// frames. Safe to call from `initState`.
+Future<void> whenDetailReady(BuildContext context) async {
+  await whenRouteSettled(context);
+  await Future<void>.delayed(kDetailHeadStart);
+}
+
+/// Completes once the header's reveal has played out, for work that rebuilds
+/// the page (palette extraction and the colour change it brings).
+Future<void> whenDetailRevealed(BuildContext context) async {
+  await whenRouteSettled(context);
+  await Future<void>.delayed(kRevealDuration);
+}
+
 /// A soft rounded box that fades in behind a pressed row or card instead of a
 /// square ripple. [spillX]/[spillY] let it extend past the bounds.
 class RoundedHighlight extends StatefulWidget {

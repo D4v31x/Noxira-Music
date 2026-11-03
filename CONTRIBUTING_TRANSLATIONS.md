@@ -1,6 +1,6 @@
-# Contributing Translations to Aurora Music
+# Contributing Translations to Noxira Music
 
-Thank you for helping translate Aurora Music! This guide walks you through everything you need to add a new language.
+Thank you for helping translate Noxira Music! This guide walks you through everything you need to add a new language.
 
 ## Prerequisites
 
@@ -66,11 +66,11 @@ That's it! The language picker in the onboarding flow and the Settings dropdown 
 
 ## Step 4 – (Optional) Add a welcome greeting
 
-The onboarding welcome screen cycles through "Welcome to Aurora Music" in every supported language as a decorative animation. To add your language, open **`lib/features/onboarding/pages/welcome_page.dart`** and append an entry to `_welcomeTexts`:
+The onboarding welcome screen cycles through "Welcome to Noxira Music" in every supported language as a decorative animation. To add your language, open **`lib/features/onboarding/pages/welcome_page.dart`** and append an entry to `_welcomeTexts`:
 
 ```dart
 {
-  'title': 'Willkommen bei Aurora Music',
+  'title': 'Willkommen bei Noxira Music',
   'subtitle': 'Lass uns dein Erlebnis einrichten',
 },
 ```

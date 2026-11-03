@@ -23,6 +23,14 @@ enum LayoutMode {
 
 /// Responsive breakpoints and utilities for adapting UI to different screen sizes
 class ResponsiveUtils {
+  /// [base] grown with the user's font scale (never smaller), for artwork beside text.
+  static double scaledArtwork(BuildContext context, double base) {
+    final textFactor =
+        (MediaQuery.textScalerOf(context).scale(16) / 16).clamp(1.0, 1.6);
+    // Only part of the text growth, so artwork stays modest next to the text.
+    return base * (1 + (textFactor - 1) * 0.5);
+  }
+
   /// Screen width breakpoints
   static const double phoneMaxWidth = 600;
   static const double tabletMaxWidth = 900;

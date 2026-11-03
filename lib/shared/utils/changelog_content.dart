@@ -142,7 +142,7 @@ class ChangelogContent {
     ],
     '1.5.0': [
       {
-        '_': ['Noxira Music 1.5'],
+        '_': ['Aurora Music 1.5'],
       },
       {
         'New Features': [
@@ -155,7 +155,7 @@ class ChangelogContent {
       },
       {
         'Languages': [
-          'Noxira Music is now available in German, Spanish, Hindi and Russian',
+          'Aurora Music is now available in German, Spanish, Hindi and Russian',
           'A short notice tells existing users about the new languages, and you can pick your language during setup',
         ],
       },
@@ -184,7 +184,7 @@ class ChangelogContent {
       {
         'Feedback & Updates': [
           'New update prompt that shows what is new in the latest version',
-          'Send a bug report or suggestion from inside the app, and rate Noxira Music from Settings',
+          'Send a bug report or suggestion from inside the app, and rate Aurora Music from Settings',
           'Onboarding now explains anonymous analytics and crash reports',
         ],
       },
@@ -206,7 +206,7 @@ class ChangelogContent {
     ],
     '1.4.0': [
       {
-        '_': ['Noxira Music 1.4 — Orbit'],
+        '_': ['Aurora Music 1.4 — Orbit'],
       },
       {
         'New Features': [
@@ -244,7 +244,7 @@ class ChangelogContent {
     ],
     '1.3.2': [
       {
-        '_': ['Noxira Music 1.3 — Insights, Equalizer & Folder Filtering'],
+        '_': ['Aurora Music 1.3 — Insights, Equalizer & Folder Filtering'],
       },
       {
         'New Features': [
@@ -295,12 +295,12 @@ class ChangelogContent {
     ],
     '1.0.5': [
       {
-        '_': ['Noxira Music 1.0 — the first production release'],
+        '_': ['Aurora Music 1.0 — the first production release'],
       },
       {
         'Preface for beta testers': [
-          'After over a year of development and testing, Noxira Music has reached its first stable release! This version includes all the core features I envisioned, along with numerous optimizations and bug fixes. I am incredibly grateful to our early adopters and beta testers for their invaluable feedback and support throughout this journey.',
-          'This release marks a major milestone for me, but it’s just the beginning. I am committed to continuously enhancing Noxira Music based on user feedback and evolving needs. Thank you for being part of this journey, and I can’t wait to share what’s next!',
+          'After over a year of development and testing, Aurora Music has reached its first stable release! This version includes all the core features I envisioned, along with numerous optimizations and bug fixes. I am incredibly grateful to our early adopters and beta testers for their invaluable feedback and support throughout this journey.',
+          'This release marks a major milestone for me, but it’s just the beginning. I am committed to continuously enhancing Aurora Music based on user feedback and evolving needs. Thank you for being part of this journey, and I can’t wait to share what’s next!',
         ],
         'New Features': [
           'Music Visualizer — real-time audio visualization with multiple modes (accessible from Now Playing)',

@@ -40,7 +40,7 @@ class _SwipeActionsState extends State<SwipeActions>
       SpringDescription.withDampingRatio(mass: 1, stiffness: 500, ratio: 0.6);
 
   late final AnimationController _dx =
-      AnimationController.unbounded(vsync: this, value: 0);
+      AnimationController.unbounded(vsync: this);
   bool _armed = false;
 
   bool get _canRight => widget.onSwipeRight != null;

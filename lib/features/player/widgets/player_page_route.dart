@@ -17,6 +17,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 
+import '../../../core/constants/font_constants.dart';
+
 // MARK: - Springs
 
 /// Samples a spring simulation as an animation curve over [span] seconds.
@@ -110,6 +112,15 @@ class PlayerPageSources {
   PlayerPageSources._();
 
   static final GlobalKey card = GlobalKey(debugLabel: 'playerPageCard');
+  static final GlobalKey queueCard =
+      GlobalKey(debugLabel: 'playerPageQueueCard');
+
+  /// The card the open page grew from; other cards ignore the fade values.
+  static GlobalKey? activeCard;
+
+  /// [value] if [key] is the card driving the open page (or none is), else 1.
+  static double forCard(GlobalKey key, double value) =>
+      activeCard == null || activeCard == key ? value : 1;
   static final GlobalKey art = GlobalKey(debugLabel: 'playerPageArt');
   static final GlobalKey title = GlobalKey(debugLabel: 'playerPageTitle');
   static final GlobalKey artist = GlobalKey(debugLabel: 'playerPageArtist');
@@ -132,6 +143,33 @@ class PlayerPageSources {
   /// True while the shuttle draws the elements, so the launching screen
   /// hides its own copies.
   static final ValueNotifier<bool> hidden = ValueNotifier<bool>(false);
+
+  /// Keys on the first rows of the queue preview card.
+  static final List<RowKeys> previewRows =
+      List.generate(kPlayerPageRows, (_) => RowKeys());
+}
+
+/// How many song rows travel from the queue card into the queue page.
+const int kPlayerPageRows = 3;
+
+/// Keys on one song row's cover, title and artist.
+class RowKeys {
+  final GlobalKey art = GlobalKey(debugLabel: 'playerPageRowArt');
+  final GlobalKey title = GlobalKey(debugLabel: 'playerPageRowTitle');
+  final GlobalKey artist = GlobalKey(debugLabel: 'playerPageRowArtist');
+}
+
+/// A song row flying from the queue card to its row in the queue page.
+class PlayerPageRowShuttle {
+  const PlayerPageRowShuttle({
+    required this.image,
+    required this.title,
+    required this.artist,
+  });
+
+  final ImageProvider<Object>? image;
+  final String title;
+  final String artist;
 }
 
 /// Where the cover, title and artist land in the page.
@@ -139,6 +177,7 @@ class PlayerPageTargets {
   final GlobalKey art = GlobalKey(debugLabel: 'playerPageTargetArt');
   final GlobalKey title = GlobalKey(debugLabel: 'playerPageTargetTitle');
   final GlobalKey artist = GlobalKey(debugLabel: 'playerPageTargetArtist');
+  final List<RowKeys> rows = List.generate(kPlayerPageRows, (_) => RowKeys());
 }
 
 /// What the shuttle draws while the elements travel.
@@ -166,7 +205,11 @@ class PlayerPageRoute<T> extends PageRoute<T> {
     required this.targets,
     this.shuttle,
     this.cardRect,
+    this.rows = const [],
   });
+
+  final List<PlayerPageRowShuttle> rows;
+  bool get _hasShuttle => shuttle != null || rows.isNotEmpty;
 
   final WidgetBuilder builder;
   final PlayerPageTargets targets;
@@ -220,7 +263,7 @@ class PlayerPageRoute<T> extends PageRoute<T> {
       controller!.addListener(_syncCardReveal);
       _syncCardReveal();
     }
-    if (shuttle != null) _shuttleOn.value = true;
+    if (_hasShuttle) _shuttleOn.value = true;
   }
 
   void _syncCardReveal() {
@@ -236,7 +279,7 @@ class PlayerPageRoute<T> extends PageRoute<T> {
         _shuttleOn.value = false;
       case AnimationStatus.forward:
       case AnimationStatus.reverse:
-        if (shuttle != null) _shuttleOn.value = true;
+        if (_hasShuttle) _shuttleOn.value = true;
       case AnimationStatus.dismissed:
         break;
     }
@@ -250,6 +293,7 @@ class PlayerPageRoute<T> extends PageRoute<T> {
     PlayerPageSources.hidden.value = false;
     PlayerPageSources.cardReveal.value = 1;
     PlayerPageSources.cardChrome.value = 1;
+    PlayerPageSources.activeCard = null;
     super.dispose();
   }
 
@@ -288,7 +332,7 @@ class PlayerPageRoute<T> extends PageRoute<T> {
     _progress.manual = true;
     controller!.stop();
     navigator!.didStartUserGesture();
-    if (shuttle != null) _shuttleOn.value = true;
+    if (_hasShuttle) _shuttleOn.value = true;
   }
 
   /// Follows the finger. [delta] is in progress units: + opens.
@@ -461,8 +505,7 @@ class _PlayerPageTransition extends StatelessWidget {
                         _CardGlassPainter(rect: rect, radius: radius, t: grow),
                   ),
                 ),
-              if (route.shuttle != null)
-                _ShuttleLayer(route: route, progress: e),
+              if (route._hasShuttle) _ShuttleLayer(route: route, progress: e),
             ],
           );
         },
@@ -592,6 +635,97 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
   }
 
   Widget _buildShuttle(BuildContext context) {
+    final children = <Widget>[
+      if (widget.route.shuttle != null) ..._mainChildren(context),
+      ..._rowChildren(context),
+    ];
+    _setHiding(children.isNotEmpty);
+    if (children.isEmpty) return const SizedBox.shrink();
+    // No Material ancestor here: without one, Text falls back to a yellow
+    // double-underlined default style.
+    return IgnorePointer(
+      child: Material(
+        type: MaterialType.transparency,
+        child: Stack(fit: StackFit.expand, children: children),
+      ),
+    );
+  }
+
+  /// The queue card's first rows flying to their rows in the queue page.
+  List<Widget> _rowChildren(BuildContext context) {
+    final route = widget.route;
+    final e = widget.progress;
+    final viewport = Offset.zero & MediaQuery.sizeOf(context);
+    const titleStyle = TextStyle(
+      fontFamily: FontConstants.fontFamily,
+      color: Colors.white,
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      height: 1.25,
+    );
+    final artistStyle = TextStyle(
+      fontFamily: FontConstants.fontFamily,
+      color: Colors.white.withValues(alpha: 0.6),
+      fontSize: 13,
+      height: 1.3,
+    );
+
+    final out = <Widget>[];
+    for (var j = 0; j < route.rows.length && j < kPlayerPageRows; j++) {
+      final row = route.rows[j];
+      final from = PlayerPageSources.previewRows[j];
+      final to = route.targets.rows[j];
+      final artFrom = _rectOf(from.art);
+      final artTo = _rectOf(to.art);
+      final titleFrom = _rectOf(from.title);
+      final titleTo = _rectOf(to.title);
+      final artistFrom = _rectOf(from.artist);
+      final artistTo = _rectOf(to.artist);
+      if (artFrom == null ||
+          artTo == null ||
+          titleFrom == null ||
+          titleTo == null ||
+          artistFrom == null ||
+          artistTo == null ||
+          !artFrom.overlaps(viewport)) {
+        continue;
+      }
+      if (row.image != null) {
+        out.add(Positioned.fromRect(
+          rect: Rect.lerp(artFrom, artTo, e)!,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image(
+              image: row.image!,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+            ),
+          ),
+        ));
+      }
+      Widget text(String value, Rect a, Rect b, TextStyle style) {
+        final r = Rect.lerp(a, b, e)!;
+        return Positioned(
+          left: r.left,
+          top: r.top,
+          width: math.max(r.width, 1) + 2,
+          child: Text(
+            value,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
+        );
+      }
+
+      out.add(text(row.title, titleFrom, titleTo, titleStyle));
+      out.add(text(row.artist, artistFrom, artistTo, artistStyle));
+    }
+    return out;
+  }
+
+  List<Widget> _mainChildren(BuildContext context) {
     final shuttle = widget.route.shuttle!;
     final targets = widget.route.targets;
     final e = widget.progress;
@@ -602,8 +736,7 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
     final titleTo = _rectOf(targets.title);
     final artistTo = _rectOf(targets.artist);
     if (artTo == null || titleTo == null || artistTo == null) {
-      _setHiding(false);
-      return const SizedBox.shrink();
+      return const [];
     }
 
     Rect? source(GlobalKey key) {
@@ -621,8 +754,6 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
     final artFrom = artSource ?? artTo.shift(rise);
     final titleFrom = titleSource ?? titleTo.shift(rise);
     final artistFrom = artistSource ?? artistTo.shift(rise);
-    _setHiding(true);
-
     double fadeIn(bool hasSource) =>
         hasSource ? 1.0 : _smoothstep((e - 0.25) / 0.55);
 
@@ -721,13 +852,6 @@ class _ShuttleLayerState extends State<_ShuttleLayer> {
         PlayerPageSources.artistStyle, shuttle.artistTo,
         hasSource: artistSource != null));
 
-    // No Material ancestor here: without one, Text falls back to a yellow
-    // double-underlined default style.
-    return IgnorePointer(
-      child: Material(
-        type: MaterialType.transparency,
-        child: Stack(fit: StackFit.expand, children: children),
-      ),
-    );
+    return children;
   }
 }

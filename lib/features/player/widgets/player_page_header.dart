@@ -36,6 +36,7 @@ class PlayerPageHeader extends StatelessWidget {
     required this.onCoverTap,
     this.route,
     this.trailing = const [],
+    this.leading,
     this.subtitle,
   });
 
@@ -44,6 +45,7 @@ class PlayerPageHeader extends StatelessWidget {
   final PlayerPageRoute<dynamic>? route;
   final VoidCallback onCoverTap;
   final List<Widget> trailing;
+  final Widget? leading;
 
   /// Replaces the artist line when set.
   final String? subtitle;
@@ -54,9 +56,14 @@ class PlayerPageHeader extends StatelessWidget {
     final route = this.route;
 
     Widget header = Padding(
-      padding: const EdgeInsets.fromLTRB(kLyricsHorizontalPadding, 12, 8, 10),
+      padding: EdgeInsets.fromLTRB(
+          leading == null ? kLyricsHorizontalPadding : 4, 12, 8, 10),
       child: Row(
         children: [
+          if (leading != null) ...[
+            leading!,
+            const SizedBox(width: 4),
+          ],
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: onCoverTap,

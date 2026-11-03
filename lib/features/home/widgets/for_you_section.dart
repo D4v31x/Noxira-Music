@@ -13,6 +13,33 @@ import '../../library/library_feature.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/song_context_menu.dart';
 
+/// Pill height that grows with the user's font scale; 64 at default size.
+double _pillHeight(BuildContext context) {
+  final scaler = MediaQuery.textScalerOf(context);
+  double lineHeight(double size, FontWeight weight) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: 'Ag',
+        style: TextStyle(
+          fontFamily: FontConstants.fontFamily,
+          fontSize: size,
+          fontWeight: weight,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+      textScaler: scaler,
+    )..layout();
+    final h = painter.height;
+    painter.dispose();
+    return h;
+  }
+
+  // 8px padding above and below plus the 2px gap between the lines.
+  final text =
+      lineHeight(13, FontWeight.w600) + 2 + lineHeight(11, FontWeight.w400);
+  return text + 16 + 2 > 64 ? (text + 18).ceilToDouble() : 64;
+}
+
 /// A "For You" section with a 2-row fixed grid of personalized content
 /// Based on currently playing, recently played, liked songs, and listening habits
 class ForYouSection extends StatefulWidget {
@@ -363,7 +390,7 @@ class _FavoriteSongsCard extends StatelessWidget {
         child: GestureDetector(
           onTap: onTap,
           child: SizedBox(
-            height: 64,
+            height: _pillHeight(context),
             child: GlassmorphicContainer(
               borderRadius: BorderRadius.circular(12),
               blur: 15,
@@ -377,6 +404,7 @@ class _FavoriteSongsCard extends StatelessWidget {
   Widget _buildFavoriteContent(BuildContext context, bool isDark,
       AppLocalizations localizations, ColorScheme colorScheme) {
     final theme = Theme.of(context);
+    final pill = _pillHeight(context);
     return Row(
       children: [
         // Liked songs artwork
@@ -384,8 +412,8 @@ class _FavoriteSongsCard extends StatelessWidget {
           borderRadius:
               const BorderRadius.horizontal(left: Radius.circular(12)),
           child: SizedBox(
-            width: 64,
-            height: 64,
+            width: pill,
+            height: pill,
             child: Image.asset(
               'assets/images/UI/liked.png',
               fit: BoxFit.cover,
@@ -464,12 +492,12 @@ class _FavoriteSongsCard extends StatelessWidget {
                 }
               },
               child: SizedBox(
-                width: 42,
-                height: 42,
+                width: pill - 22,
+                height: pill - 22,
                 child: Icon(
                   Icons.play_arrow_rounded,
                   color: theme.colorScheme.primary,
-                  size: 26,
+                  size: (pill - 22) * 0.62,
                   semanticLabel: localizations.play,
                 ),
               ),
@@ -499,6 +527,7 @@ class _ForYouItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final pill = _pillHeight(context);
 
     return Press3D(
         cornerRadius: 16,
@@ -506,7 +535,7 @@ class _ForYouItemCard extends StatelessWidget {
           onTap: onTap,
           onLongPress: onLongPress,
           child: SizedBox(
-            height: 64,
+            height: pill,
             child: GlassmorphicContainer(
               borderRadius: BorderRadius.circular(12),
               blur: 15,
@@ -517,9 +546,9 @@ class _ForYouItemCard extends StatelessWidget {
                     borderRadius: const BorderRadius.horizontal(
                         left: Radius.circular(12)),
                     child: SizedBox(
-                      width: 64,
-                      height: 64,
-                      child: _buildArtwork(),
+                      width: pill,
+                      height: pill,
+                      child: _buildArtwork(pill),
                     ),
                   ),
                   // Title & subtitle
@@ -573,12 +602,12 @@ class _ForYouItemCard extends StatelessWidget {
         ));
   }
 
-  Widget _buildArtwork() {
+  Widget _buildArtwork(double pill) {
     switch (item.type) {
       case _ForYouItemType.song:
         return artworkService.buildCachedArtwork(
           item.song!.id,
-          size: 64,
+          size: pill,
         );
       case _ForYouItemType.album:
         return DecoratedBox(
@@ -599,7 +628,7 @@ class _ForYouItemCard extends StatelessWidget {
       case _ForYouItemType.artist:
         return artworkService.buildArtistImageByName(
           item.artistName!,
-          size: 64,
+          size: pill,
         );
       case _ForYouItemType.playlist:
         return _buildPlaylistArtwork(item.playlist!);

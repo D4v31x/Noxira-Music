@@ -1,4 +1,3 @@
-import 'dart:ui' as ui;
 
 import 'package:aurora_music_v01/features/onboarding/widgets/onboarding_glass.dart';
 import 'package:aurora_music_v01/shared/providers/performance_mode_provider.dart';
@@ -91,7 +90,7 @@ void main() {
           key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       final image = await boundary.toImage();
       final data =
-          (await image.toByteData(format: ui.ImageByteFormat.rawRgba))!;
+          (await image.toByteData())!;
       final x = image.width ~/ 2;
       final y = image.height ~/ 2;
       final i = (y * image.width + x) * 4;

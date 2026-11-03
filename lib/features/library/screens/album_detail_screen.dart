@@ -1,6 +1,7 @@
 import '../../../shared/widgets/online/online_artist_widgets.dart';
 import '../../../shared/services/album_query_cache.dart';
 import '../../../shared/widgets/motion/touch_and_reveal.dart';
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
@@ -38,13 +39,16 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
   final OnAudioQuery _audioQuery = OnAudioQuery();
   final ArtworkCacheService _artworkService = ArtworkCacheService();
   late ScrollController _scrollController;
-  late ValueNotifier<Color> _dominantColorNotifier;
+
+  // The palette colour, and the eased value the buttons actually show.
+  Color _paletteColor = Colors.deepPurple.shade900;
+  Color _animatedColor = Colors.deepPurple.shade900;
 
   // Lazy loading state
   List<SongModel> _allSongs = [];
   final List<SongModel> _displayedSongs = [];
   int _currentPage = 0;
-  final int _songsPerPage = 100;
+  final int _songsPerPage = kDetailPageSize;
   bool _isLoading = false;
   bool _hasMoreSongs = true;
 
@@ -54,9 +58,16 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
   List<AlbumModel> _relatedAlbums = [];
   Uint8List? _artworkBytes;
 
+  // Header artwork: fetched and blurred while the page opens (see
+  // _prepareArtwork), the palette comes from the same bytes afterwards.
+  bool _artworkRequested = false;
+  Future<void>? _artworkTask;
+  bool _colorRequested = false;
+  late final Future<void> _revealDone;
+
   // DetailScreenMixin requirements
   @override
-  Color get dominantColor => _dominantColorNotifier.value;
+  Color get dominantColor => _animatedColor;
 
   @override
   List<SongModel> get allSongs => _allSongs;
@@ -71,10 +82,12 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
-    _dominantColorNotifier = ValueNotifier(Colors.deepPurple.shade900);
-    whenRouteSettled(context).then((_) {
-      if (mounted) _loadSongs();
-    });
+    // The header's reveal gets a head start before the songs are loaded, and
+    // the palette (and the rebuild it brings) waits for the reveal to finish.
+    _revealDone = whenDetailRevealed(context);
+    unawaited(whenDetailReady(context).then((_) {
+      if (mounted) unawaited(_loadSongs());
+    }));
   }
 
   AudioPlayerService? _audioServiceRef;
@@ -86,7 +99,36 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
     if (_audioServiceRef == null) {
       _audioServiceRef = service;
       service.songsNotifier.addListener(_onSongsChanged);
+      // The artwork is fetched and blurred while the cover is still flying in.
+      unawaited(_prepareArtwork(service.songs));
     }
+  }
+
+  /// Fetches the header artwork and blurs it ahead of time, then shows it.
+  /// Setting it only once the blurred bitmap exists keeps that rebuild cheap
+  /// instead of running a live full-size blur on the first frame.
+  Future<void> _prepareArtwork(List<SongModel> songs) async {
+    if (_artworkRequested) return;
+    SongModel? song;
+    for (final candidate in songs) {
+      if (candidate.album == widget.albumName) {
+        song = candidate;
+        break;
+      }
+    }
+    if (song == null) return;
+    _artworkRequested = true;
+    final task = _loadHeaderArtwork(song.id);
+    _artworkTask = task;
+    await task;
+  }
+
+  Future<void> _loadHeaderArtwork(int songId) async {
+    final artwork = await _artworkService.getArtwork(songId);
+    if (!mounted || artwork == null) return;
+    await DetailHeader.precacheArtwork(context, artwork);
+    if (!mounted) return;
+    setState(() => _artworkBytes = artwork);
   }
 
   void _onSongsChanged() {
@@ -99,7 +141,6 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
     _audioServiceRef?.songsNotifier.removeListener(_onSongsChanged);
     _scrollController.removeListener(_scrollListener);
     _scrollController.dispose();
-    _dominantColorNotifier.dispose();
     super.dispose();
   }
 
@@ -149,6 +190,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
     });
 
     _loadMoreSongs();
+    unawaited(_prepareArtwork(albumSongs));
     unawaited(_updateDominantColor());
 
     // Related albums come last so they don't delay the song list.
@@ -192,22 +234,22 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
   }
 
   Future<void> _updateDominantColor() async {
-    if (_allSongs.isNotEmpty) {
-      final artwork = await _artworkService.getArtwork(_allSongs.first.id);
-      if (artwork != null) {
-        setState(() {
-          _artworkBytes = artwork;
-        });
+    await _revealDone;
+    await _artworkTask;
+    final artwork = _artworkBytes;
+    if (!mounted || artwork == null || _colorRequested) return;
+    _colorRequested = true;
 
-        final paletteGenerator = await PaletteGenerator.fromImageProvider(
-          MemoryImage(artwork),
-          maximumColorCount: 8,
-        );
-
-        _dominantColorNotifier.value =
-            paletteGenerator.dominantColor?.color ?? Colors.deepPurple.shade900;
-      }
-    }
+    final paletteGenerator = await PaletteGenerator.fromImageProvider(
+      MemoryImage(artwork),
+      maximumColorCount: 8,
+      size: const Size(100, 100),
+    );
+    if (!mounted) return;
+    setState(() {
+      _paletteColor =
+          paletteGenerator.dominantColor?.color ?? Colors.deepPurple.shade900;
+    });
   }
 
   @override
@@ -216,9 +258,9 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      body: ValueListenableBuilder<Color>(
-        valueListenable: _dominantColorNotifier,
-        builder: (context, dominantColor, _) {
+      body: Builder(
+        builder: (context) {
+          final dominantColor = _paletteColor;
           if (_displayedSongs.isEmpty && _isLoading) {
             return AppBackground(
               child: SafeArea(
@@ -283,7 +325,16 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
 
                 // Action row (play, search, shuffle)
                 SliverToBoxAdapter(
-                  child: buildActionButtonsRow(),
+                  // Only the buttons rebuild while the colour eases in.
+                  child: TweenAnimationBuilder<Color?>(
+                    tween: ColorTween(end: _paletteColor),
+                    duration: const Duration(milliseconds: 800),
+                    curve: Curves.easeInOutCubic,
+                    builder: (context, animated, _) {
+                      _animatedColor = animated ?? _paletteColor;
+                      return buildActionButtonsRow();
+                    },
+                  ),
                 ),
 
                 // Songs list
@@ -316,7 +367,8 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
                           final album = _relatedAlbums[index];
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: GestureDetector(
+                            child: Press3D(
+                                child: GestureDetector(
                               onTap: () {
                                 Navigator.pushReplacement(
                                   context,
@@ -337,13 +389,16 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                          child: _artworkService
-                                              .buildCachedAlbumArtwork(
-                                            album.id,
-                                            size: 100,
+                                        ArtworkHero(
+                                          radius: 10,
+                                          child: ClipRRect(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                            child: _artworkService
+                                                .buildCachedAlbumArtwork(
+                                              album.id,
+                                              size: 100,
+                                            ),
                                           ),
                                         ),
                                         const SizedBox(height: 8),
@@ -364,7 +419,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
                                   ),
                                 ),
                               ),
-                            ),
+                            )),
                           );
                         },
                       ),

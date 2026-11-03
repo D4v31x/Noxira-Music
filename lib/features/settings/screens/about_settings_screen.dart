@@ -20,6 +20,7 @@ import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/feedback_dialog.dart';
 import '../../../shared/widgets/feedback_popup_widget.dart';
 import '../../../shared/widgets/support_goal_card.dart';
+import '../../rebrand/rebrand_welcome_screen.dart';
 import '../widgets/settings_tile_builders.dart';
 
 class AboutSettingsScreen extends StatelessWidget {
@@ -185,6 +186,21 @@ class AboutSettingsScreen extends StatelessWidget {
                   subtitle: l10n.view_changelog,
                   iconColor: Colors.blue,
                   onTap: () => _showChangelogDialog(context),
+                ),
+                SettingsTiles.buildActionTile(
+                  context,
+                  icon: const Icon(Icons.auto_awesome_rounded,
+                      color: Colors.orange, size: 20),
+                  title: l10n.rebrandTitle,
+                  subtitle: l10n.rebrandNewHeading,
+                  iconColor: Colors.orange,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const RebrandWelcomeScreen(fromSettings: true),
+                    ),
+                  ),
                 ),
                 SettingsTiles.buildActionTile(
                   context,

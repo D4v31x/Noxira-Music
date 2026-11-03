@@ -15,6 +15,7 @@ import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/lyrics_service.dart';
 import '../../../shared/services/lyrics_providers/lyrics_provider.dart';
 import '../../../shared/services/lyrics_translation_service.dart';
+import '../widgets/translate_language_picker.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/glassmorphic_dialog.dart';
@@ -112,7 +113,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
 
   /// Where the active line rests, as a fraction of the viewport height; never
   /// less than one lyric row so the line just sung stays in view above it.
-  static const double _restFraction = 0.055;
+  static const double _restFraction = 0.44;
   static const double _minRestPx = 72;
 
   @override
@@ -447,7 +448,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       if (above != null) top -= above.size.height;
     }
 
-    final rest = _restOffset(scrollBox.size.height);
+    final rest = math.max(
+        (scrollBox.size.height - renderBox.size.height) / 2, _minRestPx);
     final position = _scrollController.position;
     final target = (_scrollController.offset + top - rest)
         .clamp(0.0, position.maxScrollExtent);
@@ -761,24 +763,30 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
     );
   }
 
-  Future<void> _handleTranslateButton() async {
+  final _translateAnchorKey = GlobalKey();
+
+  Future<void> _handleTranslateButton({bool pickLanguage = false}) async {
     if (!mounted) return;
     final lyrics = _currentLyrics;
     if (lyrics == null || lyrics.isEmpty) return;
 
     // Already translated — just toggle visibility.
-    if (_translationState == _TranslationState.done) {
+    if (_translationState == _TranslationState.done && !pickLanguage) {
       setState(() => _showTranslated = !_showTranslated);
       return;
     }
 
     if (_translationState == _TranslationState.loading) return;
 
+    final targetLang = pickLanguage
+        ? await pickLyricsTranslationLanguage(context)
+        : await chooseLyricsTranslationTarget(context, _translateAnchorKey);
+    if (targetLang == null || !mounted) return;
+
     setState(() => _translationState = _TranslationState.loading);
     unawaited(_pulseController.repeat(reverse: true));
 
     try {
-      final targetLang = Localizations.localeOf(context).languageCode;
       final audioService =
           Provider.of<AudioPlayerService>(context, listen: false);
       final song = audioService.currentSong;
@@ -1551,6 +1559,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
                     ? 'Show translation'
                     : 'Translate lyrics',
         child: AnimatedContainer(
+          key: _translateAnchorKey,
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeInOut,
           width: 44,
@@ -1584,6 +1593,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
                 )
               : InkWell(
                   onTap: _handleTranslateButton,
+                  onLongPress: () => _handleTranslateButton(pickLanguage: true),
                   borderRadius: BorderRadius.circular(22),
                   child: Center(
                     child: Icon(

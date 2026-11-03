@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +15,6 @@ import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/library_screen_header.dart';
 import '../../../shared/widgets/song_context_menu.dart';
-import '../../../shared/utils/responsive_utils.dart';
 import '../../../shared/utils/sort_preferences.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
@@ -558,6 +558,7 @@ class _TracksScreenState extends State<TracksScreen> {
             borderRadius: BorderRadius.circular(8),
             child: _artworkService.buildCachedArtwork(
               song.id,
+              size: ResponsiveUtils.scaledArtwork(context, 50),
             ),
           ),
           title: Text(

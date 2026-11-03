@@ -118,18 +118,6 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get add;
 
-  /// No description provided for @addedToPlaylist.
-  ///
-  /// In en, this message translates to:
-  /// **'Added to playlist'**
-  String get addedToPlaylist;
-
-  /// No description provided for @addedToNamedPlaylist.
-  ///
-  /// In en, this message translates to:
-  /// **'Added to {name}'**
-  String addedToNamedPlaylist(String name);
-
   /// No description provided for @addExclusion.
   ///
   /// In en, this message translates to:
@@ -748,23 +736,11 @@ abstract class AppLocalizations {
   /// **'For You'**
   String get forYou;
 
-  /// No description provided for @general.
-  ///
-  /// In en, this message translates to:
-  /// **'General'**
-  String get general;
-
   /// No description provided for @genre.
   ///
   /// In en, this message translates to:
   /// **'Genre'**
   String get genre;
-
-  /// No description provided for @getStarted.
-  ///
-  /// In en, this message translates to:
-  /// **'Get Started'**
-  String get getStarted;
 
   /// No description provided for @goodQuality.
   ///
@@ -1066,12 +1042,6 @@ abstract class AppLocalizations {
   /// **'Now Playing'**
   String get nowPlaying;
 
-  /// No description provided for @onboardingAlbumArt.
-  ///
-  /// In en, this message translates to:
-  /// **'Beautiful Album Art'**
-  String get onboardingAlbumArt;
-
   /// No description provided for @onboardingAlbumArtwork.
   ///
   /// In en, this message translates to:
@@ -1101,12 +1071,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your personal music companion'**
   String get onboardingAppInfoSubtitle;
-
-  /// No description provided for @onboardingAppInfoTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Welcome to Noxira Music'**
-  String get onboardingAppInfoTitle;
 
   /// No description provided for @onboardingAudioAccess.
   ///
@@ -1155,12 +1119,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Choose Your Language'**
   String get onboardingChooseLanguage;
-
-  /// No description provided for @languageNotListedHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Your language isn\'t listed? Select English and continue to the next page.'**
-  String get languageNotListedHint;
 
   /// No description provided for @onboardingCompletionSubtitle.
   ///
@@ -1282,12 +1240,6 @@ abstract class AppLocalizations {
   /// **'Show playback controls and updates'**
   String get onboardingNotificationsDesc;
 
-  /// No description provided for @onboardingOptional.
-  ///
-  /// In en, this message translates to:
-  /// **'Optional'**
-  String get onboardingOptional;
-
   /// No description provided for @onboardingPermissionsSubtitle.
   ///
   /// In en, this message translates to:
@@ -1383,54 +1335,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Customize Your Look'**
   String get onboardingThemeTitle;
-
-  /// No description provided for @beta_welcome_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Beta Testing Program'**
-  String get beta_welcome_title;
-
-  /// No description provided for @beta_welcome_thanks.
-  ///
-  /// In en, this message translates to:
-  /// **'Thank you for joining our beta testing program and helping us improve Noxira Music.'**
-  String get beta_welcome_thanks;
-
-  /// No description provided for @beta_expect_bugs_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Expect Bugs'**
-  String get beta_expect_bugs_title;
-
-  /// No description provided for @beta_expect_bugs_desc.
-  ///
-  /// In en, this message translates to:
-  /// **'You may encounter crashes or unexpected behavior. This is a testing version.'**
-  String get beta_expect_bugs_desc;
-
-  /// No description provided for @beta_feedback_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Feedback Matters'**
-  String get beta_feedback_title;
-
-  /// No description provided for @beta_feedback_desc.
-  ///
-  /// In en, this message translates to:
-  /// **'Your reports and suggestions help us make the app better for everyone.'**
-  String get beta_feedback_desc;
-
-  /// No description provided for @beta_updates_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Frequent Updates'**
-  String get beta_updates_title;
-
-  /// No description provided for @beta_updates_desc.
-  ///
-  /// In en, this message translates to:
-  /// **'New features and fixes are released regularly as we continue development.'**
-  String get beta_updates_desc;
 
   /// No description provided for @oneTimeSupport.
   ///
@@ -1533,12 +1437,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Quality'**
   String get quality;
-
-  /// No description provided for @qualityDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Audio quality based on format and bitrate'**
-  String get qualityDesc;
 
   /// No description provided for @queue.
   ///
@@ -1756,12 +1654,6 @@ abstract class AppLocalizations {
   /// **'Lyrics source'**
   String get lyricsSource;
 
-  /// No description provided for @alreadyInPlaylist.
-  ///
-  /// In en, this message translates to:
-  /// **'Already in this playlist'**
-  String get alreadyInPlaylist;
-
   /// No description provided for @inPlaylistHint.
   ///
   /// In en, this message translates to:
@@ -1876,12 +1768,6 @@ abstract class AppLocalizations {
   /// **'Not allowed yet'**
   String get onboardingNotAllowed;
 
-  /// No description provided for @onboardingBackgroundStyle.
-  ///
-  /// In en, this message translates to:
-  /// **'Background'**
-  String get onboardingBackgroundStyle;
-
   /// No description provided for @searchLyrics.
   ///
   /// In en, this message translates to:
@@ -1917,12 +1803,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'selected'**
   String get selected;
-
-  /// No description provided for @selectPlaylist.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Playlist'**
-  String get selectPlaylist;
 
   /// No description provided for @separator.
   ///
@@ -2103,66 +1983,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically create a seamless flow between songs'**
   String get settingsAutomixDesc;
-
-  /// No description provided for @playlistAutomixTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'AutoMix'**
-  String get playlistAutomixTitle;
-
-  /// No description provided for @playlistAutomixSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'DJ-style automatic transitions for this playlist'**
-  String get playlistAutomixSubtitle;
-
-  /// No description provided for @playlistAutomixOn.
-  ///
-  /// In en, this message translates to:
-  /// **'On'**
-  String get playlistAutomixOn;
-
-  /// No description provided for @playlistAutomixOff.
-  ///
-  /// In en, this message translates to:
-  /// **'Off'**
-  String get playlistAutomixOff;
-
-  /// No description provided for @playlistAutomixBeatMatching.
-  ///
-  /// In en, this message translates to:
-  /// **'Beat matching'**
-  String get playlistAutomixBeatMatching;
-
-  /// No description provided for @playlistAutomixHarmonicMixing.
-  ///
-  /// In en, this message translates to:
-  /// **'Harmonic mixing'**
-  String get playlistAutomixHarmonicMixing;
-
-  /// No description provided for @playlistAutomixTempoMatching.
-  ///
-  /// In en, this message translates to:
-  /// **'Tempo matching'**
-  String get playlistAutomixTempoMatching;
-
-  /// No description provided for @playlistAutomixTransitionDuration.
-  ///
-  /// In en, this message translates to:
-  /// **'Transition duration'**
-  String get playlistAutomixTransitionDuration;
-
-  /// No description provided for @playlistAutomixAutomatic.
-  ///
-  /// In en, this message translates to:
-  /// **'Automatic'**
-  String get playlistAutomixAutomatic;
-
-  /// No description provided for @playlistAutomixAnalyzing.
-  ///
-  /// In en, this message translates to:
-  /// **'Analyzing playlist… {current} / {total} tracks'**
-  String playlistAutomixAnalyzing(int current, int total);
 
   /// No description provided for @settingsCrossfade.
   ///
@@ -2428,12 +2248,6 @@ abstract class AppLocalizations {
   /// **'Share'**
   String get share;
 
-  /// No description provided for @showChangelog.
-  ///
-  /// In en, this message translates to:
-  /// **'Show Changelog'**
-  String get showChangelog;
-
   /// No description provided for @shuffle.
   ///
   /// In en, this message translates to:
@@ -2541,24 +2355,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Noxira Music was updated'**
   String get updatedTitle;
-
-  /// No description provided for @updatedHighlights.
-  ///
-  /// In en, this message translates to:
-  /// **'Highlights'**
-  String get updatedHighlights;
-
-  /// No description provided for @showUpdatePopup.
-  ///
-  /// In en, this message translates to:
-  /// **'Update popup'**
-  String get showUpdatePopup;
-
-  /// No description provided for @showUpdatePopupDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Preview the screen shown after an update'**
-  String get showUpdatePopupDesc;
 
   /// No description provided for @tapAddToAddSongs.
   ///
@@ -2764,12 +2560,6 @@ abstract class AppLocalizations {
   /// **'This will restore the original section order and visibility.'**
   String get resetLayoutMessage;
 
-  /// No description provided for @sectionVisibility.
-  ///
-  /// In en, this message translates to:
-  /// **'Toggle section visibility'**
-  String get sectionVisibility;
-
   /// No description provided for @listeningHistory.
   ///
   /// In en, this message translates to:
@@ -2799,18 +2589,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Skip'**
   String get skip;
-
-  /// No description provided for @feedback_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Enjoying Noxira Music?'**
-  String get feedback_title;
-
-  /// No description provided for @maybe_later.
-  ///
-  /// In en, this message translates to:
-  /// **'Maybe Later'**
-  String get maybe_later;
 
   /// No description provided for @send_feedback.
   ///
@@ -3253,7 +3031,7 @@ abstract class AppLocalizations {
   /// No description provided for @recapIntroAppName.
   ///
   /// In en, this message translates to:
-  /// **'AURORA MUSIC'**
+  /// **'NOXIRA MUSIC'**
   String get recapIntroAppName;
 
   /// No description provided for @recapIntroTitle.
@@ -3483,6 +3261,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Later'**
   String get recapBannerLater;
+
+  /// No description provided for @rebrandTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora is now Noxira'**
+  String get rebrandTitle;
+
+  /// No description provided for @rebrandSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Same music app you know, with a new name, a fresh look and some new tricks.'**
+  String get rebrandSubtitle;
+
+  /// No description provided for @rebrandNewHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s new'**
+  String get rebrandNewHeading;
+
+  /// No description provided for @rebrandSlideLyricsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics, rebuilt'**
+  String get rebrandSlideLyricsTitle;
+
+  /// No description provided for @rebrandSlideLyricsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A redesigned lyrics page and more lyric sources, so more songs find their words. Tap a line to jump to it. You can now translate lyrics into any language you like.'**
+  String get rebrandSlideLyricsBody;
+
+  /// No description provided for @rebrandSlideWidgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A refreshed home screen widget'**
+  String get rebrandSlideWidgetTitle;
+
+  /// No description provided for @rebrandSlideWidgetBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass tinted with your artwork, and previous, play and next buttons that work without opening the app.'**
+  String get rebrandSlideWidgetBody;
+
+  /// No description provided for @rebrandSlideQueueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A redesigned queue'**
+  String get rebrandSlideQueueTitle;
+
+  /// No description provided for @rebrandSlideQueueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'See what played and what\'s next. Drag to reorder, swipe to remove.'**
+  String get rebrandSlideQueueBody;
+
+  /// No description provided for @translateLyricsTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics to'**
+  String get translateLyricsTo;
+
+  /// No description provided for @translateLyricsAppLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'App language'**
+  String get translateLyricsAppLanguage;
+
+  /// No description provided for @translateLyricsChooseLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose language…'**
+  String get translateLyricsChooseLanguage;
+
+  /// No description provided for @rebrandSlideMoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'And a few more things'**
+  String get rebrandSlideMoreTitle;
+
+  /// No description provided for @rebrandMoreSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup now suggests the right mode for your phone.'**
+  String get rebrandMoreSetup;
+
+  /// No description provided for @rebrandMoreLook.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded play button on Favorite Songs and lyric controls that stay put.'**
+  String get rebrandMoreLook;
+
+  /// No description provided for @rebrandMoreMotion.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoother, better transitions across the whole app.'**
+  String get rebrandMoreMotion;
+
+  /// No description provided for @rebrandMoreFixes.
+  ///
+  /// In en, this message translates to:
+  /// **'Stability and bug fixes across the app, including lyrics that no longer flicker.'**
+  String get rebrandMoreFixes;
 
   /// No description provided for @eqTitle.
   ///

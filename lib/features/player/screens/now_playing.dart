@@ -33,6 +33,7 @@ import '../widgets/lyrics/mini_lyrics_ticker.dart';
 import '../widgets/lyrics_page_launcher.dart';
 import '../widgets/player_page_route.dart';
 import '../widgets/player_widgets.dart';
+import '../widgets/queue_preview_section.dart';
 import '../widgets/track_tags_section.dart';
 import 'fullscreen_artwork.dart';
 import 'music_visualizer_screen.dart';
@@ -617,6 +618,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                       isTablet: isTablet,
                     ),
                     _buildLyricsSection(audioPlayerService, isTablet),
+                    QueuePreviewSection(
+                      audioPlayerService: audioPlayerService,
+                      isTablet: isTablet,
+                    ),
                     SizedBox(height: isTablet ? 40 : 30),
                     if (audioPlayerService.currentSong != null)
                       AlbumSection(audioPlayerService: audioPlayerService),

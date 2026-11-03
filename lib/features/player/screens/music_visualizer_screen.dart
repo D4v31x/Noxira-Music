@@ -441,8 +441,9 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
                           await openAppSettings();
                         }
                       } finally {
-                        if (mounted)
+                        if (mounted) {
                           setState(() => _isRequestingPermission = false);
+                        }
                       }
                     },
               child: Text(AppLocalizations.of(context).grantPermission),

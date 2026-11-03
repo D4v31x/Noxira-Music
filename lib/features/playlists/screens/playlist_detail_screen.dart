@@ -41,7 +41,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   final List<SongModel> _displayedSongs = [];
   int _currentPage = 0;
-  final int _songsPerPage = 100;
+  final int _songsPerPage = kDetailPageSize;
   bool _isLoading = false;
   bool _hasMoreSongs = true;
   bool _reorderMode = false;
@@ -54,8 +54,13 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     _scrollController = ScrollController()..addListener(_scrollListener);
     _nameController = TextEditingController(text: widget.playlist.name);
     FolderFilterService().addListener(_onFolderFilterChanged);
-    _loadMoreSongs();
-    _loadArtwork();
+    // Nothing is built while the page opens: the header's reveal gets the
+    // transition (and a short head start) before the first songs appear.
+    unawaited(whenDetailReady(context).then((_) {
+      if (mounted) _loadMoreSongs();
+    }));
+    // The artwork is fetched and blurred while the cover is still flying in.
+    unawaited(_loadArtwork());
   }
 
   AudioPlayerService? _audioServiceRef;
@@ -168,15 +173,17 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   Future<void> _loadArtwork() async {
     // Load artwork from first song if available
-    if (widget.playlist.songs.isNotEmpty && !_isAutoPlaylist) {
-      final artwork =
-          await _artworkService.getArtwork(widget.playlist.songs.first.id);
-      if (mounted && artwork != null) {
-        setState(() {
-          _artworkBytes = artwork;
-        });
-      }
-    }
+    if (widget.playlist.songs.isEmpty || _isAutoPlaylist) return;
+    final artwork =
+        await _artworkService.getArtwork(widget.playlist.songs.first.id);
+    if (!mounted || artwork == null) return;
+    // Blur first, show second: a header built with fresh artwork would
+    // otherwise run a live full-size blur on its first frame.
+    await DetailHeader.precacheArtwork(context, artwork);
+    if (!mounted) return;
+    setState(() {
+      _artworkBytes = artwork;
+    });
   }
 
   bool get _isAutoPlaylist =>

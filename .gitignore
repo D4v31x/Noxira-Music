@@ -72,3 +72,7 @@ AURORA_MUSIC_REPORT.txt
 WEBSITE_BRIEF.md
 graphify-out/
 graphify-out/cache/
+backup/
+.vscode/
+.agents/
+skills-lock.json

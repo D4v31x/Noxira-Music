@@ -105,9 +105,28 @@ flutter:
     - family: Google Sans Flex
       fonts:
         - asset: assets/fonts/GoogleSansFlex-Variable.ttf
-    - family: Cal Sans
+    - family: Cal Sans UI
       fonts:
-        - asset: assets/fonts/CalSansFlexVF.ttf
+        - asset: assets/fonts/CalSansUI-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/CalSansUI-Italic.ttf
+          weight: 400
+          style: italic
+        - asset: assets/fonts/CalSansUI-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/CalSansUI-MediumItalic.ttf
+          weight: 500
+          style: italic
+        - asset: assets/fonts/CalSansUI-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/CalSansUI-SemiBoldItalic.ttf
+          weight: 600
+          style: italic
+        - asset: assets/fonts/CalSansUI-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/CalSansUI-BoldItalic.ttf
+          weight: 700
+          style: italic
     
 
 
@@ -116,6 +135,7 @@ flutter:
 
   assets:
     - assets/images/logo/Music_full_logo.png
+    - assets/images/logo/aurora_music_logo_old.png
     - assets/images/logo/noxiramusic_wordmark_plus_outline.svg
     - assets/images/logo/noxiramusic_wordmark.svg
     - assets/images/logo/default_art.png

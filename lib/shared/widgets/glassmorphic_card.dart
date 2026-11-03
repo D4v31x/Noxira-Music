@@ -1,5 +1,7 @@
+import 'dart:math' as math;
 import 'motion/musicfy_motion.dart';
 import 'package:flutter/material.dart';
+import '../utils/responsive_utils.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:provider/provider.dart';
 import '../providers/performance_mode_provider.dart';
@@ -221,6 +223,35 @@ class GlassmorphicCard extends StatelessWidget {
     );
   }
 
+  /// Height for a horizontal list of these cards at the user's font scale.
+  static double listHeight(BuildContext context, {double artworkSize = 130}) {
+    final body = Theme.of(context).textTheme.bodySmall ?? const TextStyle();
+    final scaler = MediaQuery.textScalerOf(context);
+    double lineHeight(TextStyle style) {
+      final painter = TextPainter(
+        text: TextSpan(text: 'Ag', style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      final h = painter.height;
+      painter.dispose();
+      return h;
+    }
+
+    final title = lineHeight(body.copyWith(fontWeight: FontWeight.w600));
+    final subtitle = lineHeight(body.copyWith(fontSize: 11));
+    // Text padding 16, gap 2, border 2, plus slack for rounding.
+    final natural = ResponsiveUtils.scaledArtwork(context, artworkSize) +
+        title +
+        2 +
+        subtitle +
+        16 +
+        2 +
+        2;
+    return math.max(
+        ResponsiveUtils.scaledArtwork(context, artworkSize) + 60, natural);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -231,6 +262,7 @@ class GlassmorphicCard extends StatelessWidget {
             .isLowEndDevice;
 
     final borderRadius = BorderRadius.circular(16);
+    final scale = ResponsiveUtils.scaledArtwork(context, 1);
 
     // PERF: Never use BackdropFilter on cards that appear in scroll lists.
     // BackdropFilter must read+blur all pixels behind every card on each
@@ -255,7 +287,7 @@ class GlassmorphicCard extends StatelessWidget {
           );
 
     final cardContent = Container(
-      width: width,
+      width: width * scale,
       decoration: cardDecoration,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -269,8 +301,8 @@ class GlassmorphicCard extends StatelessWidget {
                   top: Radius.circular(16),
                 ),
                 child: SizedBox(
-                  width: width,
-                  height: artworkSize,
+                  width: width * scale,
+                  height: artworkSize * scale,
                   child: ArtworkHero(radius: 16, child: artwork),
                 ),
               ),
@@ -282,40 +314,47 @@ class GlassmorphicCard extends StatelessWidget {
                 ),
             ],
           ),
-          // Title and subtitle
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontFamily: FontConstants.fontFamily,
-                    color: isDark ? Colors.white : colorScheme.onSurface,
+          // Title and subtitle; clipped when a fixed-height parent or large font leaves too little room
+          Flexible(
+            child: ClipRect(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10.0, vertical: 8.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontFamily: FontConstants.fontFamily,
+                          color: isDark ? Colors.white : colorScheme.onSurface,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.55)
+                                : colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontSize: 11,
+                            fontFamily: FontConstants.fontFamily,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.55)
-                          : colorScheme.onSurface.withValues(alpha: 0.6),
-                      fontSize: 11,
-                      fontFamily: FontConstants.fontFamily,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ],

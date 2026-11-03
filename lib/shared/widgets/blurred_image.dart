@@ -25,12 +25,22 @@ class BlurredImage extends StatefulWidget {
   final BoxFit fit;
   final Widget fallback;
 
+  /// Renders the blurred bitmap ahead of time for a [BlurredImage] spanning
+  /// [extent] logical pixels on its longest side, so it is ready on first build.
+  static Future<void> precache(ImageProvider provider,
+      {required double sigma, required double extent}) {
+    final bitmapSigma = (sigma * _BlurCache.side / extent).clamp(0.5, 64.0);
+    return _BlurCache.load(_Key(provider, (bitmapSigma * 2).round() / 2));
+  }
+
   @override
   State<BlurredImage> createState() => _BlurredImageState();
 }
 
 class _BlurredImageState extends State<BlurredImage> {
   _Key? _requested;
+  bool _shownReady = false;
+  int _generation = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -57,22 +67,31 @@ class _BlurredImageState extends State<BlurredImage> {
             (widget.sigma * _BlurCache.side / extent).clamp(0.5, 64.0);
         final key = _Key(widget.provider, (bitmapSigma * 2).round() / 2);
         final ready = _BlurCache.peek(key);
-        if (ready != null) {
-          return RawImage(
-            image: ready,
-            fit: widget.fit,
-            width: double.infinity,
-            height: double.infinity,
-            filterQuality: FilterQuality.medium,
-          );
-        }
-        if (_requested != key) {
+        if (ready == null && _requested != key) {
           _requested = key;
           unawaited(_BlurCache.load(key).then((_) {
             if (mounted && _requested == key) setState(() {});
           }));
         }
-        return widget.fallback;
+        // A fresh key per change, so a fading-out child never shares a key with its replacement.
+        if (_shownReady != (ready != null)) {
+          _shownReady = ready != null;
+          _generation++;
+        }
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 260),
+          child: KeyedSubtree(
+            key: ValueKey(_generation),
+            child: ready != null
+                ? RawImage(
+                    image: ready,
+                    fit: widget.fit,
+                    width: double.infinity,
+                    height: double.infinity,
+                  )
+                : widget.fallback,
+          ),
+        );
       },
     );
   }

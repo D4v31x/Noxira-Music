@@ -409,7 +409,7 @@ class _FlightPainter extends CustomPainter {
             .withValues(alpha: 0.7 * fade),
     );
 
-    final start = _heartWidth * 0.32;
+    const start = _heartWidth * 0.32;
     for (final p in particles) {
       final distance = start + p.reach * out;
       final at = center + Offset(p.dx * distance, p.dy * distance);

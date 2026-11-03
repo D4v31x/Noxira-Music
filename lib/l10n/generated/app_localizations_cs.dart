@@ -15,14 +15,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get add => 'Přidat';
 
   @override
-  String get addedToPlaylist => 'Přidáno do playlistu';
-
-  @override
-  String addedToNamedPlaylist(String name) {
-    return 'Přidáno do $name';
-  }
-
-  @override
   String get addExclusion => 'Přidat výjimku';
 
   @override
@@ -343,13 +335,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get forYou => 'Pro tebe';
 
   @override
-  String get general => 'Základní';
-
-  @override
   String get genre => 'Žánr';
-
-  @override
-  String get getStarted => 'Začít';
 
   @override
   String get goodQuality => 'Dobrá kvalita';
@@ -505,9 +491,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get nowPlaying => 'Právě hraje';
 
   @override
-  String get onboardingAlbumArt => 'Krásné obaly alb';
-
-  @override
   String get onboardingAlbumArtwork => 'Obaly alb';
 
   @override
@@ -523,9 +506,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get onboardingAppInfoSubtitle => 'Váš osobní hudební společník';
-
-  @override
-  String get onboardingAppInfoTitle => 'Vítejte v Noxira Music';
 
   @override
   String get onboardingAudioAccess => 'Přístup ke zvuku';
@@ -553,10 +533,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get onboardingChooseLanguage => 'Vyberte si jazyk';
-
-  @override
-  String get languageNotListedHint =>
-      'Váš jazyk není v seznamu? Vyberte angličtinu a pokračujte na další stránku.';
 
   @override
   String get onboardingCompletionSubtitle => 'Začněte si užívat svou hudbu';
@@ -626,9 +602,6 @@ class AppLocalizationsCs extends AppLocalizations {
       'Zobrazení ovládacích prvků přehrávání a aktualizací';
 
   @override
-  String get onboardingOptional => 'Volitelné';
-
-  @override
   String get onboardingPermissionsSubtitle =>
       'Noxira Music potřebuje tato oprávnění pro správné fungování';
 
@@ -681,34 +654,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get onboardingThemeTitle => 'Upravte si vzhled';
-
-  @override
-  String get beta_welcome_title => 'Beta Testing Program';
-
-  @override
-  String get beta_welcome_thanks =>
-      'Thank you for joining our beta testing program and helping us improve Noxira Music.';
-
-  @override
-  String get beta_expect_bugs_title => 'Expect Bugs';
-
-  @override
-  String get beta_expect_bugs_desc =>
-      'You may encounter crashes or unexpected behavior. This is a testing version.';
-
-  @override
-  String get beta_feedback_title => 'Feedback Matters';
-
-  @override
-  String get beta_feedback_desc =>
-      'Your reports and suggestions help us make the app better for everyone.';
-
-  @override
-  String get beta_updates_title => 'Frequent Updates';
-
-  @override
-  String get beta_updates_desc =>
-      'New features and fixes are released regularly as we continue development.';
 
   @override
   String get oneTimeSupport => 'Rychlá jednorázová podpora';
@@ -765,9 +710,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get quality => 'Kvalita';
-
-  @override
-  String get qualityDesc => 'Kvalita zvuku na základě formátu a datového toku';
 
   @override
   String get queue => 'Fronta';
@@ -880,9 +822,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get lyricsSource => 'Zdroj textů';
 
   @override
-  String get alreadyInPlaylist => 'Už je v tomto playlistu';
-
-  @override
   String get inPlaylistHint => 'V playlistu';
 
   @override
@@ -945,9 +884,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get onboardingNotAllowed => 'Zatím nepovoleno';
 
   @override
-  String get onboardingBackgroundStyle => 'Pozadí';
-
-  @override
   String get searchLyrics => 'Hledat text';
 
   @override
@@ -964,9 +900,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get selected => 'vybráno';
-
-  @override
-  String get selectPlaylist => 'Vyberte playlist';
 
   @override
   String get separator => 'Oddělovač';
@@ -1059,39 +992,6 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get settingsAutomixDesc =>
       'Automaticky vytvoří plynulý přechod mezi skladbami';
-
-  @override
-  String get playlistAutomixTitle => 'AutoMix';
-
-  @override
-  String get playlistAutomixSubtitle =>
-      'Automatické přechody v DJ stylu pro tento playlist';
-
-  @override
-  String get playlistAutomixOn => 'Zapnuto';
-
-  @override
-  String get playlistAutomixOff => 'Vypnuto';
-
-  @override
-  String get playlistAutomixBeatMatching => 'Sladit rytmus';
-
-  @override
-  String get playlistAutomixHarmonicMixing => 'Harmonické mixování';
-
-  @override
-  String get playlistAutomixTempoMatching => 'Sladit tempo';
-
-  @override
-  String get playlistAutomixTransitionDuration => 'Délka přechodu';
-
-  @override
-  String get playlistAutomixAutomatic => 'Automaticky';
-
-  @override
-  String playlistAutomixAnalyzing(int current, int total) {
-    return 'Analyzýza playlistu… $current / $total skladeb';
-  }
 
   @override
   String get settingsCrossfade => 'Prolínání skladeb';
@@ -1238,9 +1138,6 @@ class AppLocalizationsCs extends AppLocalizations {
   String get share => 'Sdílet';
 
   @override
-  String get showChangelog => 'Zobrazit seznam změn';
-
-  @override
   String get shuffle => 'Náhodné přehrání';
 
   @override
@@ -1295,15 +1192,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get updatedTitle => 'Noxira Music was updated';
-
-  @override
-  String get updatedHighlights => 'Highlights';
-
-  @override
-  String get showUpdatePopup => 'Update popup';
-
-  @override
-  String get showUpdatePopupDesc => 'Preview the screen shown after an update';
 
   @override
   String get tapAddToAddSongs => 'Klepněte na + pro přidání skladeb';
@@ -1410,9 +1298,6 @@ class AppLocalizationsCs extends AppLocalizations {
       'Tím se obnoví původní pořadí a viditelnost sekcí.';
 
   @override
-  String get sectionVisibility => 'Přepnout viditelnost sekce';
-
-  @override
   String get listeningHistory => 'Historie poslechu';
 
   @override
@@ -1426,12 +1311,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get skip => 'Přeskočit';
-
-  @override
-  String get feedback_title => 'Líbí se vám Noxira Music?';
-
-  @override
-  String get maybe_later => 'Možná později';
 
   @override
   String get send_feedback => 'Odeslat zpětnou vazbu';
@@ -1685,7 +1564,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get recapMonthly => 'Měsíční';
 
   @override
-  String get recapIntroAppName => 'AURORA MUSIC';
+  String get recapIntroAppName => 'NOXIRA MUSIC';
 
   @override
   String recapIntroTitle(String period) {
@@ -1812,6 +1691,65 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get recapBannerLater => 'Později';
+
+  @override
+  String get rebrandTitle => 'Aurora je nyní Noxira';
+
+  @override
+  String get rebrandSubtitle =>
+      'Stejná hudební aplikace, jakou znáte, s novým názvem, novým vzhledem a pár novými funkcemi.';
+
+  @override
+  String get rebrandNewHeading => 'Co je nového';
+
+  @override
+  String get rebrandSlideLyricsTitle => 'Texty písní od základu';
+
+  @override
+  String get rebrandSlideLyricsBody =>
+      'Nový design obrazovky s texty a další zdroje textů, takže najdete více textů k vašim písním. Klepnutím na řádek na něj skočíte. Texty teď můžete přeložit do libovolného jazyka.';
+
+  @override
+  String get rebrandSlideWidgetTitle => 'Redesignovaný widget na ploše';
+
+  @override
+  String get rebrandSlideWidgetBody =>
+      'Widget v barvách obalu alba, skleněným efektem, ovládacími prvky a další, která fungují bez otevření aplikace.';
+
+  @override
+  String get rebrandSlideQueueTitle => 'Redesignovaná fronta';
+
+  @override
+  String get rebrandSlideQueueBody =>
+      'Uvidíte, co hrálo a co bude dál. Přetažením změníte pořadí, švihnutím odstraníte.';
+
+  @override
+  String get translateLyricsTo => 'Přeložit texty do';
+
+  @override
+  String get translateLyricsAppLanguage => 'Jazyk aplikace';
+
+  @override
+  String get translateLyricsChooseLanguage => 'Vybrat jazyk…';
+
+  @override
+  String get rebrandSlideMoreTitle => 'A pár dalších novinek';
+
+  @override
+  String get rebrandMoreSetup =>
+      'Nastavení teď doporučí správný režim pro váš telefon.';
+
+  @override
+  String get rebrandMoreLook =>
+      'Zaoblené tlačítko přehrávání u Oblíbených písní a ovládání textů, které zůstává na místě.';
+
+  @override
+  String get rebrandMoreMotion =>
+      'Plynulejší a hezčí přechody v celé aplikaci.';
+
+  @override
+  String get rebrandMoreFixes =>
+      'Vyšší stabilita a opravy chyb v celé aplikaci, včetně blikání textů.';
 
   @override
   String get eqTitle => 'Ekvalizér';

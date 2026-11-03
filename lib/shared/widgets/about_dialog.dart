@@ -79,9 +79,9 @@ class AuroraAboutDialog extends StatelessWidget {
                           const BorderRadius.vertical(top: Radius.circular(15)),
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: Column(
+                    child: const Column(
                       children: [
-                        const NoxiraWordmark(
+                        NoxiraWordmark(
                           width: 210,
                           asset: AnimatedLogo.splashAsset,
                         ),

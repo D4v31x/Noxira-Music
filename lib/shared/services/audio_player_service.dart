@@ -318,6 +318,8 @@ class AudioPlayerService extends ChangeNotifier {
   /// Set the background manager service for updating mesh gradient colors
   void setBackgroundManager(BackgroundManagerService backgroundManager) {
     _backgroundManager = backgroundManager;
+    // The queue may have been restored before the manager was attached.
+    if (currentSong != null) unawaited(_updateBackgroundColors());
   }
 
   Future<void> _init() async {
@@ -342,8 +344,10 @@ class AudioPlayerService extends ChangeNotifier {
     await _loadPlaylists();
 
     // Initialize home screen widget
-    unawaited(_homeWidgetService.initialize().then(
-        (_) => _homeWidgetService.attachLaunchHandler(_handleWidgetLaunch)));
+    unawaited(_homeWidgetService.initialize().then((_) {
+      unawaited(_runPendingWidgetAction());
+      return _homeWidgetService.attachLaunchHandler(_handleWidgetLaunch);
+    }));
 
     // Listen to song changes to update home screen widget
     currentSongNotifier.addListener(_onSongChangedForWidget);
@@ -561,12 +565,13 @@ class AudioPlayerService extends ChangeNotifier {
         artist: song.artist ?? 'Unknown Artist',
         isPlaying: isPlayingNotifier.value,
         songId: song.id,
-        artworkBytes: currentArtwork.value,
         source: _playbackSource.name != null
             ? 'Playing from ${_playbackSource.name}'
             : 'Noxira Music',
       );
       unawaited(_refreshWidgetRecommendations());
+      unawaited(_homeWidgetService
+          .updateQueue(_playlist.skip(_currentIndex + 1).toList()));
     } else {
       _homeWidgetService.clearWidget();
       unawaited(_refreshWidgetRecommendations());
@@ -579,10 +584,10 @@ class AudioPlayerService extends ChangeNotifier {
   Future<void> _refreshWidgetRecommendations() async {
     if (songs.isEmpty) return;
     try {
-      final suggested = await getSuggestedTracks(count: 6);
+      final suggested = await getSuggestedTracks(count: 20);
       final currentId = currentSong?.id;
       _widgetRecommendations =
-          suggested.where((s) => s.id != currentId).take(4).toList();
+          suggested.where((s) => s.id != currentId).take(16).toList();
       await _homeWidgetService.updateRecommendations(_widgetRecommendations);
     } catch (e) {
       if (kDebugMode) debugPrint('Widget recommendations failed: $e');
@@ -602,6 +607,10 @@ class AudioPlayerService extends ChangeNotifier {
 
     final id = int.tryParse(uri.queryParameters['id'] ?? '');
     if (id == null) return;
+    await _playWidgetSong(id);
+  }
+
+  Future<void> _playWidgetSong(int id) async {
     await _waitForLibrary();
 
     final queue = _widgetRecommendations.any((s) => s.id == id)
@@ -614,6 +623,19 @@ class AudioPlayerService extends ChangeNotifier {
       index,
       source: const PlaybackSourceInfo(source: PlaybackSource.forYou),
     );
+  }
+
+  /// Plays what a widget tap asked for while the app was not running.
+  Future<void> _runPendingWidgetAction() async {
+    final action = await _homeWidgetService.takePendingAction();
+    if (action == null) return;
+    await _waitForLibrary();
+    if (action == 'play') {
+      if (currentSong != null && !isPlayingNotifier.value) await resume();
+    } else if (action.startsWith('play:')) {
+      final id = int.tryParse(action.substring(5));
+      if (id != null) await _playWidgetSong(id);
+    }
   }
 
   /// A cold start from the widget arrives before the library has loaded.

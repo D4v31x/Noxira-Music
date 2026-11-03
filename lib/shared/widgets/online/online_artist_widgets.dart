@@ -6,12 +6,15 @@ import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../providers/performance_mode_provider.dart';
 import '../../services/online_discovery_service.dart';
+import '../../utils/responsive_utils.dart';
+import '../glassmorphic_card.dart';
 import '../motion/musicfy_motion.dart';
 import '../motion/touch_and_reveal.dart';
 
 String _compact(int n) {
-  if (n >= 1000000)
+  if (n >= 1000000) {
     return '${(n / 1000000).toStringAsFixed(n >= 10000000 ? 0 : 1)}M';
+  }
   if (n >= 1000) return '${(n / 1000).toStringAsFixed(n >= 10000 ? 0 : 1)}K';
   return '$n';
 }
@@ -307,7 +310,8 @@ class SimilarArtistsRow extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  height: 196,
+                  height: GlassmorphicCard.listHeight(context,
+                      artworkSize: _SimilarArtistCard._width),
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -341,12 +345,13 @@ class _SimilarArtistCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final width = ResponsiveUtils.scaledArtwork(context, _width);
     final placeholder = ColoredBox(
       color: Colors.white.withValues(alpha: 0.08),
       child: Icon(
         Icons.person_rounded,
         color: Colors.white.withValues(alpha: 0.3),
-        size: _width * 0.4,
+        size: width * 0.4,
       ),
     );
     final url = artist.pictureUrl;
@@ -356,7 +361,7 @@ class _SimilarArtistCard extends StatelessWidget {
         onTap: onTap,
         child: RepaintBoundary(
           child: Container(
-            width: _width,
+            width: width,
             decoration: _cardDecoration(context),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -365,8 +370,8 @@ class _SimilarArtistCard extends StatelessWidget {
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(16)),
                   child: SizedBox(
-                    width: _width,
-                    height: _width,
+                    width: width,
+                    height: width,
                     child: url == null
                         ? placeholder
                         : Image.network(
@@ -537,7 +542,7 @@ Future<void> showOnlineArtistSheet(BuildContext context, OnlineArtist artist) {
         initialChildSize: 0.7,
         minChildSize: 0.4,
         maxChildSize: 0.92,
-        builder: (context, controller) => Container(
+        builder: (context, controller) => DecoratedBox(
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),

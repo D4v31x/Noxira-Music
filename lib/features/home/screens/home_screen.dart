@@ -647,9 +647,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         false;
 
     if (shouldExit) {
-      // Stop audio and exit the app properly
+      // Stop audio and exit the app properly. The provider owns the service,
+      // and the process can outlive the activity, so it must not be disposed here.
       await audioService.stop();
-      audioService.dispose();
 
       // Exit the app
       if (Platform.isAndroid) {
@@ -719,7 +719,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               curve: Curves.easeInOutCubic,
               child: isConnected
                   ? Container(
-                      height: 30,
+                      constraints: BoxConstraints(
+                        minHeight: 30,
+                        maxWidth: MediaQuery.sizeOf(context).width - 48,
+                      ),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
@@ -732,28 +735,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.bluetooth_connected,
-                            color: Color(0xFF10B981),
-                            size: 16,
+                            color: const Color(0xFF10B981),
+                            size: MediaQuery.textScalerOf(context).scale(16),
                           ),
                           const SizedBox(width: 6),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 300),
-                            transitionBuilder:
-                                (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                  opacity: animation, child: child);
-                            },
-                            child: Text(
-                              _bluetoothService.connectedDeviceName,
-                              key: ValueKey(
-                                  _bluetoothService.connectedDeviceName),
-                              style: const TextStyle(
-                                fontFamily: FontConstants.fontFamily,
-                                fontSize: 12,
-                                color: Color(0xFF10B981),
-                                fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              transitionBuilder:
+                                  (Widget child, Animation<double> animation) {
+                                return FadeTransition(
+                                    opacity: animation, child: child);
+                              },
+                              child: Text(
+                                _bluetoothService.connectedDeviceName,
+                                key: ValueKey(
+                                    _bluetoothService.connectedDeviceName),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: FontConstants.fontFamily,
+                                  fontSize: 12,
+                                  color: Color(0xFF10B981),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),

@@ -77,7 +77,7 @@ class UpdatePopupDialog extends StatelessWidget {
               Center(
                 child: Image.asset(
                   'assets/images/logo/Music_full_logo.png',
-                  width: 96,
+                  width: 160,
                   height: 36,
                   fit: BoxFit.contain,
                 ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -39,12 +40,15 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
   late AnimationController _crossfadeController;
   late Animation<double> _crossfadeAnimation;
   Uint8List? _previousArtworkCache;
+  // What is actually drawn; it follows the widget only once the blur is ready.
+  Uint8List? _shown;
 
   @override
   void initState() {
     super.initState();
+    _shown = widget.currentArtwork;
     _crossfadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1200),
       value: widget.currentArtwork != null ? 1.0 : 0.0,
       vsync: this,
     );
@@ -67,30 +71,19 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
         // No animation when appearing for first time
         if (mounted) {
           setState(() {
+            _shown = widget.currentArtwork;
             _crossfadeController.value = 1.0;
             _previousArtworkCache = null;
           });
         }
       } else if (widget.currentArtwork != null) {
-        // Animate new artwork in
-        if (mounted) {
-          setState(() {
-            _previousArtworkCache = oldWidget.currentArtwork;
-          });
-          _crossfadeController.forward(from: 0.0).then((_) {
-            // Clear previous artwork after animation completes
-            if (mounted) {
-              setState(() {
-                _previousArtworkCache = null;
-              });
-            }
-          });
-        }
+        unawaited(_transitionTo(widget.currentArtwork!));
       } else {
         // Artwork removed - fade out
         if (mounted) {
           setState(() {
             _previousArtworkCache = oldWidget.currentArtwork;
+            _shown = null;
           });
           _crossfadeController.reverse(from: 1.0).then((_) {
             if (mounted) {
@@ -102,6 +95,54 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
         }
       }
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Route got covered mid-fade: finish it now rather than on return.
+    if (!TickerMode.valuesOf(context).enabled &&
+        _crossfadeController.isAnimating) {
+      _crossfadeController.value = 1.0;
+      _previousArtworkCache = null;
+    }
+  }
+
+  /// Blurs [next] off-screen first, so the crossfade starts on a ready bitmap
+  /// instead of a live full-screen blur.
+  Future<void> _transitionTo(Uint8List next) async {
+    final shouldBlur =
+        Provider.of<PerformanceModeProvider>(context, listen: false)
+            .shouldEnableBlur;
+    if (shouldBlur) {
+      final sigma =
+          Provider.of<ThemeProvider>(context, listen: false).blurIntensity;
+      final extent = MediaQuery.sizeOf(context).longestSide;
+      try {
+        await BlurredImage.precache(MemoryImage(next),
+                sigma: sigma, extent: extent)
+            .timeout(const Duration(milliseconds: 600));
+      } catch (_) {
+        // The live blur is the fallback.
+      }
+    }
+    if (!mounted || !identical(widget.currentArtwork, next)) return;
+    // Covered routes have muted tickers; a fade started now would replay on return.
+    if (!TickerMode.valuesOf(context).enabled) {
+      setState(() {
+        _shown = next;
+        _previousArtworkCache = null;
+        _crossfadeController.value = 1.0;
+      });
+      return;
+    }
+    setState(() {
+      _previousArtworkCache = _shown;
+      _shown = next;
+    });
+    unawaited(_crossfadeController.forward(from: 0.0).then((_) {
+      if (mounted) setState(() => _previousArtworkCache = null);
+    }));
   }
 
   // Helper to check if artworks are equal (by reference)
@@ -177,7 +218,7 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
           ),
 
         // Current artwork (always visible once loaded, no animation wrapper when stable)
-        if (widget.currentArtwork != null)
+        if (_shown != null)
           _crossfadeController.isAnimating
               ? AnimatedBuilder(
                   animation: _crossfadeAnimation,
@@ -187,12 +228,12 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
                   ),
                   child: RepaintBoundary(
                     child: _buildBlurredArtwork(
-                        widget.currentArtwork!, shouldBlur, blurIntensity),
+                        _shown!, shouldBlur, blurIntensity),
                   ),
                 )
               : RepaintBoundary(
-                  child: _buildBlurredArtwork(
-                      widget.currentArtwork!, shouldBlur, blurIntensity),
+                  child:
+                      _buildBlurredArtwork(_shown!, shouldBlur, blurIntensity),
                 ),
 
         // Overlay for better text readability
@@ -242,6 +283,7 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
+                    cacheWidth: 512,
                     gaplessPlayback: true,
                   ),
                   AdaptiveBackdropFilter(

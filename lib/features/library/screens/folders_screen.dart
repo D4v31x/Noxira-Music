@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/library_screen_header.dart';
 import '../../../shared/utils/sort_preferences.dart';
+import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'folder_detail_screen.dart';
 
 enum FolderSortOption { name, path }
@@ -319,7 +320,8 @@ class _FoldersScreenState extends State<FoldersScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                       vertical: 6.0, horizontal: 16.0),
-                  child: glassmorphicContainer(
+                  child: Press3D(
+                      child: glassmorphicContainer(
                     child: ListTile(
                       leading:
                           const Icon(Icons.folder_rounded, color: Colors.white),
@@ -343,7 +345,7 @@ class _FoldersScreenState extends State<FoldersScreen> {
                         ),
                       ),
                     ),
-                  ),
+                  )),
                 ),
               ),
             ),

@@ -148,15 +148,20 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
                           size: 20,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context).yourLibrary,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: FontConstants.fontFamily,
-                            color: isDark ? Colors.white70 : Colors.black54,
+                        Flexible(
+                          child: Text(
+                            AppLocalizations.of(context).yourLibrary,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: FontConstants.fontFamily,
+                              color: isDark ? Colors.white70 : Colors.black54,
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         const Spacer(),
                         Text(
                           '${stats.totalHours}h ${stats.totalMinutes}m',
@@ -225,27 +230,32 @@ class _MinimalStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            fontFamily: FontConstants.fontFamily,
-            color: isDark ? Colors.white : Colors.black87,
-          ),
+    return Expanded(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w600,
+                fontFamily: FontConstants.fontFamily,
+                color: isDark ? Colors.white : Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontFamily: FontConstants.fontFamily,
+                color: isDark ? Colors.white38 : Colors.black38,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontFamily: FontConstants.fontFamily,
-            color: isDark ? Colors.white38 : Colors.black38,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

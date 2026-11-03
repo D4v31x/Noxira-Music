@@ -15,14 +15,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get add => 'Добавить';
 
   @override
-  String get addedToPlaylist => 'Добавлено в плейлист';
-
-  @override
-  String addedToNamedPlaylist(String name) {
-    return 'Добавлено в $name';
-  }
-
-  @override
   String get addExclusion => 'Добавить Исключение';
 
   @override
@@ -349,13 +341,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get forYou => 'Для вас';
 
   @override
-  String get general => 'Общие сведения';
-
-  @override
   String get genre => 'Жанр';
-
-  @override
-  String get getStarted => 'Начать работу';
 
   @override
   String get goodQuality => 'Хорошее качество';
@@ -511,9 +497,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get nowPlaying => 'Сейчас играет';
 
   @override
-  String get onboardingAlbumArt => 'Красивые обложки альбомов';
-
-  @override
   String get onboardingAlbumArtwork => 'Обложка альбома';
 
   @override
@@ -529,9 +512,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingAppInfoSubtitle => 'Ваш личный музыкальный спутник';
-
-  @override
-  String get onboardingAppInfoTitle => 'Добро пожаловать в «Noxira Music»';
 
   @override
   String get onboardingAudioAccess => 'Доступ к аудиоматериалам';
@@ -559,10 +539,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingChooseLanguage => 'Выберите язык';
-
-  @override
-  String get languageNotListedHint =>
-      'Вашего языка нет в списке? Выберите «Английский» и перейдите на следующую страницу.';
 
   @override
   String get onboardingCompletionSubtitle => 'Начните наслаждаться музыкой';
@@ -633,9 +609,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Показать элементы управления воспроизведением и обновления';
 
   @override
-  String get onboardingOptional => 'Необязательно';
-
-  @override
   String get onboardingPermissionsSubtitle =>
       'Для правильной работы приложению «Noxira Music» необходимы следующие разрешения';
 
@@ -689,34 +662,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get onboardingThemeTitle => 'Создайте свой собственный образ';
-
-  @override
-  String get beta_welcome_title => 'Beta Testing Program';
-
-  @override
-  String get beta_welcome_thanks =>
-      'Thank you for joining our beta testing program and helping us improve Noxira Music.';
-
-  @override
-  String get beta_expect_bugs_title => 'Expect Bugs';
-
-  @override
-  String get beta_expect_bugs_desc =>
-      'You may encounter crashes or unexpected behavior. This is a testing version.';
-
-  @override
-  String get beta_feedback_title => 'Feedback Matters';
-
-  @override
-  String get beta_feedback_desc =>
-      'Your reports and suggestions help us make the app better for everyone.';
-
-  @override
-  String get beta_updates_title => 'Frequent Updates';
-
-  @override
-  String get beta_updates_desc =>
-      'New features and fixes are released regularly as we continue development.';
 
   @override
   String get oneTimeSupport => 'Быстрая разовая поддержка';
@@ -773,9 +718,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get quality => 'Качество';
-
-  @override
-  String get qualityDesc => 'Качество звука зависит от формата и битрейта';
 
   @override
   String get queue => 'Очередь';
@@ -889,9 +831,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get lyricsSource => 'Lyrics source';
 
   @override
-  String get alreadyInPlaylist => 'Already in this playlist';
-
-  @override
   String get inPlaylistHint => 'In a playlist';
 
   @override
@@ -954,9 +893,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get onboardingNotAllowed => 'Not allowed yet';
 
   @override
-  String get onboardingBackgroundStyle => 'Background';
-
-  @override
   String get searchLyrics => 'Поиск текстов песен';
 
   @override
@@ -973,9 +909,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get selected => 'выбранный';
-
-  @override
-  String get selectPlaylist => 'Выбрать плейлист';
 
   @override
   String get separator => 'Разделитель';
@@ -1070,39 +1003,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsAutomixDesc =>
       'Автоматически создаёт плавный переход между треками';
-
-  @override
-  String get playlistAutomixTitle => 'AutoMix';
-
-  @override
-  String get playlistAutomixSubtitle =>
-      'Автоматические переходы в стиле DJ для этого плейлиста';
-
-  @override
-  String get playlistAutomixOn => 'Включено';
-
-  @override
-  String get playlistAutomixOff => 'Выключено';
-
-  @override
-  String get playlistAutomixBeatMatching => 'Совпадение бита';
-
-  @override
-  String get playlistAutomixHarmonicMixing => 'Гармоническое сведение';
-
-  @override
-  String get playlistAutomixTempoMatching => 'Совпадение темпа';
-
-  @override
-  String get playlistAutomixTransitionDuration => 'Длительность перехода';
-
-  @override
-  String get playlistAutomixAutomatic => 'Автоматически';
-
-  @override
-  String playlistAutomixAnalyzing(int current, int total) {
-    return 'Анализ плейлиста… $current / $total треков';
-  }
 
   @override
   String get settingsCrossfade => 'Переход';
@@ -1253,9 +1153,6 @@ class AppLocalizationsRu extends AppLocalizations {
   String get share => 'Поделиться';
 
   @override
-  String get showChangelog => 'Показать журнал изменений';
-
-  @override
   String get shuffle => 'Перемешать';
 
   @override
@@ -1311,15 +1208,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get updatedTitle => 'Noxira Music was updated';
-
-  @override
-  String get updatedHighlights => 'Highlights';
-
-  @override
-  String get showUpdatePopup => 'Update popup';
-
-  @override
-  String get showUpdatePopupDesc => 'Preview the screen shown after an update';
 
   @override
   String get tapAddToAddSongs => 'Нажмите «+», чтобы добавить песни';
@@ -1428,9 +1316,6 @@ class AppLocalizationsRu extends AppLocalizations {
       'Это восстановит исходный порядок разделов и их отображение.';
 
   @override
-  String get sectionVisibility => 'Включить/выключить отображение раздела';
-
-  @override
   String get listeningHistory => 'История прослушиваний';
 
   @override
@@ -1444,12 +1329,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get skip => 'Пропустить';
-
-  @override
-  String get feedback_title => 'Вам нравится Noxira Music?';
-
-  @override
-  String get maybe_later => 'Может, позже';
 
   @override
   String get send_feedback => 'Отправить отзыв';
@@ -1703,7 +1582,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get recapMonthly => 'Ежемесячно';
 
   @override
-  String get recapIntroAppName => 'AURORA MUSIC';
+  String get recapIntroAppName => 'NOXIRA MUSIC';
 
   @override
   String recapIntroTitle(String period) {
@@ -1831,6 +1710,65 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get recapBannerLater => 'Позже';
+
+  @override
+  String get rebrandTitle => 'Aurora теперь Noxira';
+
+  @override
+  String get rebrandSubtitle =>
+      'То же музыкальное приложение, которое вы знаете, — с новым названием, свежим видом и несколькими новыми функциями.';
+
+  @override
+  String get rebrandNewHeading => 'Что нового';
+
+  @override
+  String get rebrandSlideLyricsTitle => 'Тексты песен — заново';
+
+  @override
+  String get rebrandSlideLyricsBody =>
+      'Новая страница текстов и больше источников, чтобы тексты находились у большего числа песен. Коснитесь строки, чтобы перейти к ней. Теперь тексты можно перевести на любой язык.';
+
+  @override
+  String get rebrandSlideWidgetTitle => 'Новый виджет на главном экране';
+
+  @override
+  String get rebrandSlideWidgetBody =>
+      'Стекло в цветах обложки и кнопки «назад», «пуск» и «вперёд», которые работают без открытия приложения.';
+
+  @override
+  String get rebrandSlideQueueTitle => 'Настоящая очередь';
+
+  @override
+  String get rebrandSlideQueueBody =>
+      'Смотрите, что играло и что дальше. Перетащите, чтобы изменить порядок, смахните, чтобы удалить.';
+
+  @override
+  String get translateLyricsTo => 'Перевести текст на';
+
+  @override
+  String get translateLyricsAppLanguage => 'Язык приложения';
+
+  @override
+  String get translateLyricsChooseLanguage => 'Выбрать язык…';
+
+  @override
+  String get rebrandSlideMoreTitle => 'И ещё кое-что';
+
+  @override
+  String get rebrandMoreSetup =>
+      'Настройка теперь рекомендует подходящий режим для вашего телефона.';
+
+  @override
+  String get rebrandMoreLook =>
+      'Более спокойный баннер поддержки, скруглённая кнопка воспроизведения в «Избранном» и элементы управления текстом, которые не прячутся.';
+
+  @override
+  String get rebrandMoreMotion =>
+      'Более плавные и красивые переходы по всему приложению.';
+
+  @override
+  String get rebrandMoreFixes =>
+      'Улучшения стабильности и исправления ошибок по всему приложению, включая мерцание текстов.';
 
   @override
   String get eqTitle => 'Эквалайзер';

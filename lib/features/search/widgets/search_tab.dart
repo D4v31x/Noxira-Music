@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import '../../../shared/widgets/motion/musicfy_motion.dart';
 import 'dart:async';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
@@ -13,6 +14,7 @@ import '../../../shared/services/music_search_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/models/models.dart';
 import '../../library/library_feature.dart';
+import '../../../shared/widgets/glassmorphic_card.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/song_context_menu.dart';
@@ -420,7 +422,7 @@ class _SearchTabState extends State<SearchTab> {
           _buildSectionHeader(AppLocalizations.of(context).albums),
           const SizedBox(height: 8),
           SizedBox(
-            height: 190,
+            height: GlassmorphicCard.listHeight(context),
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: _filteredAlbums.length.clamp(0, 10),
@@ -681,7 +683,8 @@ class _SearchSongTile extends StatelessWidget {
                   const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
               leading: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: artworkService.buildCachedArtwork(song.id),
+                child: artworkService.buildCachedArtwork(song.id,
+                    size: ResponsiveUtils.scaledArtwork(context, 50)),
               ),
               title: Text(
                 song.title,

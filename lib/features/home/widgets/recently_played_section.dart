@@ -114,7 +114,7 @@ class _RecentlyPlayedSectionState extends State<RecentlyPlayedSection> {
     }
 
     return SizedBox(
-      height: 190,
+      height: GlassmorphicCard.listHeight(context),
       child: ListView.builder(
         scrollCacheExtent:
             const ScrollCacheExtent.pixels(AppConfig.horizontalListCacheExtent),

@@ -2,15 +2,6 @@
   "@@locale": "en",
   "aboutArtist": "About artist",
   "add": "Add",
-  "addedToPlaylist": "Added to playlist",
-  "addedToNamedPlaylist": "Added to {name}",
-  "@addedToNamedPlaylist": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "addExclusion": "Add Exclusion",
   "addSeparator": "Add Separator",
   "addSongs": "Add Songs",
@@ -128,9 +119,7 @@
   "fontSize": "Font Size",
   "format": "Format",
   "forYou": "For You",
-  "general": "General",
   "genre": "Genre",
-  "getStarted": "Get Started",
   "goodQuality": "Good Quality",
   "gotIt": "Got it!",
   "grantPermission": "Grant Permission",
@@ -181,13 +170,11 @@
   "noSongsAvailable": "No songs available",
   "noSongsInPlaylist": "No songs in this playlist",
   "nowPlaying": "Now Playing",
-  "onboardingAlbumArt": "Beautiful Album Art",
   "onboardingAlbumArtwork": "Album Artwork",
   "onboardingAlbumArtworkDesc": "Fetches high-quality album covers to enhance your library",
   "onboardingAnalytics": "Anonymous analytics & crash reports",
   "onboardingAnalyticsDesc": "Helps us fix bugs and improve performance. Never includes your listening history or personal data.",
   "onboardingAppInfoSubtitle": "Your personal music companion",
-  "onboardingAppInfoTitle": "Welcome to Noxira Music",
   "onboardingAudioAccess": "Audio Access",
   "onboardingAudioAccessDesc": "Required to play and manage your music library",
   "onboardingBack": "Back",
@@ -196,7 +183,6 @@
   "onboardingBluetooth": "Bluetooth",
   "onboardingBluetoothDesc": "Needed to connect to bluetooth devices",
   "onboardingChooseLanguage": "Choose Your Language",
-  "languageNotListedHint": "Your language isn't listed? Select English and continue to the next page.",
   "onboardingCompletionSubtitle": "Start enjoying your music",
   "onboardingCompletionTitle": "You're All Set!",
   "onboardingContinue": "Continue",
@@ -217,7 +203,6 @@
   "onboardingMusicMetadataDesc": "Gets artist info, album details, and track information",
   "onboardingNotifications": "Notifications",
   "onboardingNotificationsDesc": "Show playback controls and updates",
-  "onboardingOptional": "Optional",
   "onboardingPermissionsSubtitle": "Noxira Music needs these permissions to work properly",
   "onboardingPermissionsTitle": "Grant Permissions",
   "onboardingPrivacyNote": "Your privacy is important. All music files stay on your device.",
@@ -234,14 +219,6 @@
   "onboardingVisualizerAccessDesc": "Lets the visualizer read your device's audio session for the live bar spectrum. No audio is ever recorded.",
   "onboardingThemeSubtitle": "Choose a theme that suits your style",
   "onboardingThemeTitle": "Customize Your Look",
-  "beta_welcome_title": "Beta Testing Program",
-  "beta_welcome_thanks": "Thank you for joining our beta testing program and helping us improve Noxira Music.",
-  "beta_expect_bugs_title": "Expect Bugs",
-  "beta_expect_bugs_desc": "You may encounter crashes or unexpected behavior. This is a testing version.",
-  "beta_feedback_title": "Feedback Matters",
-  "beta_feedback_desc": "Your reports and suggestions help us make the app better for everyone.",
-  "beta_updates_title": "Frequent Updates",
-  "beta_updates_desc": "New features and fixes are released regularly as we continue development.",
   "oneTimeSupport": "Quick one-time support",
   "openFolder": "Open in File Manager",
   "openFolderInfo": "Use your file manager to navigate to this location",
@@ -259,7 +236,6 @@
   "privacyNotice": "By continuing to use this app, you agree to our Privacy Policy.",
   "privacyPolicyLink": "Read our Privacy Policy",
   "quality": "Quality",
-  "qualityDesc": "Audio quality based on format and bitrate",
   "queue": "Queue",
   "queueEmpty": "Queue is empty",
   "reasonFormat": "File format doesn't support metadata editing",
@@ -296,7 +272,6 @@
   "searchArtists": "Search artists",
   "searchFailed": "Search failed",
   "lyricsSource": "Lyrics source",
-  "alreadyInPlaylist": "Already in this playlist",
   "inPlaylistHint": "In a playlist",
   "removeDuplicates": "Remove duplicates",
   "noDuplicatesFound": "No duplicate songs found",
@@ -333,14 +308,12 @@
   "onboardingSummaryLibrary": "Music library access",
   "onboardingAllowed": "Allowed",
   "onboardingNotAllowed": "Not allowed yet",
-  "onboardingBackgroundStyle": "Background",
   "searchLyrics": "Search Lyrics",
   "searchMetadata": "Search metadata",
   "searchTracks": "Search tracks",
   "selectAll": "Select All",
   "selectArtist": "Select artist",
   "selected": "selected",
-  "selectPlaylist": "Select Playlist",
   "separator": "Separator",
   "separatorHint": "e.g. / or feat.",
   "separators": "Separators",
@@ -371,26 +344,6 @@
   "settingsGaplessDesc": "Seamless track transitions",
   "settingsAutomix": "Automix",
   "settingsAutomixDesc": "Automatically create a seamless flow between songs",
-  "playlistAutomixTitle": "AutoMix",
-  "playlistAutomixSubtitle": "DJ-style automatic transitions for this playlist",
-  "playlistAutomixOn": "On",
-  "playlistAutomixOff": "Off",
-  "playlistAutomixBeatMatching": "Beat matching",
-  "playlistAutomixHarmonicMixing": "Harmonic mixing",
-  "playlistAutomixTempoMatching": "Tempo matching",
-  "playlistAutomixTransitionDuration": "Transition duration",
-  "playlistAutomixAutomatic": "Automatic",
-  "playlistAutomixAnalyzing": "Analyzing playlist… {current} / {total} tracks",
-  "@playlistAutomixAnalyzing": {
-    "placeholders": {
-      "current": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
   "settingsCrossfade": "Crossfade",
   "settingsCrossfadeDesc": "Smoothly blend the end of one track into the next",
   "crossfadeDuration": "Crossfade Duration",
@@ -442,7 +395,6 @@
   "settingsWeeklyRecapDesc": "Show a banner every week after your first play",
   "settingsVersion": "Version",
   "share": "Share",
-  "showChangelog": "Show Changelog",
   "shuffle": "Shuffle",
   "size": "Size",
   "sleepTimer": "Sleep timer",
@@ -461,9 +413,6 @@
   "supportAuroraMessage": "Help keep Noxira Music free and support future development. Every contribution means a lot!",
   "supportAuroraTitle": "Support Noxira Music",
   "updatedTitle": "Noxira Music was updated",
-  "updatedHighlights": "Highlights",
-  "showUpdatePopup": "Update popup",
-  "showUpdatePopupDesc": "Preview the screen shown after an update",
   "tapAddToAddSongs": "Tap + to add songs",
   "reorderSongs": "Reorder Songs",
   "done": "Done",
@@ -498,14 +447,11 @@
   "resetToDefault": "Reset to Default",
   "resetLayoutConfirm": "Reset layout to default?",
   "resetLayoutMessage": "This will restore the original section order and visibility.",
-  "sectionVisibility": "Toggle section visibility",
   "listeningHistory": "Listening History",
   "libraryStats": "Library Stats",
   "back": "Back",
   "continueButton": "Continue",
   "skip": "Skip",
-  "feedback_title": "Enjoying Noxira Music?",
-  "maybe_later": "Maybe Later",
   "send_feedback": "Send Feedback",
   "send_feedback_desc": "Report bugs or suggest features",
   "rateApp": "Rate Noxira Music",
@@ -656,7 +602,7 @@
   "recapPeriodMonth": "Month",
   "recapWeekly": "Weekly",
   "recapMonthly": "Monthly",
-  "recapIntroAppName": "AURORA MUSIC",
+  "recapIntroAppName": "NOXIRA MUSIC",
   "recapIntroTitle": "Your {period}\nRecap",
   "@recapIntroTitle": {
     "placeholders": {
@@ -737,6 +683,23 @@
   "recapBannerTitle": "Music recap is here",
   "recapBannerShow": "Show",
   "recapBannerLater": "Later",
+  "rebrandTitle": "Aurora is now Noxira",
+  "rebrandSubtitle": "Same music app you know, with a new name, a fresh look and some new tricks.",
+  "rebrandNewHeading": "What's new",
+  "rebrandSlideLyricsTitle": "Lyrics, rebuilt",
+  "rebrandSlideLyricsBody": "A redesigned lyrics page and more lyric sources, so more songs find their words. Tap a line to jump to it. You can now translate lyrics into any language you like.",
+  "rebrandSlideWidgetTitle": "A refreshed home screen widget",
+  "rebrandSlideWidgetBody": "Glass tinted with your artwork, and previous, play and next buttons that work without opening the app.",
+  "rebrandSlideQueueTitle": "A redesigned queue",
+  "rebrandSlideQueueBody": "See what played and what's next. Drag to reorder, swipe to remove.",
+  "translateLyricsTo": "Translate lyrics to",
+  "translateLyricsAppLanguage": "App language",
+  "translateLyricsChooseLanguage": "Choose language…",
+  "rebrandSlideMoreTitle": "And a few more things",
+  "rebrandMoreSetup": "Setup now suggests the right mode for your phone.",
+  "rebrandMoreLook": "Rounded play button on Favorite Songs and lyric controls that stay put.",
+  "rebrandMoreMotion": "Smoother, better transitions across the whole app.",
+  "rebrandMoreFixes": "Stability and bug fixes across the app, including lyrics that no longer flicker.",
   "eqTitle": "Equalizer",
   "eqOn": "ON",
   "eqOff": "OFF",
@@ -897,14 +860,20 @@
   "onboardingTryNote": "Based on your device's specs we recommend {recommended}, but you're welcome to try {selected}.",
   "@onboardingTryNote": {
     "placeholders": {
-      "recommended": {"type": "String"},
-      "selected": {"type": "String"}
+      "recommended": {
+        "type": "String"
+      },
+      "selected": {
+        "type": "String"
+      }
     }
   },
   "onboardingHeaviestNote": "{option} is the heaviest option and may feel less smooth on your device.",
   "@onboardingHeaviestNote": {
     "placeholders": {
-      "option": {"type": "String"}
+      "option": {
+        "type": "String"
+      }
     }
   }
 }

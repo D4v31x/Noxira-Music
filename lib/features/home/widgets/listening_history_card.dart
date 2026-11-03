@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:provider/provider.dart';
@@ -113,8 +114,8 @@ class ListeningHistoryCard extends StatelessWidget {
                       Hero(
                         tag: 'nowPlayingArtwork_home',
                         child: Container(
-                          width: 64,
-                          height: 64,
+                          width: ResponsiveUtils.scaledArtwork(context, 64),
+                          height: ResponsiveUtils.scaledArtwork(context, 64),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -122,7 +123,7 @@ class ListeningHistoryCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                             child: _artworkService.buildCachedArtwork(
                               song.id,
-                              size: 64,
+                              size: ResponsiveUtils.scaledArtwork(context, 64),
                             ),
                           ),
                         ),
@@ -176,6 +177,7 @@ class ListeningHistoryCard extends StatelessWidget {
                           ],
                         ),
                       ),
+                      const SizedBox(width: 16),
                       // Play/Pause button
                       ValueListenableBuilder<bool>(
                         valueListenable: audioPlayerService.isPlayingNotifier,

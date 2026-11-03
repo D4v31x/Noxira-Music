@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -147,14 +146,12 @@ class _WelcomePageState extends State<WelcomePage>
       title: '',
       primaryLabel: l10n.onboardingGetStarted,
       onPrimary: widget.onContinue,
-      children: const [],
       // The heading is custom here, so it is built below via [custom].
       custom: [
         Reveal(
           child: SizedBox(
             height: titleHeight,
             child: Align(
-              alignment: Alignment.center,
               child: _line(text.title, titleStyle, 0),
             ),
           ),
@@ -170,73 +167,9 @@ class _WelcomePageState extends State<WelcomePage>
             ),
           ),
         ),
-        const SizedBox(height: 22),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _Fact(
-              order: 3,
-              icon: iconoir.Folder(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  width: 18,
-                  height: 18),
-              label: l10n.onboardingLocalMusic,
-            ),
-            _Fact(
-              order: 4,
-              icon: iconoir.TextSize(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  width: 18,
-                  height: 18),
-              label: l10n.onboardingLyricsSupport,
-            ),
-            _Fact(
-              order: 5,
-              icon: iconoir.Palette(
-                  color: Colors.white.withValues(alpha: 0.9),
-                  width: 18,
-                  height: 18),
-              label: l10n.onboardingMaterialDesign,
-            ),
-          ],
-        ),
         const SizedBox(height: 8),
       ],
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.label, required this.order});
-
-  final Widget icon;
-  final String label;
-  final int order;
-
-  @override
-  Widget build(BuildContext context) {
-    return GlassPanel(
-      radius: 22,
-      order: order,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          icon,
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
+      children: const [],
     );
   }
 }

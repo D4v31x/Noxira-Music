@@ -1,12 +1,15 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
+import 'package:provider/provider.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'motion/musicfy_motion.dart';
 import 'blurred_image.dart';
 import 'adaptive_blur.dart';
+import '../providers/performance_mode_provider.dart';
 
 /// A beautiful blurred-artwork header for detail screens (album, artist, playlist, folder).
 ///
@@ -42,6 +45,27 @@ class DetailHeader extends StatelessWidget {
     this.expandedHeight = 300,
     this.actions,
   });
+
+  /// Blurs [artworkBytes] ahead of time, so a header first built with them
+  /// draws a ready bitmap instead of running a live full-size blur. Call it
+  /// while the page is still opening, and hand the same [Uint8List] to the
+  /// header afterwards. Does nothing where blur is off (low-end devices).
+  static Future<void> precacheArtwork(
+    BuildContext context,
+    Uint8List artworkBytes, {
+    double expandedHeight = 300,
+  }) {
+    final lowEnd = Provider.of<PerformanceModeProvider>(context, listen: false)
+        .isLowEndDevice;
+    if (lowEnd) return Future.value();
+    // The blur is sized by the header's longest side (see BlurredImage).
+    final extent = math.max(
+      MediaQuery.sizeOf(context).width,
+      expandedHeight + MediaQuery.paddingOf(context).top,
+    );
+    return BlurredImage.precache(MemoryImage(artworkBytes),
+        sigma: 30, extent: extent);
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import 'motion/swipe_actions.dart';
 import 'motion/touch_and_reveal.dart';
 import 'package:flutter/foundation.dart';
@@ -128,7 +129,9 @@ class _OptimizedSongTileState extends State<OptimizedSongTile> {
                         borderRadius: BorderRadius.circular(8),
                         child: Stack(
                           children: [
-                            _artworkService.buildCachedArtwork(widget.song.id),
+                            _artworkService.buildCachedArtwork(widget.song.id,
+                                size:
+                                    ResponsiveUtils.scaledArtwork(context, 50)),
                             if (isCurrent)
                               Positioned.fill(
                                 child: ColoredBox(

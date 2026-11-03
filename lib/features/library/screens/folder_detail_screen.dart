@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import '../../../shared/widgets/motion/touch_and_reveal.dart';
 import 'dart:io';
 import 'dart:async';
@@ -36,7 +37,7 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
   List<SongModel> _allSongs = [];
   final List<SongModel> _displayedSongs = [];
   int _currentPage = 0;
-  final int _songsPerPage = 100;
+  final int _songsPerPage = kDetailPageSize;
   bool _isLoading = false;
   bool _hasMoreSongs = true;
 
@@ -59,9 +60,10 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
   void initState() {
     super.initState();
     _scrollController = ScrollController()..addListener(_scrollListener);
-    whenRouteSettled(context).then((_) {
-      if (mounted) _fetchSongs();
-    });
+    // The header's reveal gets a head start before the songs are loaded.
+    unawaited(whenDetailReady(context).then((_) {
+      if (mounted) unawaited(_fetchSongs());
+    }));
   }
 
   AudioPlayerService? _audioServiceRef;
@@ -95,10 +97,12 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
     final allSongs = audioPlayerService.songs;
 
     final folderSongs = allSongs.where((song) {
-      final songFile = File(song.data);
-      return songFile.parent.path == widget.folderPath;
+      // Cheap pre-check first: most of the library is in other folders.
+      if (!song.data.startsWith(widget.folderPath)) return false;
+      return File(song.data).parent.path == widget.folderPath;
     }).toList();
 
+    if (!mounted) return;
     setState(() {
       _allSongs = folderSongs;
     });
@@ -108,14 +112,16 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
   }
 
   Future<void> _loadArtwork() async {
-    if (_allSongs.isNotEmpty) {
-      final artwork = await _artworkService.getArtwork(_allSongs.first.id);
-      if (mounted && artwork != null) {
-        setState(() {
-          _artworkBytes = artwork;
-        });
-      }
-    }
+    if (_allSongs.isEmpty) return;
+    final artwork = await _artworkService.getArtwork(_allSongs.first.id);
+    if (!mounted || artwork == null) return;
+    // Blur first, show second: a header built with fresh artwork would
+    // otherwise run a live full-size blur on its first frame.
+    await DetailHeader.precacheArtwork(context, artwork);
+    if (!mounted) return;
+    setState(() {
+      _artworkBytes = artwork;
+    });
   }
 
   void _scrollListener() {
@@ -265,10 +271,12 @@ class _FolderDetailScreenState extends State<FolderDetailScreen>
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: SizedBox(
-                              width: 42,
-                              height: 42,
+                              width: ResponsiveUtils.scaledArtwork(context, 42),
+                              height:
+                                  ResponsiveUtils.scaledArtwork(context, 42),
                               child: _artworkService.buildCachedArtwork(song.id,
-                                  size: 42),
+                                  size: ResponsiveUtils.scaledArtwork(
+                                      context, 42)),
                             ),
                           ),
                           const SizedBox(width: 12),

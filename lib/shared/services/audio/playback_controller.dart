@@ -20,6 +20,8 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
 
       // Reset loading flag when setting a new playlist
       _isLoading = false;
+      // Silence the old song while the new one loads rather than let it stutter.
+      unawaited(_audioPlayer.pause());
       await cancelCrossfadeIfActive();
 
       // Slice the song list to start at [startIndex] — songs before the
@@ -60,26 +62,44 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
           final startMediaItem = await _createMediaItem(startSong);
           lightMediaItems[_currentIndex] = startMediaItem;
 
-          // Update audio handler queue for notification
-          audioHandler.updateNotificationQueue(lightMediaItems);
+          // Update audio handler queue for notification (the full queue is
+          // sent after playback has started)
+          audioHandler.updateNotificationQueue([startMediaItem]);
 
           // Suppress automatic mediaItem updates during source setup
           // to prevent intermediate index 0 from overriding the correct item
           audioHandler.suppressIndexUpdates();
 
-          await _audioPlayer.setAudioSources(
-            _playlist.asMap().entries.map((entry) {
-              final song = entry.value;
-              final mediaItem = lightMediaItems[entry.key];
-              final uri = song.uri ?? song.data;
-              return AudioSource.uri(
-                Uri.parse(uri),
-                tag: mediaItem,
+          // Hand the player only the first song so playback can start at once;
+          // the rest of the queue is appended right after it is running.
+          AudioSource sourceAt(int i) => AudioSource.uri(
+                Uri.parse(_playlist[i].uri ?? _playlist[i].data),
+                tag: lightMediaItems[i],
               );
-            }).toList(),
-            initialIndex: _currentIndex,
+          final queuedPlaylist = _playlist;
+          await _audioPlayer.setAudioSources(
+            [sourceAt(_currentIndex)],
+            initialIndex: 0,
             initialPosition: Duration.zero,
           );
+          if (queuedPlaylist.length > 1) {
+            unawaited(Future<void>.delayed(const Duration(milliseconds: 400),
+                () async {
+              // The queue may have been replaced or edited in the meantime.
+              if (!identical(_playlist, queuedPlaylist) ||
+                  _audioPlayer.sequence.length != 1) {
+                return;
+              }
+              try {
+                await _audioPlayer.insertAudioSources(1, [
+                  for (var i = 1; i < queuedPlaylist.length; i++) sourceAt(i),
+                ]);
+                audioHandler.updateNotificationQueue(lightMediaItems);
+              } catch (e) {
+                if (kDebugMode) debugPrint('Error appending queue: $e');
+              }
+            }));
+          }
 
           // Apply current shuffle and loop settings to the player.
           // We manage shuffle ordering ourselves by reordering _playlist, so
@@ -120,9 +140,10 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
           // arrive during/after the play command are handled correctly.
           _isSettingPlaylist = false;
 
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint(
                 '🎥 [PLAYBACK] ▶️ Starting playback: "${_playlist[_currentIndex].title}" by ${_playlist[_currentIndex].artist ?? 'Unknown'} (id: ${_playlist[_currentIndex].id})');
+          }
           // Fire and forget — do NOT await; see comment above.
           unawaited(_audioPlayer.play());
 
@@ -130,19 +151,23 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
           unawaited(updateCurrentArtwork());
           unawaited(_updateBackgroundColors());
 
-          // Load remaining artwork in background (non-blocking)
-          unawaited(_loadRemainingArtworkInBackground(_playlist));
+          // Load remaining artwork in background (non-blocking). Deferred, with
+          // the queue save, so neither competes with the song change for frames.
+          unawaited(Future<void>.delayed(const Duration(milliseconds: 1500),
+              () => _loadRemainingArtworkInBackground(_playlist)));
 
           // Single debounced notification
           _scheduleNotify();
-          unawaited(saveQueueState());
+          unawaited(Future<void>.delayed(
+              const Duration(milliseconds: 1500), saveQueueState));
         } catch (e) {
           _isSettingPlaylist = false; // Release guard on error
           audioHandler.resumeIndexUpdates(); // Resume notification updates
           // "Loading interrupted" is expected when rapidly changing songs - don't treat as error
           if (e.toString().contains('Loading interrupted')) {
-            if (kDebugMode)
+            if (kDebugMode) {
               debugPrint('Audio load interrupted (new song selected)');
+            }
             return;
           }
           if (kDebugMode) debugPrint('Error setting audio source: $e');
@@ -167,8 +192,9 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
       audioHandler.resumeIndexUpdates(); // Resume notification updates
       // "Loading interrupted" is expected when rapidly changing songs - don't treat as error
       if (e.toString().contains('Loading interrupted')) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('Audio load interrupted (new song selected)');
+        }
         return;
       }
       if (kDebugMode) debugPrint('Failed to set playlist: $e');
@@ -276,8 +302,9 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
 
       if (_currentIndex >= 0 && _currentIndex < _playlist.length) {
         final song = _playlist[_currentIndex];
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('Playing song: ${song.title} by ${song.artist}');
+        }
 
         if (_gaplessPlayback) {
           if (kDebugMode) {
@@ -445,8 +472,9 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
 
     if (_loopMode == LoopMode.one) {
       // Repeat ONE: restart the current track.
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint('⏭️ [SKIP] Repeat ONE — restarting current track');
+      }
       await _audioPlayer.seek(Duration.zero);
       return;
     }
@@ -458,17 +486,19 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
     } else {
       // Last song in the queue.
       if (_loopMode == LoopMode.all) {
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint(
               '⏭️ [SKIP] At end of queue, wrapping to start (repeat ALL)');
+        }
         await _audioPlayer.seek(Duration.zero, index: 0);
         // just_audio ^0.10.x: play() completes on interrupt, not start —
         // awaiting would block skip() for the entire track duration.
         unawaited(_audioPlayer.play());
       } else {
         // Repeat OFF: stop playback.
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('⏭️ [SKIP] At end of queue, stopping (repeat OFF)');
+        }
         await _audioPlayer.pause();
         await _audioPlayer.seek(Duration.zero);
         _isPlaying = false;
@@ -496,16 +526,18 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
 
     // Within 3 seconds: move to the previous track.
     if (_audioPlayer.hasPrevious) {
-      if (kDebugMode)
+      if (kDebugMode) {
         debugPrint(
             '⏮️ [BACK] Within 3s and has previous — seeking to previous');
+      }
       await _audioPlayer.seekToPrevious();
     } else {
       // At the very first track in the queue.
       if (_loopMode == LoopMode.all && _playlist.isNotEmpty) {
         // Repeat ALL: jump to the last track.
-        if (kDebugMode)
+        if (kDebugMode) {
           debugPrint('⏮️ [BACK] At first track, repeat ALL — jumping to last');
+        }
         await _audioPlayer.seek(Duration.zero, index: _playlist.length - 1);
       } else {
         // Repeat OFF / ONE at first track: restart.

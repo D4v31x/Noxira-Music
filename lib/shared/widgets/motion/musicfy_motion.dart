@@ -135,11 +135,10 @@ class Press3D extends StatefulWidget {
 
 class _Press3DState extends State<Press3D> with SingleTickerProviderStateMixin {
   static final SpringDescription _spring =
-      SpringDescription.withDampingRatio(mass: 1, stiffness: 420, ratio: 1);
+      SpringDescription.withDampingRatio(mass: 1, stiffness: 420);
 
   late final AnimationController _press = AnimationController.unbounded(
     vsync: this,
-    value: 0,
   );
   final _PressSlot _slot = _PressSlot();
   Offset _normalized = Offset.zero;

@@ -37,7 +37,7 @@ class SuggestedArtistsSection extends StatelessWidget {
 
     return RepaintBoundary(
       child: SizedBox(
-        height: 190,
+        height: GlassmorphicCard.listHeight(context),
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),

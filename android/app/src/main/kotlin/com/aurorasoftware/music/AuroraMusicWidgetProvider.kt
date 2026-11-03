@@ -28,6 +28,10 @@ import android.text.TextPaint
 import android.text.TextUtils
 import android.util.TypedValue
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.support.v4.media.MediaBrowserCompat
+import android.support.v4.media.session.MediaControllerCompat
 import android.os.Bundle
 import android.util.LruCache
 import android.view.KeyEvent
@@ -38,6 +42,7 @@ import es.antonborri.home_widget.HomeWidgetPlugin
 import java.io.File
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Home screen widget: a glass player card (artwork, title, controls)
@@ -53,6 +58,8 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         const val ACTION_PLAY_PAUSE = "com.aurorasoftware.music.WIDGET_PLAY_PAUSE"
         const val ACTION_NEXT = "com.aurorasoftware.music.WIDGET_NEXT"
         const val ACTION_PREVIOUS = "com.aurorasoftware.music.WIDGET_PREVIOUS"
+        const val ACTION_PLAY_SONG = "com.aurorasoftware.music.WIDGET_PLAY_SONG"
+        const val EXTRA_SONG_ID = "song_id"
         const val ACTION_OPEN_APP = "com.aurorasoftware.music.WIDGET_OPEN"
         const val ACTION_UPDATE = "com.aurorasoftware.music.WIDGET_UPDATE"
 
@@ -61,17 +68,13 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
             "com.ryanheise.audioservice.MediaButtonReceiver"
 
         private const val DEFAULT_TINT = 0xFF4F6D8F.toInt()
-        private const val COMPACT_MAX_HEIGHT_DP = 150
-        private const val LARGE_MIN_HEIGHT_DP = 255
         private const val GLASS_RADIUS_DP = 28f
-        private const val REC_COUNT = 4
-
-        private val RECS = arrayOf(
-            Triple(R.id.widget_rec_1, R.id.widget_rec_art_1, R.id.widget_rec_title_1),
-            Triple(R.id.widget_rec_2, R.id.widget_rec_art_2, R.id.widget_rec_title_2),
-            Triple(R.id.widget_rec_3, R.id.widget_rec_art_3, R.id.widget_rec_title_3),
-            Triple(R.id.widget_rec_4, R.id.widget_rec_art_4, R.id.widget_rec_title_4),
-        )
+        private const val PAD_DP = 12
+        private const val MAX_REC_ROWS = 4
+        private const val MAX_REC_COLS = 6
+        private const val QUEUE_CARD_DP = 44
+        private const val REC_MAX_DP = 76
+        private const val ROW_GAP_DP = 6
 
         // Decoded artwork and the drawn glass are reused between updates; the keys
         // include file timestamps so new art is picked up.
@@ -80,7 +83,19 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         }
     }
 
-    private enum class Size { COMPACT, REGULAR, LARGE }
+    // Layout variants, named after the design sheet: A..F are the 1-2 row
+    // sizes, G/H/E the wider tall ones.
+    private enum class Variant { A, B, F, C, D, G, H, E }
+
+    private class RecCell(val cell: Int, val art: Int)
+
+    private val recCells = arrayOf(
+        arrayOf(RecCell(R.id.widget_rec_cell_0_0, R.id.widget_rec_art_0_0), RecCell(R.id.widget_rec_cell_0_1, R.id.widget_rec_art_0_1), RecCell(R.id.widget_rec_cell_0_2, R.id.widget_rec_art_0_2), RecCell(R.id.widget_rec_cell_0_3, R.id.widget_rec_art_0_3), RecCell(R.id.widget_rec_cell_0_4, R.id.widget_rec_art_0_4), RecCell(R.id.widget_rec_cell_0_5, R.id.widget_rec_art_0_5)),
+        arrayOf(RecCell(R.id.widget_rec_cell_1_0, R.id.widget_rec_art_1_0), RecCell(R.id.widget_rec_cell_1_1, R.id.widget_rec_art_1_1), RecCell(R.id.widget_rec_cell_1_2, R.id.widget_rec_art_1_2), RecCell(R.id.widget_rec_cell_1_3, R.id.widget_rec_art_1_3), RecCell(R.id.widget_rec_cell_1_4, R.id.widget_rec_art_1_4), RecCell(R.id.widget_rec_cell_1_5, R.id.widget_rec_art_1_5)),
+        arrayOf(RecCell(R.id.widget_rec_cell_2_0, R.id.widget_rec_art_2_0), RecCell(R.id.widget_rec_cell_2_1, R.id.widget_rec_art_2_1), RecCell(R.id.widget_rec_cell_2_2, R.id.widget_rec_art_2_2), RecCell(R.id.widget_rec_cell_2_3, R.id.widget_rec_art_2_3), RecCell(R.id.widget_rec_cell_2_4, R.id.widget_rec_art_2_4), RecCell(R.id.widget_rec_cell_2_5, R.id.widget_rec_art_2_5)),
+        arrayOf(RecCell(R.id.widget_rec_cell_3_0, R.id.widget_rec_art_3_0), RecCell(R.id.widget_rec_cell_3_1, R.id.widget_rec_art_3_1), RecCell(R.id.widget_rec_cell_3_2, R.id.widget_rec_art_3_2), RecCell(R.id.widget_rec_cell_3_3, R.id.widget_rec_art_3_3), RecCell(R.id.widget_rec_cell_3_4, R.id.widget_rec_art_3_4), RecCell(R.id.widget_rec_cell_3_5, R.id.widget_rec_art_3_5)),
+    )
+    private val recRowIds = intArrayOf(R.id.widget_rec_row_0, R.id.widget_rec_row_1, R.id.widget_rec_row_2, R.id.widget_rec_row_3)
 
     override fun onUpdate(
         context: Context,
@@ -113,8 +128,13 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
                         .apply()
                     refreshAll(context)
                 } else {
-                    openApp(context)
+                    startPlayback(context, goAsync(), "play", null)
                 }
+            }
+            ACTION_PLAY_SONG -> {
+                val id = intent.getStringExtra(EXTRA_SONG_ID)
+                if (id.isNullOrBlank()) return
+                startPlayback(context, goAsync(), "play:$id", "song/$id")
             }
             ACTION_NEXT -> if (!sendMediaKey(context, KeyEvent.KEYCODE_MEDIA_NEXT)) openApp(context)
             ACTION_PREVIOUS ->
@@ -149,19 +169,26 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         val heightDp = options.getInt(
             if (landscape) AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT
             else AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT
-        ).takeIf { it > 0 } ?: 180
+        ).takeIf { it > 0 } ?: 192
 
-        val size = when {
-            heightDp < COMPACT_MAX_HEIGHT_DP -> Size.COMPACT
-            heightDp >= LARGE_MIN_HEIGHT_DP -> Size.LARGE
-            else -> Size.REGULAR
+        // Launcher cells are about 95dp wide/tall (minus a margin), so the
+        // size in cells is recovered from the reported dp size.
+        val cols = ((widthDp + 23) / 95f).roundToInt().coerceAtLeast(2)
+        // Measured on the S25 Ultra: 1 row ~95dp, 2 rows ~190-210dp, 3 rows ~360dp.
+        val rowCount = if (heightDp < 140) 1 else (heightDp - 140) / 150 + 2
+        val variant = if (rowCount == 1) when {
+            cols <= 2 -> Variant.A
+            cols == 3 -> Variant.B
+            else -> Variant.F
+        } else when {
+            cols <= 2 -> Variant.C
+            cols == 3 -> Variant.D
+            rowCount == 2 -> Variant.G
+            cols == 4 -> Variant.H
+            else -> Variant.E
         }
-        val layoutRes = when (size) {
-            Size.COMPACT -> R.layout.widget_music_compact
-            Size.REGULAR -> R.layout.aurora_music_widget
-            Size.LARGE -> R.layout.widget_music_large
-        }
-        val views = RemoteViews(context.packageName, layoutRes)
+
+        val views = RemoteViews(context.packageName, R.layout.aurora_music_widget)
 
         val serviceRunning = isAudioServiceRunning(context)
         val rawTitle = prefs.getString("widget_song_title", null)
@@ -169,7 +196,6 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         val isPlaying = hasSong && serviceRunning && prefs.getBoolean("widget_is_playing", false)
 
         val tint = prefs.colorOrNull("widget_bg_color") ?: DEFAULT_TINT
-        val accent = accentFor(tint)
         val artFile = prefs.getString("widget_artwork_path", null)?.takeIf { hasSong }
 
         // Glass card
@@ -180,50 +206,88 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
             glassBackground(widthPx, heightPx, density, tint, artFile)
         )
 
-        // Track info
-        // The launcher ignores custom fonts in RemoteViews, so text is drawn into
-        // bitmaps with the app's own typeface (Cal Sans).
-        val columnDp = widthDp - (if (size == Size.COMPACT) 96 else 114) - 2
+        // ── Geometry (dp) ──
+        val artDp = when (variant) {
+            Variant.A, Variant.B, Variant.F -> 58
+            Variant.C -> 62
+            Variant.D, Variant.G -> 59
+            Variant.H, Variant.E -> 80
+        }
+        val oneRow = rowCount == 1
+        val sidePad = if (oneRow) 14 else PAD_DP
+        val topPad = if (oneRow) ((heightDp - artDp) / 2).coerceAtLeast(6) else PAD_DP
+        val innerW = widthDp - sidePad * 2
+        views.setViewPadding(
+            R.id.widget_content,
+            (sidePad * density).toInt(), (topPad * density).toInt(),
+            (sidePad * density).toInt(), (PAD_DP * density).toInt()
+        )
+
+        val showText = variant != Variant.A && variant != Variant.C
+        val showControls = variant == Variant.B || variant == Variant.F
+        val fullControls = variant == Variant.F
+        val controlsRow = variant == Variant.D || variant == Variant.G ||
+            variant == Variant.H || variant == Variant.E
+        val controlsDp = when {
+            !showControls -> 0
+            fullControls -> 32 + 40 + 32
+            else -> 40
+        }
+        // 26dp on the right is kept for the logo mark.
+        val columnDp = innerW - artDp - 12 - controlsDp - 26
+
+        // Track info (text is drawn into bitmaps with the app's typeface,
+        // since launchers ignore custom fonts in RemoteViews).
         val title = if (hasSong) rawTitle!! else context.getString(R.string.widget_nothing_playing)
         val artist =
             if (hasSong) prefs.getString("widget_artist_name", "") ?: ""
             else context.getString(R.string.widget_tap_to_open)
-        val titleLines = if (size == Size.COMPACT) 1 else 2
-        text(context, views, R.id.widget_song_title, title,
-            if (size == Size.COMPACT) 16f else 18f, Color.WHITE, columnDp, titleLines)
-        text(context, views, R.id.widget_artist_name, artist,
-            if (size == Size.COMPACT) 13f else 14f, 0xB3FFFFFF.toInt(), columnDp, 1)
-        if (size != Size.COMPACT) {
-            val source = prefs.getString("widget_source", null)
-                ?.takeIf { hasSong && it.isNotBlank() }
-                ?: context.getString(R.string.widget_source_default)
-            text(context, views, R.id.widget_source, source, 11f, 0x99FFFFFF.toInt(), columnDp, 1)
+        val dim = 0xB3FFFFFF.toInt()
+
+        views.setViewVisibility(R.id.widget_text_col, if (showText) View.VISIBLE else View.GONE)
+        if (showText) {
+            text(context, views, R.id.widget_song_title, title, 16f, Color.WHITE, columnDp, 1)
+            text(context, views, R.id.widget_artist_name, artist, 12f, dim, columnDp, 1)
+        }
+        val showInfo = variant == Variant.C
+        views.setViewVisibility(R.id.widget_info, if (showInfo) View.VISIBLE else View.GONE)
+        if (showInfo) {
+            text(context, views, R.id.widget_info_title, title, 16f, Color.WHITE, innerW, 1)
+            text(context, views, R.id.widget_info_artist, artist, 12f, dim, innerW, 1)
         }
 
-        // Artwork
-        val artDp = if (size == Size.COMPACT) 64 else 72
-        val art = artFile?.let { roundedSquare(it, (artDp * density).toInt(), 18f * density) }
-        if (art != null) {
-            views.setImageViewBitmap(R.id.widget_art, art)
-        } else {
-            views.setImageViewResource(R.id.widget_art, R.drawable.widget_art_placeholder)
-        }
+        // Artwork + logo mark
+        views.setImageViewBitmap(R.id.widget_art, artBitmap(context, artFile, (artDp * density).toInt()))
+        views.setViewVisibility(R.id.widget_logo_top, if (variant == Variant.A) View.GONE else View.VISIBLE)
+        views.setViewVisibility(R.id.widget_logo_mid, if (variant == Variant.A) View.VISIBLE else View.GONE)
 
-        // Controls
-        views.setInt(R.id.widget_play_bg, "setColorFilter", accent)
-        views.setImageViewResource(
-            R.id.widget_btn_play_pause,
-            if (isPlaying) R.drawable.ic_widget_pause else R.drawable.ic_widget_play
-        )
+        // Controls (plain white glyphs)
+        val playRes = if (isPlaying) R.drawable.ic_wp_pause else R.drawable.ic_wp_play
+        views.setViewVisibility(R.id.widget_controls, if (showControls) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.widget_btn_prev, if (fullControls) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.widget_btn_next, if (fullControls) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.widget_btn_play_big, if (variant == Variant.C) View.VISIBLE else View.GONE)
+        views.setViewVisibility(R.id.widget_controls_row, if (controlsRow) View.VISIBLE else View.GONE)
+        views.setImageViewResource(R.id.widget_btn_play_row, playRes)
+        views.setImageViewResource(R.id.widget_btn_play_pause, playRes)
+        views.setImageViewResource(R.id.widget_btn_play_big, playRes)
         val canControl = serviceRunning && hasSong
         views.setOnClickPendingIntent(
             R.id.widget_btn_prev,
             if (canControl) broadcast(context, ACTION_PREVIOUS, 1) else launch(context, "open")
         )
+        val playIntent =
+            if (hasSong) broadcast(context, ACTION_PLAY_PAUSE, 2) else launch(context, "open")
+        views.setOnClickPendingIntent(R.id.widget_btn_play_pause, playIntent)
+        views.setOnClickPendingIntent(R.id.widget_btn_play_big, playIntent)
+        views.setOnClickPendingIntent(R.id.widget_btn_play_row, playIntent)
         views.setOnClickPendingIntent(
-            R.id.widget_btn_play_pause,
-            if (canControl) broadcast(context, ACTION_PLAY_PAUSE, 2)
-            else launch(context, if (hasSong) "resume" else "open")
+            R.id.widget_btn_prev_row,
+            if (canControl) broadcast(context, ACTION_PREVIOUS, 1) else launch(context, "open")
+        )
+        views.setOnClickPendingIntent(
+            R.id.widget_btn_next_row,
+            if (canControl) broadcast(context, ACTION_NEXT, 3) else launch(context, "open")
         )
         views.setOnClickPendingIntent(
             R.id.widget_btn_next,
@@ -231,9 +295,94 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         )
         views.setOnClickPendingIntent(R.id.widget_root, launch(context, "open"))
 
-        if (size == Size.LARGE) bindRecommendations(context, views, prefs, density, widthDp)
+        // Up next (wider, taller sizes only)
+        val queueCards = when (variant) {
+            Variant.H -> 1
+            Variant.E -> 2
+            Variant.D -> if (rowCount >= 3) 1 else 0
+            else -> 0
+        }
+        val bigQueue = variant == Variant.D
+        val cardDp = if (bigQueue) 60 else QUEUE_CARD_DP
+        val queueDp = if (queueCards > 0) 8 + 16 + 4 + cardDp else 0
+        bindQueue(context, views, prefs, density, innerW, queueCards, cardDp, bigQueue)
+
+        // Recommendations fill whatever room is left, in as many rows as fit.
+        val wantedRows = when (variant) {
+            Variant.A, Variant.B, Variant.F -> 0
+            Variant.C -> rowCount - 2
+            Variant.D -> if (rowCount >= 3) rowCount - 2 else 1
+            Variant.G -> 1
+            Variant.H, Variant.E -> rowCount - 2
+        }.coerceIn(0, MAX_REC_ROWS)
+        val perRow = when {
+            cols <= 2 -> 2
+            cols == 3 -> 3
+            cols <= 5 -> 4
+            else -> MAX_REC_COLS
+        }
+        val fixedDp = PAD_DP + topPad + when (variant) {
+            Variant.C -> artDp + 8 + 36 + 48
+            else -> artDp
+        } + (if (controlsRow) 48 else 0) + queueDp + 8
+        val roomDp = heightDp - fixedDp
+        // 3 columns with an up-next card: smaller art, wider spacing.
+        val airy = variant == Variant.D && queueCards > 0
+        val gapDp = if (airy) 14 else ROW_GAP_DP
+        val maxArtDp = if (airy) 56 else REC_MAX_DP
+        var recRows = wantedRows
+        var recDp = 0
+        while (recRows > 0) {
+            val byHeight = (roomDp - gapDp * (recRows - 1)) / recRows
+            val byWidth = innerW / perRow - 8
+            recDp = minOf(byHeight, byWidth, maxArtDp)
+            if (recDp >= 40) break
+            recRows--
+        }
+        bindRecommendations(context, views, prefs, density, recRows, perRow, recDp, gapDp - ROW_GAP_DP)
 
         manager.updateAppWidget(appWidgetId, views)
+    }
+
+    private fun bindQueue(
+        context: Context,
+        views: RemoteViews,
+        prefs: SharedPreferences,
+        density: Float,
+        innerW: Int,
+        cards: Int,
+        cardDp: Int,
+        big: Boolean
+    ) {
+        views.setViewVisibility(R.id.widget_queue, if (cards > 0) View.VISIBLE else View.GONE)
+        if (cards == 0) return
+        val cardW = if (cards == 1) (innerW * (if (big) 0.82f else 0.5f)).toInt() else (innerW * 0.42f).toInt()
+        val cols = arrayOf(R.id.widget_q_col_1 to R.id.widget_q_col_2)
+        val labels = intArrayOf(R.id.widget_q_label_1, R.id.widget_q_label_2)
+        val cardViews = intArrayOf(R.id.widget_q_card_1, R.id.widget_q_card_2)
+        val labelRes = intArrayOf(R.string.widget_next_up, R.string.widget_after)
+        views.setViewVisibility(cols[0].second, if (cards > 1) View.VISIBLE else View.GONE)
+        for (i in 0 until 2) {
+            if (i >= cards) continue
+            val n = i + 1
+            val title = prefs.getString("widget_q_${n}_title", null)
+            val id = prefs.getString("widget_q_${n}_id", null)
+            if (title.isNullOrBlank()) {
+                views.setViewVisibility(if (i == 0) cols[0].first else cols[0].second, View.INVISIBLE)
+                continue
+            }
+            views.setViewVisibility(if (i == 0) cols[0].first else cols[0].second, View.VISIBLE)
+            text(context, views, labels[i], context.getString(labelRes[i]), 12f,
+                0xD9FFFFFF.toInt(), cardW, 1, Layout.Alignment.ALIGN_CENTER)
+            views.setImageViewBitmap(
+                cardViews[i],
+                queueCard(context, title, prefs.getString("widget_q_${n}_artist", "") ?: "",
+                    cardW, cardDp, density, big)
+            )
+            if (!id.isNullOrBlank()) {
+                views.setOnClickPendingIntent(cardViews[i], playSong(context, id))
+            }
+        }
     }
 
     private fun bindRecommendations(
@@ -241,37 +390,102 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         views: RemoteViews,
         prefs: SharedPreferences,
         density: Float,
-        widthDp: Int
+        rows: Int,
+        perRow: Int,
+        artDp: Int,
+        extraGapDp: Int
     ) {
-        val tileTextDp = (widthDp - 28) / REC_COUNT - 8
-        text(context, views, R.id.widget_recs_label, context.getString(R.string.widget_recommended),
-            12f, 0xB3FFFFFF.toInt(), widthDp - 30, 1)
+        views.setViewVisibility(R.id.widget_recs, if (rows > 0) View.VISIBLE else View.GONE)
         var shown = 0
-        for (i in 0 until REC_COUNT) {
-            val (tile, artView, titleView) = RECS[i]
-            val n = i + 1
-            val id = prefs.getString("widget_rec_${n}_id", null)
-            val title = prefs.getString("widget_rec_${n}_title", null)
-            if (id.isNullOrBlank() || title.isNullOrBlank()) {
-                views.setViewVisibility(tile, View.INVISIBLE)
-                continue
+        for (r in 0 until MAX_REC_ROWS) {
+            val rowShown = r < rows
+            views.setViewVisibility(recRowIds[r], if (rowShown) View.VISIBLE else View.GONE)
+            views.setViewPadding(recRowIds[r], 0, if (r > 0) (extraGapDp * density).toInt() else 0, 0, 0)
+            if (!rowShown) continue
+            for (c in 0 until MAX_REC_COLS) {
+                val cell = recCells[r][c]
+                if (c >= perRow) {
+                    views.setViewVisibility(cell.cell, View.GONE)
+                    continue
+                }
+                val n = r * perRow + c + 1
+                val id = prefs.getString("widget_rec_${n}_id", null)
+                if (id.isNullOrBlank()) {
+                    views.setViewVisibility(cell.cell, View.INVISIBLE)
+                    continue
+                }
+                shown++
+                views.setViewVisibility(cell.cell, View.VISIBLE)
+                views.setImageViewBitmap(
+                    cell.art,
+                    artBitmap(context, prefs.getString("widget_rec_${n}_artwork", null),
+                        (artDp * density).toInt())
+                )
+                views.setOnClickPendingIntent(cell.art, playSong(context, id))
             }
-            shown++
-            views.setViewVisibility(tile, View.VISIBLE)
-            text(context, views, titleView, title, 11f, 0xE6FFFFFF.toInt(), tileTextDp, 1,
-                Layout.Alignment.ALIGN_CENTER)
-            val art = prefs.getString("widget_rec_${n}_artwork", null)
-                ?.let { roundedSquare(it, (48 * density).toInt(), 12f * density) }
-            if (art != null) {
-                views.setImageViewBitmap(artView, art)
-            } else {
-                views.setImageViewResource(artView, R.drawable.widget_art_placeholder)
-            }
-            views.setOnClickPendingIntent(tile, launch(context, "play?id=$id"))
         }
-        views.setViewVisibility(R.id.widget_recs, if (shown > 0) View.VISIBLE else View.GONE)
+        if (shown == 0) views.setViewVisibility(R.id.widget_recs, View.GONE)
     }
 
+    /** Glass card (outlined, lightly filled) with a title and artist line. */
+    private fun queueCard(
+        context: Context,
+        title: String,
+        artist: String,
+        widthDp: Int,
+        heightDp: Int,
+        density: Float,
+        big: Boolean
+    ): Bitmap {
+        val w = max(1, (widthDp * density).toInt())
+        val h = max(1, (heightDp * density).toInt())
+        val key = "qcard|$title|$artist|$w|$h|$big"
+        bitmapCache.get(key)?.let { return it }
+
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(out)
+        val radius = 14f * density
+        val stroke = 1.2f * density
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+        paint.color = Color.argb(0x1A, 255, 255, 255)
+        canvas.drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), radius, radius, paint)
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = stroke
+        paint.color = Color.argb(0x73, 255, 255, 255)
+        canvas.drawRoundRect(
+            RectF(stroke / 2, stroke / 2, w - stroke / 2, h - stroke / 2),
+            radius, radius, paint
+        )
+
+        val textW = (w - 20 * density).toInt().coerceAtLeast(1)
+        fun layoutOf(value: String, sp: Float, color: Int): StaticLayout {
+            val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                this.color = color
+                typeface = appTypeface(context)
+                textSize = TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_SP, sp, context.resources.displayMetrics)
+            }
+            return StaticLayout.Builder.obtain(value, 0, value.length, tp, textW)
+                .setMaxLines(1)
+                .setEllipsize(TextUtils.TruncateAt.END)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .build()
+        }
+        val t = layoutOf(title, if (big) 15f else 12.5f, Color.WHITE)
+        val a = if (artist.isBlank()) null else layoutOf(artist, if (big) 12f else 10f, 0xB3FFFFFF.toInt())
+        val total = t.height + (a?.height ?: 0)
+        canvas.save()
+        canvas.translate(10 * density, (h - total) / 2f)
+        t.draw(canvas)
+        if (a != null) {
+            canvas.translate(0f, t.height.toFloat())
+            a.draw(canvas)
+        }
+        canvas.restore()
+
+        bitmapCache.put(key, out)
+        return out
+    }
 
     // ── Text ─────────────────────────────────────────────────────────────
 
@@ -410,6 +624,19 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         return out
     }
 
+    /** Rounded-square artwork; songs without art get the app's "unknown" icon. */
+    private fun artBitmap(context: Context, path: String?, sizePx: Int): Bitmap {
+        val size = max(1, sizePx)
+        val radius = size * 0.22f
+        path?.takeIf { it.isNotBlank() }?.let { roundedSquare(it, size, radius) }?.let { return it }
+        val key = "unknown|$size"
+        bitmapCache.get(key)?.let { return it }
+        val src = BitmapFactory.decodeResource(context.resources, R.drawable.widget_unknown)
+        val out = drawRounded(src, size, radius)
+        bitmapCache.put(key, out)
+        return out
+    }
+
     private fun roundedSquare(path: String, sizePx: Int, radiusPx: Float): Bitmap? {
         if (sizePx <= 0) return null
         val file = File(path)
@@ -418,6 +645,13 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         bitmapCache.get(key)?.let { return it }
 
         val src = decodeSampled(path, sizePx) ?: return null
+        val out = drawRounded(src, sizePx, radiusPx)
+        bitmapCache.put(key, out)
+        return out
+    }
+
+    /** Centre-crops [src] into a [sizePx] square with rounded corners; recycles [src]. */
+    private fun drawRounded(src: Bitmap, sizePx: Int, radiusPx: Float): Bitmap {
         val out = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val scale = max(sizePx / src.width.toFloat(), sizePx / src.height.toFloat())
         val shader = BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
@@ -431,7 +665,6 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
             RectF(0f, 0f, sizePx.toFloat(), sizePx.toFloat()), radiusPx, radiusPx, paint
         )
         src.recycle()
-        bitmapCache.put(key, out)
         return out
     }
 
@@ -471,6 +704,18 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         )
     }
 
+    private fun playSong(context: Context, id: String): PendingIntent {
+        val intent = Intent(context, AuroraMusicWidgetProvider::class.java).apply {
+            action = ACTION_PLAY_SONG
+            data = Uri.parse("noxira://widget/play?id=$id")
+            putExtra(EXTRA_SONG_ID, id)
+        }
+        return PendingIntent.getBroadcast(
+            context, id.hashCode(), intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+    }
+
     /** Opens the app; Flutter reads the `noxira://widget/...` URI to act on it. */
     private fun launch(context: Context, path: String): PendingIntent =
         HomeWidgetLaunchIntent.getActivity(
@@ -483,6 +728,56 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             context.startActivity(launchIntent)
         }
+    }
+
+    /**
+     * Starts playback without showing the app. Connecting to audio_service's
+     * media browser wakes the app's process if needed (as Android Auto does);
+     * a running player gets the command straight away, a cold one reads
+     * [pending] from the widget preferences once it has loaded.
+     */
+    private fun startPlayback(
+        context: Context,
+        result: PendingResult?,
+        pending: String,
+        mediaId: String?
+    ) {
+        val running = isAudioServiceRunning(context)
+        if (!running) {
+            HomeWidgetPlugin.getData(context).edit()
+                .putString("widget_pending_action", pending)
+                .putLong("widget_pending_at", System.currentTimeMillis())
+                .apply()
+        }
+        val app = context.applicationContext
+        val main = Handler(Looper.getMainLooper())
+        var browser: MediaBrowserCompat? = null
+        var finished = false
+        fun finish() {
+            if (finished) return
+            finished = true
+            browser?.disconnect()
+            result?.finish()
+        }
+        browser = MediaBrowserCompat(
+            app,
+            ComponentName(app, AUDIO_SERVICE_CLASS),
+            object : MediaBrowserCompat.ConnectionCallback() {
+                override fun onConnected() {
+                    if (running) {
+                        val controls = MediaControllerCompat(app, browser!!.sessionToken).transportControls
+                        if (mediaId != null) controls.playFromMediaId(mediaId, null) else controls.play()
+                    }
+                    // Stay connected long enough for a cold start to finish loading.
+                    main.postDelayed({ finish() }, if (running) 1500L else 8000L)
+                }
+
+                override fun onConnectionFailed() = finish()
+            },
+            null
+        )
+        browser.connect()
+        main.postDelayed({ finish() }, 9000L)
     }
 
     /** Same key events the media notification sends to audio_service. */

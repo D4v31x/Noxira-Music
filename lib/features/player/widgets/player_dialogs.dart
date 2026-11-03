@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
@@ -7,11 +6,13 @@ import '../../../core/constants/font_constants.dart';
 import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/models/models.dart';
+import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/widgets/music_metadata_widget.dart';
 import '../screens/queue_page.dart';
 import 'lyrics_page_launcher.dart';
+import 'player_page_route.dart';
 import '../../../shared/widgets/add_to_playlist_sheet.dart';
 
 /// Opens the "add to playlist" sheet for the current song.
@@ -46,9 +47,25 @@ void shareSong(AudioPlayerService audioPlayerService) {
 
 /// Shows a dialog displaying the current playback queue with full management capabilities.
 void showQueueDialog(
-    BuildContext context, AudioPlayerService audioPlayerService) {
+    BuildContext context, AudioPlayerService audioPlayerService,
+    {bool fromCard = false}) {
   openPlayerPage(
     context,
+    fromCard: fromCard,
+    sourceKey: fromCard ? PlayerPageSources.queueCard : null,
+    rows: fromCard
+        ? [
+            for (final song
+                in audioPlayerService.upcomingQueue.take(kPlayerPageRows))
+              PlayerPageRowShuttle(
+                image:
+                    ArtworkCacheService().getCachedImageProviderSync(song.id),
+                title: song.title,
+                artist:
+                    splitArtists(song.artist ?? 'Unknown Artist').join(', '),
+              ),
+          ]
+        : const [],
     builder: (targets) => QueuePage(
       audioPlayerService: audioPlayerService,
       targets: targets,

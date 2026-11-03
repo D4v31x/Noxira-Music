@@ -15,14 +15,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get add => 'जोड़ें';
 
   @override
-  String get addedToPlaylist => 'प्लेलिस्ट में जोड़ा गया';
-
-  @override
-  String addedToNamedPlaylist(String name) {
-    return '$name में जोड़ा गया';
-  }
-
-  @override
   String get addExclusion => 'अपवाद जोड़ें';
 
   @override
@@ -348,13 +340,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get forYou => 'आपके लिए';
 
   @override
-  String get general => 'सामान्य';
-
-  @override
   String get genre => 'शैली';
-
-  @override
-  String get getStarted => 'शुरू करें';
 
   @override
   String get goodQuality => 'अच्छी गुणवत्ता';
@@ -510,9 +496,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get nowPlaying => 'अब चल रहा है';
 
   @override
-  String get onboardingAlbumArt => 'सुंदर एल्बम कला';
-
-  @override
   String get onboardingAlbumArtwork => 'एल्बम की कलाकृति';
 
   @override
@@ -528,9 +511,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingAppInfoSubtitle => 'आपका व्यक्तिगत संगीत साथी';
-
-  @override
-  String get onboardingAppInfoTitle => 'Noxira म्यूजिक में आपका स्वागत है';
 
   @override
   String get onboardingAudioAccess => 'ऑडियो पहुँच';
@@ -558,10 +538,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingChooseLanguage => 'अपनी भाषा चुनें';
-
-  @override
-  String get languageNotListedHint =>
-      'आपकी भाषा सूचीबद्ध नहीं है? अंग्रेज़ी चुनें और अगले पृष्ठ पर जाएँ।';
 
   @override
   String get onboardingCompletionSubtitle =>
@@ -631,9 +607,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get onboardingNotificationsDesc => 'प्लेबैक नियंत्रण और अपडेट दिखाएँ';
 
   @override
-  String get onboardingOptional => 'वैकल्पिक';
-
-  @override
   String get onboardingPermissionsSubtitle =>
       'Noxira Music को ठीक से काम करने के लिए इन अनुमतियों की आवश्यकता है।';
 
@@ -686,34 +659,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get onboardingThemeTitle => 'अपनी लुक को कस्टमाइज़ करें';
-
-  @override
-  String get beta_welcome_title => 'Beta Testing Program';
-
-  @override
-  String get beta_welcome_thanks =>
-      'Thank you for joining our beta testing program and helping us improve Noxira Music.';
-
-  @override
-  String get beta_expect_bugs_title => 'Expect Bugs';
-
-  @override
-  String get beta_expect_bugs_desc =>
-      'You may encounter crashes or unexpected behavior. This is a testing version.';
-
-  @override
-  String get beta_feedback_title => 'Feedback Matters';
-
-  @override
-  String get beta_feedback_desc =>
-      'Your reports and suggestions help us make the app better for everyone.';
-
-  @override
-  String get beta_updates_title => 'Frequent Updates';
-
-  @override
-  String get beta_updates_desc =>
-      'New features and fixes are released regularly as we continue development.';
 
   @override
   String get oneTimeSupport => 'त्वरित एक-बार सहायता';
@@ -769,9 +714,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get quality => 'गुणवत्ता';
-
-  @override
-  String get qualityDesc => 'फ़ॉर्मेट और बिटरेट के आधार पर ऑडियो गुणवत्ता';
 
   @override
   String get queue => 'कतार';
@@ -885,9 +827,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get lyricsSource => 'Lyrics source';
 
   @override
-  String get alreadyInPlaylist => 'Already in this playlist';
-
-  @override
   String get inPlaylistHint => 'In a playlist';
 
   @override
@@ -950,9 +889,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get onboardingNotAllowed => 'Not allowed yet';
 
   @override
-  String get onboardingBackgroundStyle => 'Background';
-
-  @override
   String get searchLyrics => 'गीत के बोल खोजें';
 
   @override
@@ -969,9 +905,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get selected => 'चुना हुआ';
-
-  @override
-  String get selectPlaylist => 'प्लेलिस्ट चुनें';
 
   @override
   String get separator => 'विभाजक';
@@ -1064,39 +997,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get settingsAutomixDesc =>
       'गानों के बीच अपने आप एक सहज प्रवाह बनाता है';
-
-  @override
-  String get playlistAutomixTitle => 'ऑटोमिक्स';
-
-  @override
-  String get playlistAutomixSubtitle =>
-      'इस प्लेलिस्ट के लिए DJ स्टाइल स्‍वचालित संक्रमण';
-
-  @override
-  String get playlistAutomixOn => 'चालू';
-
-  @override
-  String get playlistAutomixOff => 'बंद';
-
-  @override
-  String get playlistAutomixBeatMatching => 'बीट मिलान';
-
-  @override
-  String get playlistAutomixHarmonicMixing => 'हार्मोनिक मिश्रण';
-
-  @override
-  String get playlistAutomixTempoMatching => 'टेम्पो मिलान';
-
-  @override
-  String get playlistAutomixTransitionDuration => 'संक्रमण अवधि';
-
-  @override
-  String get playlistAutomixAutomatic => 'स्‍वचालित';
-
-  @override
-  String playlistAutomixAnalyzing(int current, int total) {
-    return 'प्लेलिस्ट का विश्लेषण… $current / $total ट्रैक';
-  }
 
   @override
   String get settingsCrossfade => 'क्रॉसफ़ेड';
@@ -1244,9 +1144,6 @@ class AppLocalizationsHi extends AppLocalizations {
   String get share => 'साझा करें';
 
   @override
-  String get showChangelog => 'परिवर्तन-इतिहास दिखाएँ';
-
-  @override
   String get shuffle => 'शफल';
 
   @override
@@ -1301,15 +1198,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get updatedTitle => 'Noxira Music was updated';
-
-  @override
-  String get updatedHighlights => 'Highlights';
-
-  @override
-  String get showUpdatePopup => 'Update popup';
-
-  @override
-  String get showUpdatePopupDesc => 'Preview the screen shown after an update';
 
   @override
   String get tapAddToAddSongs => 'गीत जोड़ने के लिए + पर टैप करें';
@@ -1417,9 +1305,6 @@ class AppLocalizationsHi extends AppLocalizations {
       'यह मूल अनुभाग क्रम और दृश्यता को बहाल करेगा।';
 
   @override
-  String get sectionVisibility => 'अनुभाग दृश्यता टॉगल करें';
-
-  @override
   String get listeningHistory => 'श्रवण इतिहास';
 
   @override
@@ -1433,12 +1318,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get skip => 'छोड़ें';
-
-  @override
-  String get feedback_title => 'क्या आप Noxira Music का आनंद ले रहे हैं?';
-
-  @override
-  String get maybe_later => 'शायद बाद में';
 
   @override
   String get send_feedback => 'प्रतिक्रिया भेजें';
@@ -1818,6 +1697,64 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get recapBannerLater => 'बाद में';
+
+  @override
+  String get rebrandTitle => 'Aurora अब Noxira है';
+
+  @override
+  String get rebrandSubtitle =>
+      'वही म्यूज़िक ऐप जिसे आप जानते हैं, नए नाम, नए लुक और कुछ नई सुविधाओं के साथ।';
+
+  @override
+  String get rebrandNewHeading => 'नया क्या है';
+
+  @override
+  String get rebrandSlideLyricsTitle => 'लिरिक्स, नए सिरे से';
+
+  @override
+  String get rebrandSlideLyricsBody =>
+      'नया लिरिक्स पेज और ज़्यादा स्रोत, ताकि ज़्यादा गानों को उनके बोल मिलें। किसी लाइन पर टैप करके वहाँ पहुँचें। अब आप बोल को अपनी पसंद की किसी भी भाषा में अनुवाद कर सकते हैं।';
+
+  @override
+  String get rebrandSlideWidgetTitle => 'नया होम स्क्रीन विजेट';
+
+  @override
+  String get rebrandSlideWidgetBody =>
+      'आपके आर्टवर्क के रंगों वाला ग्लास, और पिछला, प्ले और अगला बटन जो ऐप खोले बिना काम करते हैं।';
+
+  @override
+  String get rebrandSlideQueueTitle => 'असली क्यू';
+
+  @override
+  String get rebrandSlideQueueBody =>
+      'देखें क्या चला और आगे क्या है। क्रम बदलने के लिए खींचें, हटाने के लिए स्वाइप करें।';
+
+  @override
+  String get translateLyricsTo => 'लिरिक्स का अनुवाद करें';
+
+  @override
+  String get translateLyricsAppLanguage => 'ऐप की भाषा';
+
+  @override
+  String get translateLyricsChooseLanguage => 'भाषा चुनें…';
+
+  @override
+  String get rebrandSlideMoreTitle => 'और भी कुछ चीज़ें';
+
+  @override
+  String get rebrandMoreSetup => 'सेटअप अब आपके फ़ोन के लिए सही मोड सुझाता है।';
+
+  @override
+  String get rebrandMoreLook =>
+      'ज़्यादा शांत सपोर्ट बैनर, पसंदीदा गानों पर गोल प्ले बटन और लिरिक्स कंट्रोल जो अपनी जगह रहते हैं।';
+
+  @override
+  String get rebrandMoreMotion =>
+      'पूरे ऐप में ज़्यादा स्मूद और बेहतर ट्रांज़िशन।';
+
+  @override
+  String get rebrandMoreFixes =>
+      'पूरे ऐप में स्थिरता और बग फ़िक्स, जिनमें लिरिक्स की झिलमिलाहट भी शामिल है।';
 
   @override
   String get eqTitle => 'समानाकार';

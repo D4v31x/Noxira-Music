@@ -103,16 +103,19 @@ enum _Script {
 }
 
 _Script? _scriptOf(int r) {
-  if ((r >= 0x41 && r <= 0x5A) || (r >= 0x61 && r <= 0x7A))
+  if ((r >= 0x41 && r <= 0x5A) || (r >= 0x61 && r <= 0x7A)) {
     return _Script.latin;
+  }
   if (r >= 0xC0 && r <= 0x24F) return _Script.latin;
   if (r >= 0x400 && r <= 0x52F) return _Script.cyrillic;
   if (r >= 0x370 && r <= 0x3FF) return _Script.greek;
-  if ((r >= 0x4E00 && r <= 0x9FFF) || (r >= 0x3400 && r <= 0x4DBF))
+  if ((r >= 0x4E00 && r <= 0x9FFF) || (r >= 0x3400 && r <= 0x4DBF)) {
     return _Script.han;
+  }
   if (r >= 0x3040 && r <= 0x30FF) return _Script.kana;
-  if ((r >= 0xAC00 && r <= 0xD7AF) || (r >= 0x1100 && r <= 0x11FF))
+  if ((r >= 0xAC00 && r <= 0xD7AF) || (r >= 0x1100 && r <= 0x11FF)) {
     return _Script.hangul;
+  }
   if (r >= 0x600 && r <= 0x6FF) return _Script.arabic;
   if (r >= 0x590 && r <= 0x5FF) return _Script.hebrew;
   if (r >= 0x900 && r <= 0x97F) return _Script.devanagari;

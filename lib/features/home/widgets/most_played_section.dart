@@ -1,3 +1,4 @@
+import 'package:aurora_music_v01/shared/utils/responsive_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:on_audio_query/on_audio_query.dart';
@@ -215,7 +216,7 @@ class _MostPlayedTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     child: artworkService.buildCachedArtwork(
                       song.id,
-                      size: 56,
+                      size: ResponsiveUtils.scaledArtwork(context, 56),
                     ),
                   ),
                 ),

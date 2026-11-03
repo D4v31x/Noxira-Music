@@ -7,4 +7,7 @@
     <string name="widget_nothing_playing">Nic nehraje</string>
     <string name="widget_tap_to_open">Klepnutím otevřete Noxira Music</string>
     <string name="widget_recommended">Doporučeno pro tebe</string>
+    <string name="widget_queue">Fronta</string>
+    <string name="widget_next_up">Další</string>
+    <string name="widget_after">Poté</string>
 </resources>

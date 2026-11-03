@@ -172,8 +172,9 @@ class NowPlayingController {
     try {
       final provider = await _artworkService.getCachedImageProvider(song.id,
           highQuality: true);
-      if (song.id != _lastSongId)
+      if (song.id != _lastSongId) {
         return; // Song changed — discard stale artwork
+      }
       currentArtwork = provider;
     } catch (e) {
       if (song.id != _lastSongId) return;

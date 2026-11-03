@@ -83,6 +83,7 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
       final song = _playlist[_currentIndex];
       _currentSongController.add(song);
       currentSongNotifier.value = song;
+      unawaited(_updateBackgroundColors());
 
       debugPrint(
           'Queue state restored: ${_playlist.length} songs, index: $_currentIndex, '
