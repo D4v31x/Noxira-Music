@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -222,45 +223,54 @@ class _IntroSlide extends StatelessWidget {
     // Each step lands about 0.6 s after the one before it.
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: kOnboardingMargin),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          GlassPanel(
-            order: 0,
-            radius: 24,
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-            child: Image.asset(
-              'assets/images/logo/aurora_music_logo_old.png',
-              width: 200,
-              fit: BoxFit.contain,
+      child: LayoutBuilder(
+        // Short (landscape) screens scale the whole slide down instead of overflowing.
+        builder: (context, box) => FittedBox(
+          child: SizedBox(
+            width: math.min(box.maxWidth, 480),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                GlassPanel(
+                  order: 0,
+                  radius: 24,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+                  child: Image.asset(
+                    'assets/images/logo/aurora_music_logo_old.png',
+                    width: 200,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const _Arrow(order: 7),
+                const GlassPanel(
+                  order: 12,
+                  radius: 24,
+                  padding: EdgeInsets.symmetric(horizontal: 28, vertical: 26),
+                  child: _DrawnWordmark(width: 240, startAfterMs: 1250),
+                ),
+                const SizedBox(height: 28),
+                Reveal(
+                  order: 20,
+                  child: Text(
+                    l10n.rebrandTitle,
+                    textAlign: TextAlign.center,
+                    style: _slideTitle,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Reveal(
+                  order: 22,
+                  child: Text(
+                    l10n.rebrandSubtitle,
+                    textAlign: TextAlign.center,
+                    style: OnboardingText.lead.copyWith(fontSize: 16),
+                  ),
+                ),
+              ],
             ),
           ),
-          const _Arrow(order: 7),
-          const GlassPanel(
-            order: 12,
-            radius: 24,
-            padding: EdgeInsets.symmetric(horizontal: 28, vertical: 26),
-            child: _DrawnWordmark(width: 240, startAfterMs: 1250),
-          ),
-          const SizedBox(height: 28),
-          Reveal(
-            order: 20,
-            child: Text(
-              l10n.rebrandTitle,
-              textAlign: TextAlign.center,
-              style: _slideTitle,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Reveal(
-            order: 22,
-            child: Text(
-              l10n.rebrandSubtitle,
-              textAlign: TextAlign.center,
-              style: OnboardingText.lead.copyWith(fontSize: 16),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -382,32 +392,38 @@ class _MoreSlide extends StatelessWidget {
       (Icons.animation_rounded, l10n.rebrandMoreMotion),
       (Icons.build_circle_outlined, l10n.rebrandMoreFixes),
     ];
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: kOnboardingMargin),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Reveal(child: Text(l10n.rebrandSlideMoreTitle, style: _slideTitle)),
-          const SizedBox(height: 20),
-          for (var i = 0; i < rows.length; i++) ...[
-            if (i > 0) const SizedBox(height: 12),
-            GlassPanel(
-              order: 2 + i * 2,
-              padding: const EdgeInsets.all(18),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(rows[i].$1, color: Colors.white, size: 26),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(rows[i].$2, style: OnboardingText.lead),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: kOnboardingMargin),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Reveal(
+                  child: Text(l10n.rebrandSlideMoreTitle, style: _slideTitle)),
+              const SizedBox(height: 20),
+              for (var i = 0; i < rows.length; i++) ...[
+                if (i > 0) const SizedBox(height: 12),
+                GlassPanel(
+                  order: 2 + i * 2,
+                  padding: const EdgeInsets.all(18),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(rows[i].$1, color: Colors.white, size: 26),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(rows[i].$2, style: OnboardingText.lead),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
-        ],
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -420,34 +436,39 @@ class _SupportSlide extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: kOnboardingMargin),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          GlassPanel(
-            order: 0,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(Icons.favorite_rounded,
-                    color: Colors.white, size: 40),
-                const SizedBox(height: 18),
-                Text(l10n.supportAuroraTitle, style: _slideTitle),
-                const SizedBox(height: 10),
-                Text(l10n.supportAuroraMessage, style: OnboardingText.lead),
-              ],
-            ),
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: kOnboardingMargin),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              GlassPanel(
+                order: 0,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.favorite_rounded,
+                        color: Colors.white, size: 40),
+                    const SizedBox(height: 18),
+                    Text(l10n.supportAuroraTitle, style: _slideTitle),
+                    const SizedBox(height: 10),
+                    Text(l10n.supportAuroraMessage, style: OnboardingText.lead),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              GlassButton(
+                order: 3,
+                label: l10n.supportAuroraBtn,
+                onPressed: () => unawaited(DonationService.openBuyMeACoffee()),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          GlassButton(
-            order: 3,
-            label: l10n.supportAuroraBtn,
-            onPressed: () => unawaited(DonationService.openBuyMeACoffee()),
-          ),
-        ],
+        ),
       ),
     );
   }
