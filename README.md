@@ -5,7 +5,7 @@
 
 # Noxira Music
 
-### Your music. Your colours.
+### Free of ads. Free to be yours.
 
 A beautiful, fast, local music player for Android, with synced lyrics, smart playlists and a design that adapts to your phone.
 
