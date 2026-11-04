@@ -1,129 +1,146 @@
+<p align="center">
+  <img src="docs/banner.png" alt="Noxira Music" width="100%">
+</p>
+<div align="center">
+
 # Noxira Music
 
-A modern, beautiful local music player for Android (and iOS), built with Flutter. Noxira Music focuses on a polished Material You experience, buttery-smooth performance across low-to-high end devices, synced lyrics, and a rich set of "smart" listening features — all while playing music straight from your device's local library.
+### Your music. Your colours.
 
-**Current version:** 1.4.5+27
+A beautiful, fast, local music player for Android, with synced lyrics, smart playlists and a design that adapts to your phone.
 
----
+**Version 2.0**
 
-## What it does
+<a href="https://play.google.com/store/apps/details?id=com.aurorasoftware.music">
+  <img alt="Get it on Google Play" height="80" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png">
+</a>
 
-Noxira Music scans and indexes the audio files already on your phone (via `on_audio_query`) and gives you a fast, gesture-friendly way to browse, organize, and play them — with a fully custom now-playing experience, background playback, lock-screen/notification controls, synced lyrics, an equalizer, playlists, and detailed listening statistics.
+[Website](https://aurorasoftware.netlify.app) · [Google Play](https://play.google.com/store/apps/details?id=com.aurorasoftware.music) · [Instagram](https://www.instagram.com/aurora.software)
 
----
-
-## Core Features
-
-### Playback
-- Local audio playback powered by `just_audio` + `audio_service` (background playback, lock screen & notification controls, media-button/Bluetooth support).
-- Gapless queue management: play, pause, skip, shuffle, repeat (off/one/all), and queue reordering.
-- Sleep timer with configurable duration and fade-out.
-- Custom equalizer with presets and manual band control.
-- ReplayGain-aware volume normalization (reads embedded ReplayGain tags).
-- Bluetooth-aware playback handling (auto pause/resume on device connect/disconnect).
-- Cross-fade / smooth track transitions and fire-and-forget playback calls tuned to avoid audio-interrupt glitches.
-
-### Now Playing
-- Custom "Now Playing" screen with animated, palette-driven backgrounds generated from the current track's artwork (via `palette_generator`).
-- Expanding mini-player that morphs into the full now-playing screen with Hero animations.
-- Fullscreen artwork view and a fullscreen lyrics view.
-- Music visualizer screen.
-- Synced (time-stamped) lyrics with an in-app lyrics editor, plus lyrics translation support.
-
-### Library
-- Browse by Tracks, Albums, Artists, and Folders, with dedicated detail screens for each.
-- Artist aggregation/separation tools to clean up multi-artist tag strings (e.g. "Artist A feat. Artist B").
-- Folder filtering to include/exclude specific directories from your library.
-- Metadata viewer/editor for track details (title, artist, album, duration, bitrate, etc.).
-- Cached artwork with an LRU artwork cache service for fast scrolling.
-
-### Playlists
-- Create, edit, and manage custom playlists.
-- Import/export playlists via M3U file support.
-- "Liked songs" as a first-class favorites list.
-
-### Search
-- Fast in-app search across tracks, albums, artists, and playlists.
-
-### Smart Suggestions & Listening Insights
-- Play-count tracking and "most played" / "recently played" / "recently added" smart lists.
-- Listening Insights screen: all-time stats — top tracks, artists, genres, skip counts, listening-time-by-hour/weekday, most active listening periods, total listening time.
-- Listening Recap screen: a periodic (7/30-day) wrapped-style summary of recent listening activity.
-- Smart suggestions engine that learns from play/skip behavior.
-
-### Personalization & Theming
-- Material You / dynamic color support (`dynamic_color`), following the system wallpaper palette on supported devices.
-- Custom light/dark theme system with a dedicated `ThemeProvider`.
-- Adaptive performance mode: automatically detects device tier (low/medium/high) and scales down animations/effects (e.g. disables heavy blur/mesh gradients) on weaker hardware to keep the UI smooth.
-- Animated mesh-gradient backgrounds and glassmorphic UI elements.
-- Customizable home screen layout (choose which sections/cards appear).
-- Home-screen widget support (`home_widget`) for quick access from the Android launcher.
-
-### Onboarding & Settings
-- First-run onboarding flow (permissions, initial preferences, language selection).
-- Extensive settings: appearance, playback, equalizer, home layout, folder filters, artist separator rules, insights, storage/cache management, and about/app-info screens.
-- Storage settings with cache management and batch download utilities.
-
-### Internationalization
-- Fully localized UI (English and Czech shipped; community-translatable via Crowdin, with a simple ARB-file-based system for adding new languages).
-
-### Reliability & Diagnostics
-- Crash reporting and performance monitoring via Sentry and Firebase Crashlytics/Analytics/Performance.
-- In-app update checks (`in_app_update`, `upgrader`) and version/changelog awareness.
-- User feedback flow (email-based feedback + periodic feedback reminders) and a donation/support entry point.
-- Centralized logging and error-tracking services.
+</div>
 
 ---
 
-## Tech Stack
+## Why I made this
 
-- **Framework:** Flutter (Dart SDK ^3.3.3)
-- **State management:** Provider (`ChangeNotifier`, `Selector`, `ValueNotifier`) for high-frequency state like playback position/song changes.
-- **Audio:** `just_audio`, `audio_service`, `audio_session`, `audiotags` (tag reading), custom ReplayGain reader.
-- **Media library access:** `on_audio_query`, `sqflite_android`.
-- **Visuals:** `palette_generator` (artwork-driven color palettes), `mesh` (animated gradients), `lottie` (splash animation), `flutter_staggered_animations`, `mini_music_visualizer`, `dynamic_color`.
-- **Platform integration:** `home_widget`, `device_info_plus`, `connectivity_plus`, `permission_handler`, `share_plus`, `url_launcher`, `file_picker`.
-- **Diagnostics/telemetry:** `sentry_flutter`, `firebase_core`/`crashlytics`/`analytics`/`performance`.
-- **Updates:** `in_app_update`, `upgrader`, `package_info_plus`, `version`/`pub_semver`.
-- **Persistence:** `shared_preferences`, `path_provider`.
+I started this app in October 2024 because I wanted a music player for the files I already own that felt as good as the streaming apps, without an account, a subscription or ads. After more than a year of development and testing with beta testers, it reached its first stable release, and I'm still building it on my own.
+
+Version 2.0 is the biggest step yet: **Aurora Music is now Noxira Music**, with a new name, wordmark and look.
+
+I'm a solo developer from the Czech Republic, working under the name **Aurora Software CZ**.
 
 ---
 
-## Project Structure
+## Screenshots
 
-```
-lib/
-  core/               # Constants, theming primitives
-  features/
-    home/              # Home screen, listening insights & recap
-    library/            # Tracks, albums, artists, folders
-    onboarding/          # First-run setup flow
-    player/              # Now Playing, lyrics, visualizer, fullscreen artwork
-    playlists/           # Playlist management
-    search/              # In-app search
-    settings/             # All settings & preferences screens
-    splash/               # Splash screen
-  l10n/               # Localization (ARB files + generated AppLocalizations)
-  shared/
-    mixins/            # Shared widget mixins (e.g. artwork/dominant color)
-    models/            # Data models
-    providers/          # ThemeProvider, PerformanceModeProvider
-    services/           # Audio engine, caching, metadata, insights, etc.
-    utils/             # Helpers
-    widgets/            # Shared UI (mini/expanding player, glassmorphic UI, etc.)
-```
+<img src="docs/screenshots/screen1_git.png" width="720">
+<img src="docs/screenshots/screen2_git.png" width="720">
+<img src="docs/screenshots/screen3_git.png" width="720">
+<img src="docs/screenshots/screen4_git.png" width="720">
+<img src="docs/screenshots/screen5_git.png" width="720">
 
 ---
 
-## Platforms
+## What's new in 2.0
 
-- **Android** — primary target (Material You dynamic color, home-screen widget, Spotify App Remote AAR present in `android/spotify-app-remote`).
-- **iOS** — supported via Flutter's iOS target (`ios/Runner`), with a custom `AudioSessionHandler.swift` for audio session management.
+- **Noxira Music**: a new name, wordmark, app icon and an animated splash screen.
+- **Lyrics in any language**: translate lyrics into any language you like, not only the app languages.
+- **More lyric sources**: BetterLyrics, YouLyPlus and KuGou are tried when LRCLIB has nothing. Pick which ones to use in Settings.
+- **Redesigned lyrics page**: tap a line to jump to it, dots mark instrumental breaks, and the lyrics box on Now Playing follows along.
+- **Redesigned home-screen widget**: glass tinted with your artwork, with previous, play and next buttons that work without opening the app.
+- **Redesigned queue**: see what played and what is next, drag to reorder, swipe to remove, with an Up next preview on Now Playing.
+- **New add-to-playlist sheet** and a Remove duplicates option.
+- **Glass surfaces that adapt to your phone**: the app detects your hardware and tunes effects, caches and transitions, and falls back to plain solid surfaces on low-end phones.
+- **Smoother transitions and faster detail pages**, with artwork that flies from cards into album, artist, folder and playlist pages.
+- **WAV tag support** in the tag editor and in the player.
 
-## Building & Running
+---
 
-```bash
-flutter pub get
-flutter run --release
-```
+## Features
 
+### Looks that follow you
+- **Material You** colours taken from your wallpaper, from the current album artwork, or from one of ten presets: Aurora, Midnight, Ocean, Teal, Forest, Neon, Gold, Ember, Rose and Sakura.
+- A custom **Now Playing** screen with artwork-driven backgrounds.
+- A mini player that glides into the full player with a tap or a swipe up.
+- Two interface styles, high-end and lightweight, and the setup recommends the one that suits your phone.
+
+### Synced lyrics
+- Time-synced lyrics from a `.lrc` file next to the song or from the lyrics tag inside the file, which work offline, with online lookup when there is nothing local.
+- Fullscreen lyrics and translation.
+- A built-in **lyrics editor**: paste plain text and tap to stamp each line as the song plays, or import an `.lrc` file.
+
+### Your library, organised
+- Browse by **Tracks, Albums, Artists and Folders**, search across all of it, and pull down to refresh.
+- Include or exclude folders, and split artist tags like "A & B" into separate artists with your own rules.
+- A **tag editor** for title, artist, album, genre, track number and artwork, covering MP3, FLAC, M4A, Ogg, Opus and **WAV**.
+- Playlists with drag-to-reorder, **M3U / M3U8** import and export, and a Favorite Songs list.
+
+### Smart features
+- **Smart playlists** built from your own rules (match all or any, optional limit, live match count).
+- **Track tags** to mark chapters, highlights and bookmarks inside long tracks and jump back to them, ideal for DJ sets and mixes. Timestamps can be imported by pasting.
+- **Share as clip**: cut a section of a song and save or share it.
+- **Suggestions**: For You, suggested artists, recently added, recently played and most played.
+- **Listening Insights** and **Listening Recap** with your top tracks, artists and genres, based on real listening time.
+
+### Sound
+- Crossfade with an adjustable duration, plus an Automix option.
+- A 5-band **equalizer** with presets and custom profiles.
+- **ReplayGain** support for MP3, FLAC, Ogg Vorbis/Opus and MP4/M4A/AAC/ALAC.
+- Playback speed up to 2.0×, a sleep timer and a saved queue.
+- A **music visualizer** with four modes: bar spectrum, circular bars, mirror bars and frequency line.
+
+### Everywhere you listen
+- **Android Auto** support.
+- Media notification and lock-screen controls, Bluetooth handling and a **home-screen widget**.
+- Available in English, Czech, German, Spanish, Hindi and Russian.
+
+---
+
+## Get it
+
+| | |
+| --- | --- |
+| **Google Play** | [Noxira Music on Google Play](https://play.google.com/store/apps/details?id=com.aurorasoftware.music) |
+| **Requires** | Android 10 or newer |
+| **Price** | Free, with no account and no ads |
+
+---
+
+## Support Noxira
+
+Noxira Music is free. I build it on my own in my spare time, and if it earns a place on your phone, a small donation helps me keep it going and keep it ad-free.
+
+<p align="center">
+  <a href="https://ko-fi.com/aurorasoftwarecz"><img alt="Support me on Ko-fi" height="48" src="https://img.shields.io/badge/Ko--fi-Support%20me-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white"></a>
+  &nbsp;
+  <a href="https://buymeacoffee.com/aurorasoftwareCZ"><img alt="Buy me a coffee" height="48" src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-FFDD00?style=for-the-badge&logo=buymeacoffee&logoColor=black"></a>
+</p>
+
+A monthly support goal shows up in the app from time to time, and you can always find it in Settings under About. Leaving a rating or a review on Google Play helps just as much.
+
+Thank you, it means a lot.
+
+---
+
+## Privacy
+
+Your music stays on your device. The app only goes online for things like lyrics, artist info and lyrics translation, and for artist info only the artist name is sent.
+
+The first-run setup explains this openly. The app uses Firebase (Analytics, Crashlytics, Performance) and Sentry for anonymous usage and crash reports, so I can find and fix problems. Permissions are used for reading your audio files, notifications, background playback, Bluetooth and the microphone permission that the visualizer needs.
+
+Read the [Terms](https://aurorasoftware.netlify.app/terms.html) for details.
+
+---
+
+## Follow along
+
+- Instagram: [@aurora.software](https://www.instagram.com/aurora.software)
+- Website: [aurorasoftware.netlify.app](https://aurorasoftware.netlify.app)
+
+---
+
+## License
+
+Noxira Music is released under the **GNU General Public License v3.0**. See [LICENSE](LICENSE).
+
+© D4v31x/Aurora Software CZ
