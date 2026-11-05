@@ -5,7 +5,7 @@
 <div align="center">
 
 <p align="center">
-  <img src="docs/logo.svg" alt="Noxira" width="500">
+  <img src="docs/noxiramusic_wordmark_plus_outline.svg" alt="Noxira" width="500">
   <br>
   <strong>Free of ads. Free to be yours.</strong>
 </p>
