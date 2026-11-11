@@ -57,7 +57,7 @@ class _CompletionPageState extends State<CompletionPage> {
         ? l10n.onboardingDynamicColors
         : (theme.selectedPresetIndex >= 0 &&
                 theme.selectedPresetIndex < AppThemePreset.presets.length
-            ? AppThemePreset.presets[theme.selectedPresetIndex].name
+            ? AppThemePreset.presets[theme.selectedPresetIndex].label(l10n)
             : l10n.accentColor);
 
     final rows = <({String label, String value, bool good})>[

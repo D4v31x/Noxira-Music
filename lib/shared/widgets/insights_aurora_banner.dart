@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../providers/providers.dart';
 import 'adaptive_blur.dart';
 
@@ -57,8 +58,7 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
   @override
   Widget build(BuildContext context) {
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
 
     return FadeTransition(
       opacity: CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut),
@@ -158,8 +158,8 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
       children: [
         Text(
           widget.isNewFeature
-              ? 'Your Music Insights Are Here ✦'
-              : 'Your Music Recap Awaits',
+              ? AppLocalizations.of(context).bannerInsightsNewTitle
+              : AppLocalizations.of(context).bannerRecapTitle,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
@@ -171,8 +171,8 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
         const SizedBox(height: 4),
         Text(
           widget.isNewFeature
-              ? 'See your top tracks, artists & listening patterns'
-              : 'Discover your top songs and listening trends',
+              ? AppLocalizations.of(context).bannerInsightsNewBody
+              : AppLocalizations.of(context).bannerRecapBody,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.78),
             fontSize: 13,
@@ -206,9 +206,9 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
                     ),
                   ],
                 ),
-                child: const Text(
-                  'Take me there',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context).takeMeThere,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -224,7 +224,7 @@ class _InsightsAuroraBannerState extends State<InsightsAuroraBanner>
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 child: Text(
-                  'Not now',
+                  AppLocalizations.of(context).notNow,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.52),
                     fontSize: 13,

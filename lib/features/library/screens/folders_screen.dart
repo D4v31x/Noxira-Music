@@ -169,11 +169,12 @@ class _FoldersScreenState extends State<FoldersScreen> {
   }
 
   String _getSortLabel(FolderSortOption opt) {
+    final l10n = AppLocalizations.of(context);
     switch (opt) {
       case FolderSortOption.name:
-        return 'Name';
+        return l10n.sortName;
       case FolderSortOption.path:
-        return 'Path';
+        return l10n.songInfoPath;
     }
   }
 
@@ -190,11 +191,11 @@ class _FoldersScreenState extends State<FoldersScreen> {
           physics: const ClampingScrollPhysics(),
           slivers: [
             LibraryScreenHeader(
-              badge: 'Library',
+              badge: AppLocalizations.of(context).library,
               title: loc.folders,
               subtitle: _isLoading
                   ? null
-                  : '$count ${count == 1 ? 'folder' : 'folders'}',
+                  : AppLocalizations.of(context).foldersCountPlural(count),
               accentColor: Colors.orange,
               expandedHeight: 295,
               showBackButton: true,
@@ -240,8 +241,10 @@ class _FoldersScreenState extends State<FoldersScreen> {
                         ),
                       ),
                       itemBuilder: (context) => [
-                        _sortItem(FolderSortOption.name, 'Name'),
-                        _sortItem(FolderSortOption.path, 'Path'),
+                        _sortItem(FolderSortOption.name,
+                            AppLocalizations.of(context).sortName),
+                        _sortItem(FolderSortOption.path,
+                            AppLocalizations.of(context).songInfoPath),
                       ],
                     ),
                   ),

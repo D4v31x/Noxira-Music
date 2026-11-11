@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:provider/provider.dart';
 
 import '../../l10n/generated/app_localizations.dart';
@@ -13,7 +14,7 @@ import '../onboarding/widgets/onboarding_background.dart';
 import '../onboarding/widgets/onboarding_kit.dart';
 import '../splash/animated_logo.dart';
 
-const _kPageCount = 6;
+const _kPageCount = 8;
 
 /// Shown once on launch to users who updated from a pre-Noxira version.
 ///
@@ -116,6 +117,18 @@ class _RebrandWelcomeScreenState extends State<RebrandWelcomeScreen>
           demo: const _QueueDemo(),
         );
       case 4:
+        return _Slide(
+          title: l10n.rebrandSlideOutputTitle,
+          body: l10n.rebrandSlideOutputBody,
+          demo: const _OutputDemo(),
+        );
+      case 5:
+        return _Slide(
+          title: l10n.rebrandSlideLibraryTitle,
+          body: l10n.rebrandSlideLibraryBody,
+          demo: const _LibraryDemo(),
+        );
+      case 6:
         return _MoreSlide(l10n: l10n);
       default:
         return _SupportSlide(l10n: l10n);
@@ -390,13 +403,24 @@ class _MoreSlide extends StatelessWidget {
       (Icons.tune_rounded, l10n.rebrandMoreSetup),
       (Icons.palette_outlined, l10n.rebrandMoreLook),
       (Icons.animation_rounded, l10n.rebrandMoreMotion),
+      (Icons.chat_bubble_outline_rounded, l10n.rebrandMoreMessages),
+      (Icons.speed_rounded, l10n.rebrandMorePerformance),
+      (Icons.graphic_eq_rounded, l10n.rebrandMorePlayback),
+      (Icons.search_rounded, l10n.rebrandMoreSearch),
       (Icons.build_circle_outlined, l10n.rebrandMoreFixes),
     ];
+    // Same breathing room as the onboarding steps (StepScaffold): a tall page
+    // still starts a good way down the screen and scrolls when it is longer
+    // than the screen.
+    final inset = (MediaQuery.sizeOf(context).height * 0.06).clamp(24.0, 72.0);
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: kOnboardingMargin),
+        padding: EdgeInsets.fromLTRB(
+            kOnboardingMargin, inset, kOnboardingMargin, inset),
+        physics: const BouncingScrollPhysics(),
         child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: constraints.maxHeight),
+          constraints: BoxConstraints(
+              minHeight: math.max(0, constraints.maxHeight - inset * 2)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,11 +485,13 @@ class _SupportSlide extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              GlassButton(
-                order: 3,
-                label: l10n.supportAuroraBtn,
-                onPressed: () => unawaited(DonationService.openBuyMeACoffee()),
-              ),
+              if (DonationService.enabled)
+                GlassButton(
+                  order: 3,
+                  label: l10n.supportAuroraBtn,
+                  onPressed: () =>
+                      unawaited(DonationService.openBuyMeACoffee()),
+                ),
             ],
           ),
         ),
@@ -845,6 +871,271 @@ class _QueueDemoState extends State<_QueueDemo> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+const _accentGreen = Color(0xFF10B981);
+const _accentAmber = Color(0xFFFFB74D);
+
+/// The audio output picker: the highlighted row moves between a headset, the
+/// phone and a watch; tap a row to send the sound there.
+class _OutputDemo extends StatefulWidget {
+  const _OutputDemo();
+
+  @override
+  State<_OutputDemo> createState() => _OutputDemoState();
+}
+
+class _OutputDemoState extends State<_OutputDemo> {
+  int _selected = 0;
+  Timer? _timer;
+
+  static Widget _icon(int row, Color color) => switch (row) {
+        0 => iconoir.Headset(color: color, width: 22, height: 22),
+        1 => iconoir.SmartphoneDevice(color: color, width: 22, height: 22),
+        _ => iconoir.Bluetooth(color: color, width: 22, height: 22),
+      };
+
+  @override
+  void initState() {
+    super.initState();
+    _restart();
+  }
+
+  void _restart() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: 1800), (_) {
+      if (mounted) setState(() => _selected = (_selected + 1) % 3);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      order: 0,
+      padding: const EdgeInsets.all(16),
+      child: SizedBox(
+        width: 280,
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const iconoir.SoundHigh(
+                    color: Colors.white, width: 22, height: 22),
+                const SizedBox(width: 10),
+                _bar(110, height: 12, a: .85),
+              ],
+            ),
+            const SizedBox(height: 14),
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(height: 8),
+              GestureDetector(
+                onTap: () {
+                  setState(() => _selected = i);
+                  _restart();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: i == _selected
+                        ? _accentGreen.withValues(alpha: 0.16)
+                        : Colors.white.withValues(alpha: 0.08),
+                    border: Border.all(
+                      color: i == _selected
+                          ? _accentGreen.withValues(alpha: 0.55)
+                          : Colors.white.withValues(alpha: 0.12),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      _icon(i, i == _selected ? _accentGreen : Colors.white),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: _bar(i == 1 ? 96 : 120,
+                              a: i == _selected ? .8 : .45),
+                        ),
+                      ),
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 250),
+                        opacity: i == _selected ? 1 : 0,
+                        child: const iconoir.Check(
+                            color: _accentGreen, width: 20, height: 20),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The duplicate-tracks review (tap a copy to keep it) above the new
+/// playlist tiles.
+class _LibraryDemo extends StatefulWidget {
+  const _LibraryDemo();
+
+  @override
+  State<_LibraryDemo> createState() => _LibraryDemoState();
+}
+
+class _LibraryDemoState extends State<_LibraryDemo> {
+  int _keep = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _restart();
+  }
+
+  void _restart() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(milliseconds: 2000), (_) {
+      if (mounted) setState(() => _keep = (_keep + 1) % 2);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Widget _copy(int index) {
+    final selected = index == _keep;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _keep = index);
+        _restart();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+        child: Row(
+          children: [
+            selected
+                ? const iconoir.CheckCircle(
+                    color: _accentAmber, width: 20, height: 20)
+                : const iconoir.Circle(
+                    color: Colors.white38, width: 20, height: 20),
+            const SizedBox(width: 10),
+            Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: _palette[index],
+              ),
+            ),
+            const SizedBox(width: 10),
+            _bar(index == 0 ? 90 : 70, a: .6),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _tile(int index) => Container(
+        height: 46,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(14),
+          color: Colors.white.withValues(alpha: 0.08),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              decoration: BoxDecoration(
+                borderRadius:
+                    const BorderRadius.horizontal(left: Radius.circular(14)),
+                gradient: LinearGradient(
+                  colors: [
+                    _palette[index],
+                    _palette[index].withValues(alpha: 0.45),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: _bar(52, a: .55)),
+            const SizedBox(width: 10),
+          ],
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassPanel(
+      order: 0,
+      padding: const EdgeInsets.all(16),
+      child: SizedBox(
+        width: 280,
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(18),
+                color: _accentAmber.withValues(alpha: 0.12),
+                border: Border.all(color: _accentAmber.withValues(alpha: 0.45)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const iconoir.Copy(
+                          color: _accentAmber, width: 22, height: 22),
+                      const SizedBox(width: 10),
+                      _bar(120, height: 12, a: .85),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _copy(0),
+                  const SizedBox(height: 6),
+                  _copy(1),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(child: _tile(0)),
+                const SizedBox(width: 8),
+                Expanded(child: _tile(1)),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: _tile(2)),
+                const SizedBox(width: 8),
+                Expanded(child: _tile(3)),
+              ],
+            ),
+          ],
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../library/screens/artist_detail_screen.dart';
 import '../../../shared/services/local_caching_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
@@ -23,7 +24,7 @@ class SuggestedArtistsSection extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Text(
-            'No data',
+            AppLocalizations.of(context).noData,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Theme.of(context)
                       .colorScheme

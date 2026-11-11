@@ -29,8 +29,7 @@ Future<void> _open(String? url) async {
 
 BoxDecoration _cardDecoration(BuildContext context) {
   final scheme = Theme.of(context).colorScheme;
-  final isLowEnd = Provider.of<PerformanceModeProvider>(context, listen: false)
-      .isLowEndDevice;
+  final isLowEnd = Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
   return isLowEnd
       ? BoxDecoration(
           color: scheme.surfaceContainerHigh,

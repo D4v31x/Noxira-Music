@@ -9,6 +9,7 @@ import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 
 import '../../main.dart' show pageNavigatorKey;
+import '../../l10n/generated/app_localizations.dart';
 import '../models/models.dart';
 import '../../features/player/player_feature.dart';
 import '../services/audio_player_service.dart';
@@ -54,6 +55,17 @@ class ExpandingPlayer extends StatefulWidget {
   static double getMiniPlayerPaddingHeight(BuildContext context) {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return miniPlayerHeightOf(context) + bottomMargin + bottomPadding + 8;
+  }
+
+  /// Bottom padding for scrollable content: clears the mini player while a
+  /// song is loaded (rebuilding when that changes), otherwise [idle] plus the
+  /// system inset.
+  static double bottomInsetFor(BuildContext context, {double idle = 24}) {
+    final hasSong =
+        context.select<AudioPlayerService, bool>((s) => s.currentSong != null);
+    return hasSong
+        ? getMiniPlayerPaddingHeight(context)
+        : MediaQuery.paddingOf(context).bottom + idle;
   }
 
   /// Global state holder
@@ -205,7 +217,9 @@ class _ExpandingPlayerState extends State<ExpandingPlayer> {
           ? null
           : (
               title: song.title,
-              artist: splitArtists(song.artist ?? 'Unknown').join(', '),
+              artist: splitArtists(
+                      song.artist ?? AppLocalizations.of(context).unknownArtist)
+                  .join(', '),
             );
     }
 
@@ -929,8 +943,7 @@ class _MiniPlayerWidget extends StatelessWidget {
     final margin = isTablet ? 32.0 : 16.0;
     final colorScheme = Theme.of(context).colorScheme;
 
-    final performanceProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
+    final performanceProvider = Provider.of<PerformanceModeProvider>(context);
     final shouldBlur = performanceProvider.shouldEnableBlur;
 
     // The glass fill and blur give way to the page as the player grows; the
@@ -1004,7 +1017,9 @@ class _MiniPlayerWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          splitArtists(song.artist ?? 'Unknown').join(', '),
+                          splitArtists(song.artist ??
+                                  AppLocalizations.of(context).unknownArtist)
+                              .join(', '),
                           style: _miniArtistStyle,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

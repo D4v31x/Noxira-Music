@@ -322,7 +322,7 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                       context,
                       const iconoir.Playlist(
                           color: Colors.white, width: 22, height: 22),
-                      'Queue',
+                      AppLocalizations.of(context).queue,
                       () => _addAllToQueue(context),
                       iconOnly: true,
                     ),
@@ -546,7 +546,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${albumSongs.length} ${albumSongs.length == 1 ? 'song' : 'songs'}',
+                            AppLocalizations.of(context)
+                                .songsCountPlural(albumSongs.length),
                             style: TextStyle(
                               fontFamily: FontConstants.fontFamily,
                               color: Colors.white.withValues(alpha: 0.6),
@@ -793,7 +794,8 @@ class _ArtistDetailsScreenState extends State<ArtistDetailsScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  song.album ?? 'Unknown Album',
+                                  song.album ??
+                                      AppLocalizations.of(context).unknownAlbum,
                                   style: TextStyle(
                                     fontFamily: FontConstants.fontFamily,
                                     color: Colors.white.withValues(alpha: 0.5),

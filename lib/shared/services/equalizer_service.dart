@@ -1,3 +1,4 @@
+import 'effect_support.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -77,11 +78,24 @@ class EqualizerService extends ChangeNotifier {
   List<EqualizerPreset> get allPresets =>
       [...builtInPresets, ..._customPresets];
 
+  /// True until the equalizer's parameters are known. The player only exposes
+  /// them once its audio session exists, which starts with the first track
+  /// that is loaded, so before that there is simply nothing to configure yet.
+  bool get waitingForAudio => !_initialized && _waitingForAudio;
+  bool _waitingForAudio = false;
+
   Future<void> init(AndroidEqualizer eq, {bool retry = false}) async {
     if (_initialized && !retry) return;
+    if (!EffectSupport.equalizerAvailable) {
+      // Not attached to the player: nothing to configure.
+      _params = null;
+      _initialized = true;
+      notifyListeners();
+      return;
+    }
     if (_initializing != null) return _initializing!;
 
-    _initializing = _initializeWithRetry(eq);
+    _initializing = _awaitParameters(eq);
     try {
       await _initializing;
     } finally {
@@ -91,36 +105,22 @@ class EqualizerService extends ChangeNotifier {
 
   Future<void>? _initializing;
 
-  Future<void> _initializeWithRetry(AndroidEqualizer eq) async {
-    Object? lastError;
-    for (var attempt = 0; attempt < 3; attempt++) {
-      try {
-        // The equalizer is attached to the player pipeline before this runs,
-        // but Android may expose its parameters a little later, especially
-        // after a cold start or when no track has played yet.
-        if (attempt > 0) {
-          await Future<void>.delayed(Duration(milliseconds: 350 * attempt));
-        }
-        _params = await eq.parameters.timeout(
-          const Duration(seconds: 4),
-          onTimeout: () => throw StateError(
-              'Equalizer parameters timed out while the audio session starts'),
-        );
-        await _restoreSettings(eq);
-        _initialized = true;
-        notifyListeners();
-        return;
-      } catch (e) {
-        lastError = e;
-        debugPrint('[EQ] init attempt ${attempt + 1}/3 failed: $e');
-      }
+  /// Waits for the parameters to arrive (no timeout: a timer would only
+  /// report a failure that is really "no song has played yet"), then restores
+  /// the saved settings.
+  Future<void> _awaitParameters(AndroidEqualizer eq) async {
+    _waitingForAudio = true;
+    notifyListeners();
+    try {
+      _params = await eq.parameters;
+      await _restoreSettings(eq);
+    } catch (e) {
+      // Reached only if the player itself failed to create the effect.
+      debugPrint('[EQ] unavailable: $e');
+      _params = null;
     }
-
-    // Keep params null, but mark initialization complete so the UI can offer
-    // the native equalizer. A later explicit retry can recover a slow session.
-    _params = null;
+    _waitingForAudio = false;
     _initialized = true;
-    debugPrint('[EQ] unavailable after retries: $lastError');
     notifyListeners();
   }
 

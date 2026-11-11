@@ -1,7 +1,10 @@
-/// Online lyrics providers used after LRCLIB comes up empty.
+/// Online lyrics providers, asked alongside LRCLIB. Word-by-word lyrics from
+/// any of them win; otherwise LRCLIB is preferred and these fill in when it
+/// has nothing.
 ///
-/// Every provider turns a [LyricsQuery] into plain LRC text (`[mm:ss.xx]line`)
-/// so the rest of the lyrics pipeline does not care where lyrics came from.
+/// Every provider turns a [LyricsQuery] into LRC text (`[mm:ss.xx]line`, or
+/// enhanced LRC with `<mm:ss.xxx>` word tags) so the rest of the lyrics
+/// pipeline does not care where lyrics came from.
 /// The set of services and the data each one receives is listed in the
 /// onboarding "Internet usage" page; users can switch each one off in
 /// Settings > Playback > Lyrics sources.
@@ -9,6 +12,7 @@ library;
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../remote_config_helper.dart';
 
 import 'better_lyrics_provider.dart';
 import 'kugou_provider.dart';
@@ -38,7 +42,9 @@ abstract class LyricsProvider {
   /// Name shown in settings.
   String get name;
 
-  /// Returns synced lyrics as LRC text, or null when there are none.
+  /// Returns synced lyrics as LRC text, or null when there are none. When the
+  /// service has word-by-word timing the text is enhanced LRC
+  /// (`[00:01.00]<00:01.000>Hel<00:01.200>lo<00:01.500>`); see [lrcHasWordTiming].
   Future<String?> fetchLrc(LyricsQuery query, http.Client client);
 }
 
@@ -64,11 +70,24 @@ class LyricsProviders {
     await prefs.setBool(_key(id), enabled);
   }
 
+  /// The providers to ask, in priority order: those the user hasn't turned
+  /// off, minus any switched off remotely (`lyrics_disabled_providers`), in
+  /// the remote order (`lyrics_provider_order`) when one is set. Ids missing
+  /// from the order keep their default place after the listed ones.
   static Future<List<LyricsProvider>> enabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return [
+    final disabled = RemoteConfigHelper.list('lyrics_disabled_providers');
+    final order = RemoteConfigHelper.list('lyrics_provider_order');
+    final ordered = [
+      for (final id in {...order})
+        for (final p in all)
+          if (p.id == id) p,
       for (final p in all)
-        if (prefs.getBool(_key(p.id)) ?? true) p,
+        if (!order.contains(p.id)) p,
+    ];
+    return [
+      for (final p in ordered)
+        if (!disabled.contains(p.id) && (prefs.getBool(_key(p.id)) ?? true)) p,
     ];
   }
 }
@@ -78,6 +97,36 @@ class LyricsProviders {
 String sanitizeLrc(String lrc) => lrc
     .replaceAll(RegExp(r'<\d{1,2}:\d{2}(?:[.:]\d{1,3})?>'), '')
     .replaceAll(RegExp(r'\{(?:agent:[^}]*|bg)\}'), '');
+
+/// Formats a millisecond offset as an enhanced-LRC word tag, e.g.
+/// `<01:02.357>`. Words keep millisecond precision.
+String lrcWordTag(int ms) {
+  final clamped = ms < 0 ? 0 : ms;
+  final minutes = clamped ~/ 60000;
+  final seconds = (clamped % 60000) ~/ 1000;
+  final millis = clamped % 1000;
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '<${two(minutes)}:${two(seconds)}.${millis.toString().padLeft(3, '0')}>';
+}
+
+final RegExp _wordTaggedLine = RegExp(r'^\s*\[[^\]]*\]\s*<\d{1,2}:\d{2}');
+
+/// Whether [lrc] carries word-by-word timing (enhanced LRC): at least half of
+/// its lines start with a word tag.
+bool lrcHasWordTiming(String lrc) {
+  var lines = 0;
+  var tagged = 0;
+  for (final line in lrc.split('\n')) {
+    if (!line.trimLeft().startsWith('[')) continue;
+    lines++;
+    if (_wordTaggedLine.hasMatch(line)) tagged++;
+  }
+  return tagged > 0 && tagged * 2 >= lines;
+}
+
+/// Drops only the `{agent:v1}` / `{bg}` markers, keeping word timings.
+String stripLrcMarkers(String lrc) =>
+    lrc.replaceAll(RegExp(r'\{(?:agent:[^}]*|bg)\}'), '');
 
 /// Formats a millisecond offset as an LRC tag, e.g. `[01:02.35]`.
 String lrcTag(int ms) {

@@ -1,6 +1,35 @@
 part of '../audio_player_service.dart';
 
+/// Extracted WAV covers by song id; MediaStore has no album art for WAV files.
+final Map<int, Uri> _wavArtUris = {};
+
 extension AudioMediaArtworkExtension on AudioPlayerService {
+  Uri? _mediaArtUri(SongModel song) {
+    final wavArt = _wavArtUris[song.id];
+    if (wavArt != null) return wavArt;
+    return song.albumId != null
+        ? Uri.parse('content://media/external/audio/albumart/${song.albumId}')
+        : null;
+  }
+
+  /// Saves a WAV song's embedded cover to a file so the notification can load it.
+  Future<void> _publishWavArtwork(SongModel song, Uint8List? artwork) async {
+    if (!song.data.toLowerCase().endsWith('.wav')) return;
+    if (artwork == null || artwork.isEmpty) return;
+    if (_wavArtUris.containsKey(song.id)) return;
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/wav_art_${song.id}');
+      await file.writeAsBytes(artwork, flush: true);
+      _wavArtUris[song.id] = Uri.file(file.path);
+      if (currentSong?.id == song.id) {
+        audioHandler.updateNotificationMediaItem(_createMediaItemSync(song));
+      }
+    } catch (e) {
+      if (kDebugMode) debugPrint('WAV artwork export failed: $e');
+    }
+  }
+
   /// Update background colors based on current song
   Future<void> _updateBackgroundColors() async {
     if (_backgroundManager != null && currentSong != null) {
@@ -22,13 +51,12 @@ extension AudioMediaArtworkExtension on AudioPlayerService {
   MediaItem _createMediaItemSync(SongModel song) {
     return MediaItem(
       id: song.id.toString(),
-      album: song.album ?? 'Unknown Album',
+      album: song.album ?? MediaFallbackLabels.unknownAlbum,
       title: song.title,
-      artist: splitArtists(song.artist ?? 'Unknown Artist').join(', '),
+      artist: splitArtists(song.artist ?? MediaFallbackLabels.unknownArtist)
+          .join(', '),
       duration: Duration(milliseconds: song.duration ?? 0),
-      artUri: song.albumId != null
-          ? Uri.parse('content://media/external/audio/albumart/${song.albumId}')
-          : null,
+      artUri: _mediaArtUri(song),
     );
   }
 
@@ -37,13 +65,12 @@ extension AudioMediaArtworkExtension on AudioPlayerService {
   Future<MediaItem> _createMediaItem(SongModel song) async {
     return MediaItem(
       id: song.id.toString(),
-      album: song.album ?? 'Unknown Album',
+      album: song.album ?? MediaFallbackLabels.unknownAlbum,
       title: song.title,
-      artist: splitArtists(song.artist ?? 'Unknown Artist').join(', '),
+      artist: splitArtists(song.artist ?? MediaFallbackLabels.unknownArtist)
+          .join(', '),
       duration: Duration(milliseconds: song.duration ?? 0),
-      artUri: song.albumId != null
-          ? Uri.parse('content://media/external/audio/albumart/${song.albumId}')
-          : null,
+      artUri: _mediaArtUri(song),
     );
   }
 
@@ -115,7 +142,7 @@ extension AudioMediaArtworkExtension on AudioPlayerService {
         }
       }
       currentArtwork.value = artwork;
-
+      unawaited(_publishWavArtwork(song, artwork));
       // Push artwork directly to the background manager, bypassing all guards.
       // This is the primary mechanism for updating the background because this
       // function is confirmed to run on every song change.
@@ -125,7 +152,7 @@ extension AudioMediaArtworkExtension on AudioPlayerService {
       // drops the previous song's cover and tint instead of keeping them.
       unawaited(_homeWidgetService.updateSongInfo(
         title: song.title,
-        artist: song.artist ?? 'Unknown Artist',
+        artist: song.artist ?? MediaFallbackLabels.unknownArtist,
         isPlaying: isPlayingNotifier.value,
         artworkBytes: (artwork != null && artwork.isNotEmpty) ? artwork : null,
       ));

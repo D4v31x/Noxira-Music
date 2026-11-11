@@ -828,69 +828,69 @@ class AppLocalizationsRu extends AppLocalizations {
   String get searchFailed => 'Поиск не удался';
 
   @override
-  String get lyricsSource => 'Lyrics source';
+  String get lyricsSource => 'Источник текста';
 
   @override
-  String get inPlaylistHint => 'In a playlist';
+  String get inPlaylistHint => 'В плейлисте';
 
   @override
-  String get removeDuplicates => 'Remove duplicates';
+  String get removeDuplicates => 'Удалить дубликаты';
 
   @override
-  String get noDuplicatesFound => 'No duplicate songs found';
+  String get noDuplicatesFound => 'Дубликаты песен не найдены';
 
   @override
   String duplicatesRemoved(int count) {
-    return '$count duplicate songs removed';
+    return 'Удалено дубликатов песен: $count';
   }
 
   @override
-  String get supportNoxiraTitle => 'Support Noxira!';
+  String get supportNoxiraTitle => 'Поддержите Noxira!';
 
   @override
-  String get supportButton => 'Support';
+  String get supportButton => 'Поддержать';
 
   @override
   String supportGoalProgress(String raised, String goal) {
-    return '$raised of $goal this month';
+    return '$raised из $goal в этом месяце';
   }
 
   @override
-  String get onboardingSupportGoal => 'Support goal';
+  String get onboardingSupportGoal => 'Цель поддержки';
 
   @override
   String get onboardingSupportGoalDesc =>
-      'Occasionally downloads a tiny public file with this month\'s support goal and amount raised. It is a plain download: nothing about you or your music is sent.';
+      'Время от времени скачивает крошечный общедоступный файл с целью поддержки на этот месяц и уже собранной суммой. Это обычная загрузка: ничего о вас и вашей музыке не отправляется.';
 
   @override
-  String get songAddedChip => 'Added';
+  String get songAddedChip => 'Добавлено';
 
   @override
-  String get tapToRemove => 'Tap to remove';
+  String get tapToRemove => 'Нажмите, чтобы удалить';
 
   @override
-  String get onboardingGetStarted => 'Get started';
+  String get onboardingGetStarted => 'Начать';
 
   @override
-  String get onboardingYourLanguage => 'Your language?';
+  String get onboardingYourLanguage => 'Ваш язык?';
 
   @override
-  String get onboardingAllow => 'Allow';
+  String get onboardingAllow => 'Разрешить';
 
   @override
-  String get onboardingSummaryLanguage => 'Language';
+  String get onboardingSummaryLanguage => 'Язык';
 
   @override
-  String get onboardingSummaryTheme => 'Look';
+  String get onboardingSummaryTheme => 'Внешний вид';
 
   @override
-  String get onboardingSummaryLibrary => 'Music library access';
+  String get onboardingSummaryLibrary => 'Доступ к музыкальной медиатеке';
 
   @override
-  String get onboardingAllowed => 'Allowed';
+  String get onboardingAllowed => 'Разрешено';
 
   @override
-  String get onboardingNotAllowed => 'Not allowed yet';
+  String get onboardingNotAllowed => 'Пока не разрешено';
 
   @override
   String get searchLyrics => 'Поиск текстов песен';
@@ -936,6 +936,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsAboutSubtitle => 'Версия, отзывы и обновления';
+
+  @override
+  String get settingsGroupExperience => 'Впечатления';
+
+  @override
+  String get settingsGroupLibrary => 'Медиатека и данные';
+
+  @override
+  String get settingsGroupApp => 'Приложение';
 
   @override
   String get settingsAccentColor => 'Акцентный цвет';
@@ -1079,6 +1088,16 @@ class AppLocalizationsRu extends AppLocalizations {
       'В выключенном состоянии темп изменяется без изменения высоты тона';
 
   @override
+  String get playbackPitch => 'Высота тона';
+
+  @override
+  String get playbackPitchDesc =>
+      'Сдвигает звук выше или ниже независимо от скорости';
+
+  @override
+  String get playbackPitchLinkedDesc => 'Следует скорости воспроизведения';
+
+  @override
   String get settingsPlayback => 'Воспроизведение';
 
   @override
@@ -1138,6 +1157,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsUpToDate => 'Вы в курсе последних новостей';
+
+  @override
+  String get settingsUpdateCheckFailed =>
+      'Не удалось проверить обновления. Обновления приходят из Google Play.';
 
   @override
   String get settingsWeeklyRecap => 'Еженедельный обзор';
@@ -1207,7 +1230,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get supportAuroraTitle => 'Поддержите «Noxira Music»';
 
   @override
-  String get updatedTitle => 'Noxira Music was updated';
+  String get updatedTitle => 'Noxira Music обновлена';
 
   @override
   String get tapAddToAddSongs => 'Нажмите «+», чтобы добавить песни';
@@ -1338,29 +1361,29 @@ class AppLocalizationsRu extends AppLocalizations {
       'Сообщите об ошибках или предложите новые функции';
 
   @override
-  String get rateApp => 'Rate Noxira Music';
+  String get rateApp => 'Оценить Noxira Music';
 
   @override
-  String get rateAppDesc => 'Enjoying the app? Leave a review on Google Play';
+  String get rateAppDesc => 'Нравится приложение? Оставьте отзыв в Google Play';
 
   @override
-  String get feedbackTypeBug => 'Bug';
+  String get feedbackTypeBug => 'Ошибка';
 
   @override
-  String get feedbackTypeSuggestion => 'Suggestion';
+  String get feedbackTypeSuggestion => 'Предложение';
 
   @override
-  String get feedbackHint => 'Describe the bug or suggestion...';
+  String get feedbackHint => 'Опишите ошибку или предложение...';
 
   @override
-  String get feedbackSend => 'Send';
+  String get feedbackSend => 'Отправить';
 
   @override
-  String get feedbackSentThanks => 'Thanks for your feedback!';
+  String get feedbackSentThanks => 'Спасибо за ваш отзыв!';
 
   @override
   String get feedbackSentError =>
-      'Couldn\'t send feedback. Please try again later.';
+      'Не удалось отправить отзыв. Повторите попытку позже.';
 
   @override
   String get contributeTranslations => 'Присылайте переводы';
@@ -1388,16 +1411,6 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get settingsHighendUiDesc =>
       'Включить расширенные визуальные эффекты и анимацию';
-
-  @override
-  String get restartRequired => 'Требуется перезапуск';
-
-  @override
-  String get restartRequiredDesc =>
-      'Для применения изменений режима интерфейса необходимо перезапустить приложение. Перезапустить сейчас?';
-
-  @override
-  String get restartNow => 'Перезапустить сейчас';
 
   @override
   String get clearUpcoming => 'Очистить предстоящие';
@@ -1501,7 +1514,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String lyricsAdded(String title) {
-    return 'Lyrics added for \"$title\"';
+    return 'Текст добавлен для «$title»';
   }
 
   @override
@@ -1743,6 +1756,28 @@ class AppLocalizationsRu extends AppLocalizations {
       'Смотрите, что играло и что дальше. Перетащите, чтобы изменить порядок, смахните, чтобы удалить.';
 
   @override
+  String get rebrandSlideOutputTitle => 'Выбирайте, где играет';
+
+  @override
+  String get rebrandSlideOutputBody =>
+      'Нажмите на чип Bluetooth на главном экране или новую кнопку на экране «Сейчас играет», чтобы переключать воспроизведение между динамиком телефона и подключёнными устройствами прямо в приложении.';
+
+  @override
+  String get rebrandSlideLibraryTitle => 'Более аккуратная медиатека';
+
+  @override
+  String get rebrandSlideLibraryBody =>
+      'Noxira находит дубликаты треков и позволяет выбрать, какую копию оставить. У плейлистов новый вид: «Избранное», автоматические и умные плейлисты в одном месте.';
+
+  @override
+  String get rebrandMoreMessages =>
+      'Сообщения теперь появляются маленьким островком внизу экрана.';
+
+  @override
+  String get rebrandMorePerformance =>
+      'Более быстрый поиск, быстрый запуск и более лёгкая загрузка изображений.';
+
+  @override
   String get translateLyricsTo => 'Перевести текст на';
 
   @override
@@ -1767,6 +1802,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Более плавные и красивые переходы по всему приложению.';
 
   @override
+  String get rebrandMorePlayback =>
+      'Отдельные ползунки скорости и высоты тона, которые можно связать.';
+
+  @override
+  String get rebrandMoreSearch =>
+      'Обновлённая вкладка поиска и страница настроек, разбитая на группы.';
+
+  @override
   String get rebrandMoreFixes =>
       'Улучшения стабильности и исправления ошибок по всему приложению, включая мерцание текстов.';
 
@@ -1782,6 +1825,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get eqNotAvailable =>
       'На данном устройстве функция эквалайзера недоступна.';
+
+  @override
+  String get eqWaitingForAudio =>
+      'Запустите песню, чтобы настроить эквалайзер.';
 
   @override
   String get eqOpenSystem => 'Эквалайзер с открытой системой';
@@ -1902,6 +1949,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get closeVisualiser => 'Закрыть визуализатор';
 
   @override
+  String get visualizerWaitingForAudio => 'Ожидание звука воспроизведения...';
+
+  @override
+  String get visualizerUnavailable =>
+      'Для этого вывода анализ звука в реальном времени недоступен.';
+
+  @override
   String get previousMode => 'Предыдущий режим';
 
   @override
@@ -1972,20 +2026,20 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get translationDisclaimerNote =>
-      'Some translations are AI-generated or community-contributed and may contain errors. Help us improve them on Crowdin.';
+      'Некоторые переводы созданы ИИ или предоставлены сообществом и могут содержать ошибки. Помогите улучшить их на Crowdin.';
 
   @override
-  String get newLanguagesAvailableTitle => 'New Languages Available';
+  String get newLanguagesAvailableTitle => 'Доступны новые языки';
 
   @override
   String get newLanguagesAvailableBody =>
-      'Noxira Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.';
+      'Noxira Music теперь поддерживает немецкий, испанский, хинди и русский языки. Язык можно изменить в настройках.';
 
   @override
-  String get newLanguagesGoToSettings => 'Change Language';
+  String get newLanguagesGoToSettings => 'Сменить язык';
 
   @override
-  String get newLanguagesDismiss => 'Got it';
+  String get newLanguagesDismiss => 'Понятно';
 
   @override
   String get settingsLyricsSources => 'Источники текстов';
@@ -1995,38 +2049,38 @@ class AppLocalizationsRu extends AppLocalizations {
       'Используется, если на LRCLIB нет текста. Получает название, исполнителя, альбом и длительность.';
 
   @override
-  String get onlineAboutArtist => 'About';
+  String get onlineAboutArtist => 'Об исполнителе';
 
   @override
-  String get onlineFansAlsoLike => 'Fans also like';
+  String get onlineFansAlsoLike => 'Фанатам также нравится';
 
   @override
-  String get onlinePopularTracks => 'Popular right now';
+  String get onlinePopularTracks => 'Популярное сейчас';
 
   @override
-  String get onlineReadMore => 'Read more';
+  String get onlineReadMore => 'Читать далее';
 
   @override
   String get onlineBioDisclaimer =>
-      'Gathered automatically from public sources. Not guaranteed to be accurate.';
+      'Собрано автоматически из открытых источников. Точность не гарантируется.';
 
   @override
-  String get onlineShowLess => 'Show less';
+  String get onlineShowLess => 'Свернуть';
 
   @override
-  String get onlineWikipedia => 'Wikipedia';
+  String get onlineWikipedia => 'Википедия';
 
   @override
   String onlineFansCount(String count) {
-    return '$count fans';
+    return 'Фанатов: $count';
   }
 
   @override
-  String get settingsOnlineSuggestions => 'Online suggestions';
+  String get settingsOnlineSuggestions => 'Онлайн-подсказки';
 
   @override
   String get settingsOnlineSuggestionsDesc =>
-      'Look up artist info and similar artists from Deezer and Wikipedia. Only the artist name is sent.';
+      'Искать сведения об исполнителях и похожих исполнителей в Deezer и Википедии. Отправляется только имя исполнителя.';
 
   @override
   String get onboardingUiModeTitle => 'Стиль интерфейса';
@@ -2056,5 +2110,960 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String onboardingHeaviestNote(String option) {
     return '«$option» — самый ресурсоёмкий вариант, на вашем устройстве он может работать менее плавно.';
+  }
+
+  @override
+  String get audioOutput => 'Вывод звука';
+
+  @override
+  String get audioOutputBluetoothDevice => 'Устройство Bluetooth';
+
+  @override
+  String get audioOutputPhoneSpeaker => 'Динамик телефона';
+
+  @override
+  String get audioOutputWired => 'Проводные наушники';
+
+  @override
+  String get audioOutputUsb => 'USB-аудио';
+
+  @override
+  String get audioOutputOther => 'Другой вывод';
+
+  @override
+  String get audioOutputNoOthers => 'Других устройств не обнаружено';
+
+  @override
+  String get audioOutputCurrentDevice => 'Текущее устройство';
+
+  @override
+  String get audioOutputSwitchFailed => 'Не удалось переключить вывод звука';
+
+  @override
+  String get duplicatesBannerTitle => 'Найдены дубликаты треков';
+
+  @override
+  String duplicatesBannerSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count трека существуют в нескольких копиях',
+      many: '$count треков существуют в нескольких копиях',
+      few: '$count трека существуют в нескольких копиях',
+      one: '$count трек существует в нескольких копиях',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesReview => 'Проверить';
+
+  @override
+  String get duplicatesScreenTitle => 'Дубликаты треков';
+
+  @override
+  String get duplicatesEmpty => 'Дубликаты не найдены';
+
+  @override
+  String get duplicatesIgnore => 'Игнорировать';
+
+  @override
+  String get duplicatesIgnoreAll => 'Игнорировать все';
+
+  @override
+  String get duplicatesKeepBest => 'Лучшее качество';
+
+  @override
+  String duplicatesCopies(int count) {
+    return 'Копий: $count';
+  }
+
+  @override
+  String duplicatesDeleteOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Оставить выбранную, удалить $count других',
+      many: 'Оставить выбранную, удалить $count других',
+      few: 'Оставить выбранную, удалить $count другие',
+      one: 'Оставить выбранную, удалить $count другую',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesDeleteFailed => 'Не удалось удалить некоторые копии';
+
+  @override
+  String get duplicatesResolved => 'Дубликаты удалены';
+
+  @override
+  String get duplicatesHint =>
+      'Выберите копию, которую нужно оставить. Остальные будут удалены с вашего устройства.';
+
+  @override
+  String get remoteAnnouncementOpenLink => 'Подробнее';
+
+  @override
+  String get remoteAnnouncementOpenScreen => 'Открыть';
+
+  @override
+  String get updateRequiredTitle => 'Требуется обновление';
+
+  @override
+  String get updateRequiredMessage =>
+      'Эта версия больше не поддерживается. Обновите Noxira Music, чтобы продолжить пользоваться приложением.';
+
+  @override
+  String get settingsSupport => 'Поддержка';
+
+  @override
+  String get settingsSupportSubtitle => 'Спонсоры и способы помочь';
+
+  @override
+  String get supportSupporters => 'Спонсоры';
+
+  @override
+  String get supportNoSupportersYet => 'Пока никого нет. Станьте первым!';
+
+  @override
+  String get musicInsightsTitle => 'Музыкальная статистика';
+
+  @override
+  String get insightsActivityByTimeOfDay => 'Активность по времени суток';
+
+  @override
+  String get insightsActivityByDay => 'Активность по дням';
+
+  @override
+  String get insightsGenreBreakdown => 'Разбивка по жанрам';
+
+  @override
+  String get insightsNoDataTitle => 'Данных о прослушивании пока нет';
+
+  @override
+  String get insightsNoDataBody =>
+      'Включите музыку, чтобы начать собирать статистику.';
+
+  @override
+  String insightsMostActiveAround(String time) {
+    return 'Больше всего активности около $time';
+  }
+
+  @override
+  String insightsMostActiveOn(String day) {
+    return 'Больше всего активности: $day';
+  }
+
+  @override
+  String moreFromArtist(String artist) {
+    return 'Ещё от $artist';
+  }
+
+  @override
+  String tracksCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count трека',
+      many: '$count треков',
+      few: '$count трека',
+      one: '$count трек',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String songsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count песни',
+      many: '$count песен',
+      few: '$count песни',
+      one: '$count песня',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String albumsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count альбома',
+      many: '$count альбомов',
+      few: '$count альбома',
+      one: '$count альбом',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playlistsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count плейлиста',
+      many: '$count плейлистов',
+      few: '$count плейлиста',
+      one: '$count плейлист',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String foldersCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count папки',
+      many: '$count папок',
+      few: '$count папки',
+      one: '$count папка',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String foldersExcludedCount(int count) {
+    return 'исключено: $count';
+  }
+
+  @override
+  String get unknownAlbum => 'Неизвестный альбом';
+
+  @override
+  String get queueNextUp => 'Далее';
+
+  @override
+  String queueNextFrom(String source) {
+    return 'Далее из: $source';
+  }
+
+  @override
+  String get queueNothingElse => 'В очереди больше ничего нет';
+
+  @override
+  String get queueMoveToEnd => 'Переместить в конец';
+
+  @override
+  String get translateLyrics => 'Перевести текст';
+
+  @override
+  String get translateFailedTapToRetry =>
+      'Не удалось перевести — нажмите, чтобы повторить';
+
+  @override
+  String get translateShowOriginal => 'Показать оригинал';
+
+  @override
+  String get translateShowTranslation => 'Показать перевод';
+
+  @override
+  String get lyricsAiTranslatedNote =>
+      'Переведено ИИ · точность может отличаться';
+
+  @override
+  String lyricsCantTranslateSameLanguage(String language) {
+    return 'Невозможно перевести — текст уже на целевом языке ($language)';
+  }
+
+  @override
+  String get lyricsAddLyrics => 'Добавить текст';
+
+  @override
+  String get lyricsBlurOn => 'Размытие текста: вкл.';
+
+  @override
+  String get lyricsBlurOff => 'Размытие текста: выкл.';
+
+  @override
+  String get lyricsAutoHideOn => 'Автоскрытие элементов управления: вкл.';
+
+  @override
+  String get lyricsAutoHideOff => 'Автоскрытие элементов управления: выкл.';
+
+  @override
+  String get lyricsEditCreate => 'Изменить / создать текст';
+
+  @override
+  String get sleepTimerMinShort => 'мин';
+
+  @override
+  String sleepTimerMinutesValue(int minutes) {
+    return '$minutes мин';
+  }
+
+  @override
+  String get sleepTimerMusicStopsAfter => 'Музыка остановится через…';
+
+  @override
+  String get sleepTimerPickDuration => 'Выберите длительность ниже';
+
+  @override
+  String get visualizerBarSpectrum => 'Столбчатый спектр';
+
+  @override
+  String get visualizerCircularBars => 'Круговые столбцы';
+
+  @override
+  String get visualizerMirrorBars => 'Зеркальные столбцы';
+
+  @override
+  String get visualizerFrequencyLine => 'Линия частот';
+
+  @override
+  String get visualizerDotMatrix => 'Точечная матрица';
+
+  @override
+  String get visualizerPeakBars => 'Пиковые столбцы';
+
+  @override
+  String get visualizerCircularWave => 'Круговая волна';
+
+  @override
+  String get visualizerAuroraWaves => 'Волны сияния';
+
+  @override
+  String get visualizerPulseRings => 'Пульсирующие кольца';
+
+  @override
+  String get smartFieldFolderPath => 'Путь к папке';
+
+  @override
+  String get smartFieldLiked => 'Понравившиеся';
+
+  @override
+  String get smartFieldPlayCount => 'Число прослушиваний';
+
+  @override
+  String get smartFieldDurationSeconds => 'Длительность (сек.)';
+
+  @override
+  String get smartFieldDaysSinceAdded => 'Дней с момента добавления';
+
+  @override
+  String get smartOpContains => 'содержит';
+
+  @override
+  String get smartOpNotContains => 'не содержит';
+
+  @override
+  String get smartOpEquals => 'равно';
+
+  @override
+  String get smartOpNotEquals => 'не равно';
+
+  @override
+  String get smartOpGreaterThan => 'больше чем';
+
+  @override
+  String get smartOpLessThan => 'меньше чем';
+
+  @override
+  String get smartOpIsTrue => 'истина';
+
+  @override
+  String get smartOpIsFalse => 'ложь';
+
+  @override
+  String get smartSortTitleAZ => 'Название (А–Я)';
+
+  @override
+  String get smartSortArtistAZ => 'Исполнитель (А–Я)';
+
+  @override
+  String get smartSortDateAddedNewest => 'Дата добавления (новые)';
+
+  @override
+  String get smartSortPlayCountHighest => 'Прослушивания (больше)';
+
+  @override
+  String get smartSortDurationLongest => 'Длительность (длинные)';
+
+  @override
+  String get smartSortRandom => 'Случайно';
+
+  @override
+  String get folderFilterTitle => 'Фильтр папок';
+
+  @override
+  String get artistSeparatorTestHint =>
+      'напр. Исполнитель 1 / Исполнитель 2 feat. 3';
+
+  @override
+  String get tracksPermissionRequired =>
+      'Требуется разрешение на доступ к медиатеке. Предоставьте разрешения при первоначальной настройке или в настройках приложения.';
+
+  @override
+  String tracksErrorFetching(String error) {
+    return 'Ошибка при получении песен: $error';
+  }
+
+  @override
+  String get seeAll => 'Показать все';
+
+  @override
+  String get selectItemToViewDetails =>
+      'Выберите элемент, чтобы увидеть подробности';
+
+  @override
+  String get takeMeThere => 'Перейти';
+
+  @override
+  String get notNow => 'Не сейчас';
+
+  @override
+  String get aboutCodename => 'Кодовое имя';
+
+  @override
+  String get aboutDeveloper => 'Разработчик';
+
+  @override
+  String get aboutCopyright => 'Авторские права';
+
+  @override
+  String get aboutWebsite => 'Сайт';
+
+  @override
+  String get openSourcePackages => 'Пакеты с открытым исходным кодом';
+
+  @override
+  String packagesUsedCount(int count) {
+    return 'Используется пакетов: $count';
+  }
+
+  @override
+  String get packagesThanks => 'Спасибо всем участникам open source!';
+
+  @override
+  String versionWithCodename(String version, String codename) {
+    return 'Версия $version ($codename)';
+  }
+
+  @override
+  String get customColor => 'Свой цвет';
+
+  @override
+  String exportPlaylistAs(String format) {
+    return 'Экспорт ($format)';
+  }
+
+  @override
+  String get shareClipListeningTo => 'СЛУШАЮ';
+
+  @override
+  String get shareClipNowOn => 'СЕЙЧАС В';
+
+  @override
+  String get splashInitializingServices => 'Инициализация служб';
+
+  @override
+  String get splashLoadingLibrary => 'Загрузка библиотеки';
+
+  @override
+  String get splashPreparingHome => 'Подготовка главной';
+
+  @override
+  String get splashCachingArtwork => 'Кэширование обложек';
+
+  @override
+  String get splashFinalPreparations => 'Завершающие приготовления';
+
+  @override
+  String get queueHistory => 'История';
+
+  @override
+  String get sortName => 'Название';
+
+  @override
+  String get bannerInsightsNewTitle =>
+      'Ваша музыкальная статистика уже здесь ✦';
+
+  @override
+  String get bannerInsightsNewBody =>
+      'Узнайте свои любимые треки, исполнителей и привычки прослушивания';
+
+  @override
+  String get bannerRecapTitle => 'Ваш музыкальный итог ждёт вас';
+
+  @override
+  String get bannerRecapBody =>
+      'Узнайте свои любимые песни и тенденции прослушивания';
+
+  @override
+  String get musicalArtist => 'Музыкальный исполнитель';
+
+  @override
+  String get eqPresetFlat => 'Плоский';
+
+  @override
+  String get eqPresetBassBoost => 'Усиление басов';
+
+  @override
+  String get eqPresetBassCut => 'Срез басов';
+
+  @override
+  String get eqPresetTrebleBoost => 'Усиление высоких';
+
+  @override
+  String get eqPresetTrebleCut => 'Срез высоких';
+
+  @override
+  String get eqPresetRock => 'Рок';
+
+  @override
+  String get eqPresetPop => 'Поп';
+
+  @override
+  String get eqPresetJazz => 'Джаз';
+
+  @override
+  String get eqPresetClassical => 'Классика';
+
+  @override
+  String get eqPresetElectronic => 'Электронная';
+
+  @override
+  String get eqPresetHipHop => 'Хип-хоп';
+
+  @override
+  String get eqPresetRnB => 'R&B';
+
+  @override
+  String get eqPresetVocal => 'Вокал';
+
+  @override
+  String get eqPresetAcoustic => 'Акустика';
+
+  @override
+  String get eqPresetDance => 'Танцевальная';
+
+  @override
+  String get eqPresetMetal => 'Метал';
+
+  @override
+  String get eqPresetLounge => 'Лаунж';
+
+  @override
+  String get eqPresetSpokenWord => 'Разговорная речь';
+
+  @override
+  String get supportOfMonthlyGoal => 'от цели этого месяца';
+
+  @override
+  String get cl200Hl1 =>
+      'Aurora Music теперь Noxira Music, с новым внешним видом';
+
+  @override
+  String get cl200Hl2 =>
+      'Переводите тексты песен на любой язык из большего числа источников';
+
+  @override
+  String get cl200Hl3 =>
+      'Обновлённый виджет главного экрана с управлением воспроизведением';
+
+  @override
+  String get cl200Hl4 => 'Обновлённая очередь';
+
+  @override
+  String get cl200Hl5 =>
+      'Выбирайте, где играет звук, через чип Bluetooth или экран «Сейчас играет»';
+
+  @override
+  String get cl200Hl6 => 'Тексты по словам, если источник содержит тайминг';
+
+  @override
+  String get cl200Hl7 =>
+      'Дубликаты треков находятся автоматически, а вы выбираете, какую копию оставить';
+
+  @override
+  String get cl200Hl8 =>
+      'Стеклянные поверхности, подстраивающиеся под ваш телефон';
+
+  @override
+  String get cl200Hl9 =>
+      'Более плавные переходы и быстрые страницы с подробностями';
+
+  @override
+  String get cl200SecWelcome => 'Добро пожаловать в Noxira';
+
+  @override
+  String get cl200SecNew => 'Новые возможности';
+
+  @override
+  String get cl200SecLibrary => 'Плейлисты и медиатека';
+
+  @override
+  String get cl200SecSetup => 'Настройка';
+
+  @override
+  String get cl200SecLook => 'Внешний вид';
+
+  @override
+  String get cl200SecPerf => 'Производительность';
+
+  @override
+  String get cl200SecHood => 'Под капотом';
+
+  @override
+  String get cl200Welcome1 =>
+      'Aurora Music теперь Noxira Music — с новым названием, логотипом и значком приложения';
+
+  @override
+  String get cl200Welcome2 =>
+      'Новая анимированная заставка рисует логотип Noxira';
+
+  @override
+  String get cl200Welcome3 =>
+      'Существующие пользователи увидят короткую приветственную страницу о новинках, которую можно снова открыть в настройках';
+
+  @override
+  String get cl200New1 =>
+      'Переводите тексты песен на любой язык, а не только на языки приложения';
+
+  @override
+  String get cl200New2 =>
+      'Обновлённый виджет главного экрана: стекло в цветах обложки, кнопки «назад / играть / вперёд», работающие без открытия приложения, и рекомендуемые песни, когда виджет высокий';
+
+  @override
+  String get cl200New3 =>
+      'Обновлённая страница очереди — видно, что играло и что дальше, перетаскивайте для смены порядка, смахивайте для удаления; на экране «Сейчас играет» теперь есть предпросмотр «Далее»';
+
+  @override
+  String get cl200New4 =>
+      'Ежемесячная цель поддержки время от времени появляется в верхней панели главного экрана и в настройках в разделе «О приложении»';
+
+  @override
+  String get cl200New5 => 'Потяните вниз в медиатеке, чтобы обновить её';
+
+  @override
+  String get cl200New6 =>
+      'Выбирайте, где играет звук: нажмите на чип Bluetooth на главном экране или на новый остров вывода на экране «Сейчас играет», чтобы переключать воспроизведение между динамиком телефона и подключёнными устройствами, не выходя из приложения';
+
+  @override
+  String get cl200New7 =>
+      'У скорости и высоты тона теперь свои ползунки, а высоту тона можно связать со скоростью';
+
+  @override
+  String get cl200New8 =>
+      'Пять новых стилей визуализатора и более тонкий спектр с большим числом полос';
+
+  @override
+  String get cl200New9 =>
+      'На главном экране могут появляться необязательные объявления от команды Noxira с кнопкой, открывающей ссылку или экран приложения';
+
+  @override
+  String get cl200Lyrics1 =>
+      'Обновлённая страница текстов: нажмите на строку, чтобы перейти к ней, точки отмечают инструментальные паузы, а блок текста на экране «Сейчас играет» следует за музыкой';
+
+  @override
+  String get cl200Lyrics2 =>
+      'Если в LRCLIB ничего нет, пробуются другие источники текстов (BetterLyrics, YouLyPlus и KuGou); выбрать, какие использовать, можно в настройках';
+
+  @override
+  String get cl200Lyrics3 =>
+      'Тексты, сохранённые в аудиофайле или в файле .lrc рядом с песней, используются в первую очередь и работают офлайн';
+
+  @override
+  String get cl200Lyrics4 =>
+      'Автоскрытие элементов управления на полноэкранных текстах теперь опция и по умолчанию выключено';
+
+  @override
+  String get cl200Lyrics5 =>
+      'Исправлены тексты, которые мигали и пропадали с сообщением «текст недоступен», в том числе после обновления или ручного поиска';
+
+  @override
+  String get cl200Lyrics6 =>
+      'Тексты по словам: если у источника есть тайминг по словам, каждое слово подсвечивается, когда звучит';
+
+  @override
+  String get cl200Library1 =>
+      'Новая панель добавления в плейлист: добавляйте, удаляйте и создавайте плейлисты в одном месте, песни, уже входящие в плейлист, отмечены';
+
+  @override
+  String get cl200Library2 =>
+      'Песню больше нельзя добавить в один плейлист дважды, а опция «Удалить дубликаты» очищает уже имеющиеся';
+
+  @override
+  String get cl200Library3 =>
+      'Noxira теперь замечает дубликаты треков в медиатеке и на вкладке «Медиатека» предлагает их проверить: вы выбираете, какую копию оставить';
+
+  @override
+  String get cl200Library4 =>
+      'Обновлённая страница плейлистов: сверху «Избранное», автоматические плейлисты плитками, а ваши плейлисты — сеткой с мозаикой обложек';
+
+  @override
+  String get cl200Library5 =>
+      'Обновлённая вкладка поиска: стеклянная строка поиска, количество результатов и более понятные состояния «пусто» и «ничего не найдено»';
+
+  @override
+  String get cl200Library6 =>
+      'Значок воспроизводимой песни теперь следует за треком в плейлистах';
+
+  @override
+  String get cl200Library7 =>
+      'Необязательные онлайн-подсказки: сведения об исполнителях и похожие исполнители из Deezer и Википедии (отправляется только имя исполнителя)';
+
+  @override
+  String get cl200Library8 =>
+      'Эквалайзер больше не сообщает по ошибке, что он недоступен; он сам пробует снова и предлагает «Повторить» и «Открыть системный эквалайзер»';
+
+  @override
+  String get cl200Library9 =>
+      '«Сведения о кэше» теперь показывают реальные размеры, кнопка закрывает диалог, а «Очистить кэш» удаляет и загруженные изображения исполнителей';
+
+  @override
+  String get cl200Setup1 =>
+      'Обновлённая первоначальная настройка со стеклянными панелями, анимациями появления и плавным фоном';
+
+  @override
+  String get cl200Setup2 =>
+      'Настройка рекомендует стиль интерфейса, подходящий вашему телефону (производительный или облегчённый), и соответствующий фон, а также позволяет попробовать другой';
+
+  @override
+  String get cl200Setup3 =>
+      'Облегчённый интерфейс теперь всегда использует простой фон; опция «Анимированные пятна» удалена';
+
+  @override
+  String get cl200Setup4 =>
+      'Настройки теперь разбиты на группы (Впечатления, Медиатека и данные, Приложение) в том же простом стеклянном стиле, что и первоначальная настройка';
+
+  @override
+  String get cl200Setup5 =>
+      'Сообщения появляются маленьким островком внизу экрана вместо снекбаров';
+
+  @override
+  String get cl200Look1 =>
+      'Новый шрифт приложения (Cal Sans) и чуть более компактный текст во всём приложении';
+
+  @override
+  String get cl200Look2 =>
+      'Матовые стеклянные поверхности везде, на слабых телефонах рисуются как простые сплошные';
+
+  @override
+  String get cl200Look3 =>
+      'Обложка перелетает с карточек на страницы альбомов, исполнителей, папок и плейлистов; нажатые карточки реагируют, любимые песни рассыпаются сердечками, а метки времени прокручиваются';
+
+  @override
+  String get cl200Look4 =>
+      'Скруглённая квадратная кнопка воспроизведения в «Любимых песнях»';
+
+  @override
+  String get cl200Look5 =>
+      'Карточки главной и медиатеки используют тот же стеклянный стиль, что и первоначальная настройка, без лишнего размытия поверх размытого фона';
+
+  @override
+  String get cl200Perf1 =>
+      'Noxira определяет оборудование телефона и подстраивает под него стеклянные эффекты, кэши изображений и переходы';
+
+  @override
+  String get cl200Perf2 =>
+      'Страницы альбомов, исполнителей, папок и плейлистов открываются плавно: они загружаются после анимации открытия, строят короткую первую страницу песен и заранее размывают обложку заголовка';
+
+  @override
+  String get cl200Perf3 =>
+      'Пересекающиеся запросы к медиатеке теперь выполняются совместно, а не повторяются, что снижает расход памяти на больших медиатеках';
+
+  @override
+  String get cl200Perf4 =>
+      'Более быстрый поиск и пересканирование медиатеки, более лёгкая загрузка изображений и меньше работы при прокрутке списков';
+
+  @override
+  String get cl200Hood1 =>
+      'Исправлено несколько сбоев: нажатие «Закрыть» в редакторе текстов, редакторе тегов или таймере сна после закрытия страницы, добавление в очередь или установка рингтона из меню песни, перевод текстов и открытие Noxira из виджета';
+
+  @override
+  String get cl200Hood2 =>
+      'Приложение больше не вылетает, когда нет разрешения на доступ к хранилищу';
+
+  @override
+  String get cl200Hood3 =>
+      'Плейлисты, любимые песни, счётчики прослушиваний и настройки сохраняются безопасно, поэтому прерванное сохранение больше не оставляет пустой файл';
+
+  @override
+  String get cl200Hood4 =>
+      'FLAC-файлы, у которых блоки метаданных остались неполными после редактора тегов, исправляются при сохранении и снова воспроизводятся';
+
+  @override
+  String get cl200Hood5 =>
+      'Обложка в уведомлении о медиа уменьшается, чтобы избежать зависаний при его создании';
+
+  @override
+  String get cl200Hood6 =>
+      'Редактирование тегов у голосовых записей (M4A) больше не завершается ошибкой из-за остатков данных в конце файла';
+
+  @override
+  String get cl200Hood7 =>
+      'Визуализатор больше не искажает треки Dolby Atmos; для них используется имитированная анимация';
+
+  @override
+  String get cl200Hood8 =>
+      'Телефоны, не способные создать эффект эквалайзера, теперь воспроизводят как обычно, а эквалайзер ждёт первую песню вместо тайм-аута';
+
+  @override
+  String get cl200Hood9 =>
+      '«Проверка обновлений» теперь показывает результат и сообщает, когда обновления приходят из Google Play';
+
+  @override
+  String get cl200Hood10 =>
+      'Объявления, цель поддержки и некоторые онлайн-сервисы можно менять без обновления приложения';
+
+  @override
+  String get cl200Hood11 => 'Обновлены зависимости';
+
+  @override
+  String get pkgJustAudio => 'Многофункциональный аудиоплеер для Flutter';
+
+  @override
+  String get pkgAudioService => 'Фоновое воспроизведение и управление медиа';
+
+  @override
+  String get pkgAudioSession =>
+      'Управление аудиосессией для корректного аудиофокуса';
+
+  @override
+  String get pkgOnAudioQuery => 'Запрос аудиофайлов из памяти устройства';
+
+  @override
+  String get pkgHaudiotagger => 'Чтение и запись тегов метаданных аудио';
+
+  @override
+  String get pkgProvider => 'Решение для управления состоянием во Flutter';
+
+  @override
+  String get pkgSharedPreferences => 'Постоянное хранилище «ключ — значение»';
+
+  @override
+  String get pkgPathProvider => 'Доступ к путям файловой системы устройства';
+
+  @override
+  String get pkgPermissionHandler => 'Управление разрешениями во время работы';
+
+  @override
+  String get pkgDynamicColor => 'Динамические цветовые темы Material You';
+
+  @override
+  String get pkgPaletteGenerator => 'Извлечение цветов из изображений';
+
+  @override
+  String get pkgLottie => 'Анимации Lottie для Flutter';
+
+  @override
+  String get pkgStaggeredAnimations => 'Каскадные анимации списков';
+
+  @override
+  String get pkgMesh => 'Фоны с сетчатыми градиентами';
+
+  @override
+  String get pkgHttp => 'HTTP-запросы для вызовов API';
+
+  @override
+  String get pkgUrlLauncher => 'Открытие ссылок в браузере';
+
+  @override
+  String get pkgSharePlus => 'Отправка контента в другие приложения';
+
+  @override
+  String get pkgPackageInfoPlus =>
+      'Получение версии приложения и сведений о пакете';
+
+  @override
+  String get pkgDeviceInfoPlus => 'Получение сведений об устройстве';
+
+  @override
+  String get pkgFlutterDotenv => 'Загрузка переменных окружения из файла .env';
+
+  @override
+  String get pkgCrypto => 'Криптографические хеш-функции';
+
+  @override
+  String get pkgIntl => 'Интернационализация и локализация';
+
+  @override
+  String get pkgVersion => 'Разбор и сравнение версий';
+
+  @override
+  String get pkgPubSemver => 'Инструменты семантического версионирования';
+
+  @override
+  String get pkgClarityFlutter => 'Аналитика Microsoft Clarity';
+
+  @override
+  String get pkgFlutterHooks => 'Хуки в стиле React для Flutter';
+
+  @override
+  String get themeAurora => 'Аврора';
+
+  @override
+  String get themeMidnight => 'Полночь';
+
+  @override
+  String get themeOcean => 'Океан';
+
+  @override
+  String get themeTeal => 'Бирюзовый';
+
+  @override
+  String get themeForest => 'Лес';
+
+  @override
+  String get themeNeon => 'Неон';
+
+  @override
+  String get themeGold => 'Золото';
+
+  @override
+  String get themeEmber => 'Тлеющий уголь';
+
+  @override
+  String get themeRose => 'Роза';
+
+  @override
+  String get themeSakura => 'Сакура';
+
+  @override
+  String artistsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count исполнителя',
+      many: '$count исполнителей',
+      few: '$count исполнителя',
+      one: '$count исполнитель',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playbackInvalidPlaylist =>
+      'Недопустимый плейлист или начальная позиция';
+
+  @override
+  String playbackCouldNotPlayTitleSkipping(String title) {
+    return 'Не удалось воспроизвести «$title» — пропускаем';
+  }
+
+  @override
+  String get playbackCouldNotPlaySkipping =>
+      'Не удалось воспроизвести эту песню — пропускаем';
+
+  @override
+  String playbackCouldNotPlayTitle(String title) {
+    return 'Не удалось воспроизвести «$title»';
+  }
+
+  @override
+  String get playbackFailed => 'Ошибка воспроизведения';
+
+  @override
+  String playbackSetPlaylistFailed(String error) {
+    return 'Не удалось задать плейлист: $error';
+  }
+
+  @override
+  String playbackUpdatePlaylistFailed(String error) {
+    return 'Не удалось обновить плейлист: $error';
   }
 }

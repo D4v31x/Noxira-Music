@@ -43,7 +43,7 @@ class UpdatePopupDialog extends StatelessWidget {
     const codename =
         String.fromEnvironment('CODE_NAME', defaultValue: 'Unknown');
     final highlights =
-        ChangelogContent.getHighlightsForVersion(version).take(3);
+        ChangelogContent.localizedHighlights(version, loc).take(3);
 
     final content = DecoratedBox(
       decoration: BoxDecoration(
@@ -117,38 +117,40 @@ class UpdatePopupDialog extends StatelessWidget {
                     ),
                   ),
                 ),
-              const SizedBox(height: 24),
-              Text(
-                loc.enjoyingAuroraDesc,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 13,
-                  height: 1.4,
-                  fontFamily: FontConstants.fontFamily,
-                ),
-              ),
-              const SizedBox(height: 14),
-              FilledButton.icon(
-                onPressed: onSupport,
-                icon: const Icon(Icons.favorite_rounded, size: 18),
-                label: Text(
-                  loc.supportAuroraBtn,
+              if (DonationService.enabled) ...[
+                const SizedBox(height: 24),
+                Text(
+                  loc.enjoyingAuroraDesc,
+                  textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                    color: Colors.white70,
+                    fontSize: 13,
+                    height: 1.4,
                     fontFamily: FontConstants.fontFamily,
                   ),
                 ),
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.pink,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                const SizedBox(height: 14),
+                FilledButton.icon(
+                  onPressed: onSupport,
+                  icon: const Icon(Icons.favorite_rounded, size: 18),
+                  label: Text(
+                    loc.supportAuroraBtn,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: FontConstants.fontFamily,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                   ),
                 ),
-              ),
+              ],
               const SizedBox(height: 4),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),

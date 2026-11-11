@@ -7,6 +7,7 @@ import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/folder_filter_service.dart';
 import '../../../shared/widgets/app_background.dart';
@@ -139,7 +140,7 @@ class _FolderFilterSettingsScreenState
               onPressed: _applyAndPop,
             ),
             title: Text(
-              'Folder Filter',
+              AppLocalizations.of(context).folderFilterTitle,
               style: TextStyle(
                 fontFamily: FontConstants.fontFamily,
                 fontWeight: FontWeight.bold,
@@ -163,20 +164,26 @@ class _FolderFilterSettingsScreenState
                       color: isDark ? Colors.white : Colors.black,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Search folders…',
+                      hintText: AppLocalizations.of(context).searchFolders,
                       hintStyle: TextStyle(
                         fontFamily: FontConstants.fontFamily,
                         color: isDark ? Colors.white38 : Colors.black38,
                       ),
-                      prefixIcon: Icon(
-                        Icons.search_rounded,
-                        color: isDark ? Colors.white54 : Colors.black45,
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: iconoir.Search(
+                          color: isDark ? Colors.white54 : Colors.black45,
+                          width: 20,
+                          height: 20,
+                        ),
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: Icon(Icons.clear_rounded,
+                              icon: iconoir.Xmark(
                                   color:
-                                      isDark ? Colors.white54 : Colors.black45),
+                                      isDark ? Colors.white54 : Colors.black45,
+                                  width: 20,
+                                  height: 20),
                               onPressed: () {
                                 _searchController.clear();
                                 _applySearch();
@@ -201,9 +208,9 @@ class _FolderFilterSettingsScreenState
                 SettingsTiles.buildSectionHeader(
                   context,
                   _isLoading
-                      ? 'Loading…'
-                      : '${_allFolders.length} folder${_allFolders.length == 1 ? '' : 's'}'
-                          '${_excludedCount > 0 ? ' · $_excludedCount excluded' : ''}',
+                      ? '${AppLocalizations.of(context).loading}…'
+                      : '${AppLocalizations.of(context).foldersCountPlural(_allFolders.length)}'
+                          '${_excludedCount > 0 ? ' · ${AppLocalizations.of(context).foldersExcludedCount(_excludedCount)}' : ''}',
                 ),
 
                 // ── Folder list ────────────────────────────────────────────
@@ -247,14 +254,14 @@ class _FolderFilterSettingsScreenState
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.folder_off_rounded,
-            size: 52,
+          iconoir.FolderMinus(
+            width: 52,
+            height: 52,
             color: isDark ? Colors.white24 : Colors.black26,
           ),
           const SizedBox(height: 12),
           Text(
-            'No folders found',
+            AppLocalizations.of(context).noFoldersFound,
             style: TextStyle(
               fontFamily: FontConstants.fontFamily,
               color: isDark ? Colors.white54 : Colors.black45,
@@ -288,82 +295,70 @@ class _FolderTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final included = !isExcluded;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black)
-                .withValues(alpha: included ? 0.08 : 0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: included ? 0.15 : 0.06),
-            ),
-          ),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: cs.primary.withValues(alpha: included ? 0.15 : 0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                included ? Icons.folder_rounded : Icons.folder_off_rounded,
-                size: 20,
+      child: SettingsTiles.buildGlassRow(
+        context,
+        active: included,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          leading: SizedBox(
+              width: 28,
+              child: Center(
+                  child:
+                      (included ? iconoir.Folder.new : iconoir.FolderMinus.new)(
+                width: 20,
+                height: 20,
                 color: included
-                    ? cs.primary
+                    ? Colors.white
                     : (isDark ? Colors.white38 : Colors.black26),
-              ),
+              ))),
+          title: Text(
+            displayName,
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: included
+                  ? (isDark ? Colors.white : Colors.black)
+                  : (isDark ? Colors.white38 : Colors.black38),
             ),
-            title: Text(
-              displayName,
-              style: TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: included
-                    ? (isDark ? Colors.white : Colors.black)
-                    : (isDark ? Colors.white38 : Colors.black38),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 2),
-                Text(
-                  folder,
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    fontSize: 11,
-                    color: isDark ? Colors.white38 : Colors.black38,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2),
+              Text(
+                folder,
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  fontSize: 11,
+                  color: isDark ? Colors.white38 : Colors.black38,
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '$songCount song${songCount == 1 ? '' : 's'}',
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    fontSize: 12,
-                    color: isDark ? Colors.white54 : Colors.black54,
-                  ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                AppLocalizations.of(context).songsCountPlural(songCount),
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  fontSize: 12,
+                  color: isDark ? Colors.white54 : Colors.black54,
                 ),
-              ],
-            ),
-            trailing: Switch.adaptive(
+              ),
+            ],
+          ),
+          trailing: SettingsTiles.glassSwitchTheme(
+            context,
+            Switch(
               value: included,
               onChanged: (v) => onToggle(!v),
-              activeTrackColor: cs.primary,
             ),
           ),
         ),

@@ -91,13 +91,18 @@ class YouLyPlusProvider extends LyricsProvider {
     }
   }
 
-  /// Prefers the server's own LRC, otherwise builds line-level LRC from the
-  /// per-line list. Background vocal lines are skipped.
+  /// Word-timed lyrics are built from the per-line syllable data when the
+  /// server has it. Otherwise this uses the server's own LRC, or builds
+  /// line-level LRC from the per-line list. Background vocals are skipped.
   static String? toLrc(Map<String, dynamic> body) {
+    final items = body['lyrics'];
+
+    final wordTimed = items is List ? _wordTimedLrc(items) : null;
+    if (wordTimed != null) return wordTimed;
+
     final synced = body['syncedLyrics'];
     if (synced is String && synced.trim().isNotEmpty) return synced;
 
-    final items = body['lyrics'];
     if (items is! List) return null;
 
     final lines = <String>[];
@@ -120,5 +125,77 @@ class YouLyPlusProvider extends LyricsProvider {
       lines.add('${lrcTag(time.round())}$text');
     }
     return lines.isEmpty ? null : lines.join('\n');
+  }
+
+  /// Enhanced LRC from per-syllable timing, or null unless most lines have it.
+  static String? _wordTimedLrc(List items) {
+    final lines = <String>[];
+    var withWords = 0;
+
+    for (final item in items) {
+      if (item is! Map) continue;
+      final time = item['time'];
+      if (time is! num) continue;
+
+      final syllabus = item['syllabus'];
+      final timed = syllabus is List ? _timedSyllables(syllabus) : null;
+      if (timed != null) {
+        lines.add('${lrcTag(time.round())}$timed');
+        withWords++;
+        continue;
+      }
+
+      final text = ((item['text'] as String?) ?? '')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      if (text.isNotEmpty && !_isBackgroundOnly(syllabus)) {
+        lines.add('${lrcTag(time.round())}$text');
+      }
+    }
+
+    return withWords > 0 && withWords * 2 >= lines.length
+        ? lines.join('\n')
+        : null;
+  }
+
+  static bool _isBackgroundOnly(Object? syllabus) =>
+      syllabus is List &&
+      syllabus.isNotEmpty &&
+      syllabus.every((s) => s is Map && s['isBackground'] == true);
+
+  static String? _timedSyllables(List syllabus) {
+    final starts = <int>[];
+    final texts = <String>[];
+    var lastEnd = -1;
+
+    for (final s in syllabus) {
+      if (s is! Map || s['isBackground'] == true) continue;
+      final time = s['time'];
+      final text = s['text'];
+      if (time is! num || text is! String) return null;
+      final start = time.round();
+      if (starts.isNotEmpty && start < starts.last) return null;
+      if (text.trim().isEmpty) {
+        if (texts.isNotEmpty) {
+          texts[texts.length - 1] = '${texts.last.trimRight()} ';
+        }
+        continue;
+      }
+      starts.add(start);
+      texts.add(texts.isEmpty ? text.trimLeft() : text);
+      final duration = s['duration'];
+      lastEnd = duration is num ? start + duration.round() : -1;
+    }
+
+    if (starts.isEmpty) return null;
+    final buffer = StringBuffer();
+    for (var i = 0; i < starts.length; i++) {
+      buffer
+        ..write(lrcWordTag(starts[i]))
+        ..write((i == starts.length - 1 ? texts[i].trimRight() : texts[i])
+            .replaceAll(RegExp(r'\s+'), ' '));
+    }
+    if (lastEnd > starts.last) buffer.write(lrcWordTag(lastEnd));
+    return buffer.toString();
   }
 }

@@ -165,8 +165,7 @@ class _AnimatedArtworkBackgroundState extends State<AnimatedArtworkBackground>
         widget.fallbackColor ?? Theme.of(context).colorScheme.surface;
 
     // Check if blur should be enabled based on performance mode
-    final performanceProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
+    final performanceProvider = Provider.of<PerformanceModeProvider>(context);
     final shouldBlur = performanceProvider.shouldEnableBlur;
     final isLowEndMode = !shouldBlur;
 
@@ -342,8 +341,7 @@ class SimpleBlurredBackground extends StatelessWidget {
     }
 
     // Check if blur should be enabled based on performance mode
-    final performanceProvider =
-        Provider.of<PerformanceModeProvider>(context, listen: false);
+    final performanceProvider = Provider.of<PerformanceModeProvider>(context);
     final shouldBlur = performanceProvider.shouldEnableBlur;
     final isLowEndMode = !shouldBlur;
 

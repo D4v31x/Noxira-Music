@@ -3,9 +3,8 @@ import 'motion/musicfy_motion.dart';
 import 'package:flutter/material.dart';
 import '../utils/responsive_utils.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
-import 'package:provider/provider.dart';
-import '../providers/performance_mode_provider.dart';
 import '../services/artwork_cache_service.dart';
+import 'glass_fill.dart';
 
 /// A unified glassmorphic card widget used across the app for songs, albums, artists, etc.
 /// This provides a consistent UI for all card-based displays.
@@ -257,38 +256,13 @@ class GlassmorphicCard extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
-
-    final borderRadius = BorderRadius.circular(16);
     final scale = ResponsiveUtils.scaledArtwork(context, 1);
 
     // PERF: Never use BackdropFilter on cards that appear in scroll lists.
-    // BackdropFilter must read+blur all pixels behind every card on each
-    // frame, making scrolling prohibitively expensive when many cards are
-    // visible simultaneously. The app background is already a blurred
-    // artwork image, so a semi-transparent overlay achieves a very similar
-    // frosted-glass look without the GPU cost.
-    final cardDecoration = (isDark && !isLowEnd)
-        ? BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.10),
-            borderRadius: borderRadius,
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.13),
-            ),
-          )
-        : BoxDecoration(
-            color: colorScheme.surfaceContainerHighest,
-            borderRadius: borderRadius,
-            border: Border.all(
-              color: colorScheme.outlineVariant,
-            ),
-          );
-
-    final cardContent = Container(
+    // The app background is already a blurred artwork image, so GlassFill's
+    // sheen and edge give the frosted look without the GPU cost.
+    final cardContent = GlassFill(
       width: width * scale,
-      decoration: cardDecoration,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

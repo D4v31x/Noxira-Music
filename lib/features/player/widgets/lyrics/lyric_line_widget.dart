@@ -10,11 +10,14 @@ library;
 
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 
+import '../../../../shared/models/timed_lyrics.dart';
 import '../../../../shared/providers/performance_mode_provider.dart';
+import 'lyric_word_text.dart';
 import 'lyrics_constants.dart';
 import '../../../../shared/widgets/adaptive_blur.dart';
 
@@ -50,6 +53,8 @@ class LyricLineWidget extends StatelessWidget {
     this.fontSize = 1.0,
     this.blurEnabled = true,
     this.onTap,
+    this.words,
+    this.clock,
   });
 
   /// The text to display (the translation when one is shown).
@@ -72,6 +77,11 @@ class LyricLineWidget extends StatelessWidget {
   final bool blurEnabled;
   final VoidCallback? onTap;
 
+  /// Word-by-word timing of an active, untranslated line; with [clock] (the
+  /// playback position in ms) its words light up as they are sung.
+  final List<LyricWord>? words;
+  final ValueListenable<int>? clock;
+
   _LineLook get _look {
     final alpha = isActive
         ? 1.0
@@ -86,8 +96,7 @@ class LyricLineWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final lowEnd = Provider.of<PerformanceModeProvider>(context, listen: false)
-        .isLowEndDevice;
+    final lowEnd = Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     return lowEnd ? _buildPlain() : _buildStyled();
   }
 
@@ -125,7 +134,10 @@ class LyricLineWidget extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(text, style: style),
+        if (isActive && words != null && clock != null && subtitle == null)
+          LyricWordText(words: words!, clock: clock!, style: style)
+        else
+          Text(text, style: style),
         if (subtitle != null)
           Padding(
             padding: const EdgeInsets.only(top: 6),

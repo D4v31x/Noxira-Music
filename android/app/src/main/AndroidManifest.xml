@@ -12,7 +12,6 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <!-- Required for url_launcher on Android 11+ -->
     <queries>
@@ -29,7 +28,7 @@
     <application
         android:enableOnBackInvokedCallback="true"
         android:label="Noxira Music"
-        android:name="${applicationName}"
+        android:name=".NoxiraApplication"
         android:icon="@mipmap/ic_launcher"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
@@ -44,6 +43,10 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
             android:exported="true">
+            <!-- home_widget consumes widget URIs; they are not Flutter routes. -->
+            <meta-data
+                android:name="flutter_deeplinking_enabled"
+                android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -91,13 +94,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/aurora_music_widget_info" />
         </receiver>
-
-        <!-- Widget taps open the app with a noxira:// URI. Flutter must not
-             treat it as a navigation route (FLUTTER-9W): home_widget reads the
-             URI itself and the app has no routes to open by link. -->
-        <meta-data
-            android:name="flutter_deeplinking_enabled"
-            android:value="false" />
 
         <!-- Android Auto: declare this is a media app -->
         <meta-data

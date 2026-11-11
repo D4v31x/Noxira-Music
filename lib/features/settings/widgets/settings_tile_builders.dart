@@ -6,9 +6,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
-import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
-import '../../../shared/providers/providers.dart';
+import '../../onboarding/widgets/onboarding_glass.dart';
 
 class SettingsTiles {
   const SettingsTiles._();
@@ -16,65 +15,87 @@ class SettingsTiles {
   // ── Section header ──────────────────────────────────────────────────────────
 
   static Widget buildSectionHeader(BuildContext context, String title) {
-    final cs = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(22, 28, 22, 10),
+      padding: const EdgeInsets.fromLTRB(26, 28, 22, 10),
       child: Text(
         title.toUpperCase(),
         style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.4,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 1.3,
           height: 1.2,
           fontFamily: FontConstants.fontFamily,
-          color: cs.onSurfaceVariant,
+          color: Colors.white.withValues(alpha: 0.6),
         ),
       ),
     );
   }
 
-  // ── Glassmorphic card ───────────────────────────────────────────────────────
+  // ── Glass card ──────────────────────────────────────────────────────────────
 
+  /// The onboarding glass without its own blur (the page background is
+  /// already blurred; a plain solid surface on low-end devices), holding
+  /// [children].
   static Widget buildGlassmorphicCard(
     BuildContext context, {
     required List<Widget> children,
   }) {
-    final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
-    final cs = Theme.of(context).colorScheme;
-    final bgColor = isLowEnd
-        ? cs.surfaceContainerHigh
-        : Colors.white.withValues(alpha: 0.08);
-    final borderColor =
-        isLowEnd ? cs.outlineVariant : Colors.white.withValues(alpha: 0.12);
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor),
-          boxShadow: isLowEnd
-              ? null
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Material(
-            color: bgColor,
-            child: Column(children: children),
-          ),
+      child: GlassSurface(
+        blur: false,
+        child: Material(
+          type: MaterialType.transparency,
+          child: Column(children: children),
         ),
       ),
     );
   }
+
+  /// A single glass row (for lists of cards such as folders or home sections).
+  /// Inactive rows are dimmed.
+  static Widget buildGlassRow(
+    BuildContext context, {
+    required Widget child,
+    bool active = true,
+    double radius = 22,
+  }) {
+    return Opacity(
+      opacity: active ? 1 : 0.55,
+      child: GlassSurface(
+        blur: false,
+        radius: radius,
+        child: Material(type: MaterialType.transparency, child: child),
+      ),
+    );
+  }
+
+  /// Gives a [Switch] / [SwitchListTile] below it a plain look: a white thumb
+  /// on a white-tinted track that fills with the accent colour when on.
+  static Widget glassSwitchTheme(BuildContext context, Widget child) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Theme(
+      data: Theme.of(context).copyWith(
+        switchTheme: SwitchThemeData(
+          thumbColor: const WidgetStatePropertyAll(Colors.white),
+          trackColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? primary
+                : Colors.white.withValues(alpha: 0.18),
+          ),
+          trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+        ),
+      ),
+      child: child,
+    );
+  }
+
+  static Widget divider(BuildContext context) => _divider(context);
+
+  /// A tile's leading icon: just the icon, white (or [color]), like the
+  /// onboarding rows.
+  static Widget iconChip(BuildContext context, Widget icon, Color color) =>
+      _iconChip(context, icon, color);
 
   // ── Switch tile ─────────────────────────────────────────────────────────────
 
@@ -87,18 +108,21 @@ class SettingsTiles {
     required ValueChanged<bool> onChanged,
     bool isFirst = false,
   }) {
-    final primary = Theme.of(context).colorScheme.primary;
     return Column(
       children: [
         if (!isFirst) _divider(context),
-        SwitchListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          secondary: _iconChip(context, icon, primary),
-          title: _tileTitle(title),
-          subtitle: subtitle != null ? _tileSubtitle(context, subtitle) : null,
-          value: value,
-          onChanged: onChanged,
+        glassSwitchTheme(
+          context,
+          SwitchListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            secondary: _iconChip(context, icon, Colors.white),
+            title: _tileTitle(title),
+            subtitle:
+                subtitle != null ? _tileSubtitle(context, subtitle) : null,
+            value: value,
+            onChanged: onChanged,
+          ),
         ),
       ],
     );
@@ -116,8 +140,7 @@ class SettingsTiles {
     bool isFirst = false,
     Color? iconColor,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final effectiveColor = iconColor ?? Theme.of(context).colorScheme.primary;
+    final effectiveColor = iconColor ?? Colors.white;
     return Column(
       children: [
         if (!isFirst) _divider(context),
@@ -128,27 +151,10 @@ class SettingsTiles {
           title: _tileTitle(title),
           subtitle: subtitle != null ? _tileSubtitle(context, subtitle) : null,
           trailing: trailing ??
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.07)
-                      : Colors.black.withValues(alpha: 0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: iconoir.NavArrowRight(
-                    color: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.color
-                            ?.withValues(alpha: 0.45) ??
-                        Colors.white38,
-                    width: 14,
-                    height: 14,
-                  ),
-                ),
+              iconoir.NavArrowRight(
+                color: Colors.white.withValues(alpha: 0.4),
+                width: 18,
+                height: 18,
               ),
           onTap: onTap,
         ),
@@ -173,33 +179,37 @@ class SettingsTiles {
     double? defaultValue,
     bool showArrows = false,
     double arrowStep = 0.05,
+    bool enabled = true,
   }) {
     final draft = <double?>[null];
-    return StatefulBuilder(
-      builder: (context, setLocal) => _buildSliderContent(
-        context,
-        icon: icon,
-        title: title,
-        subtitle: subtitle,
-        value: value,
-        draft: draft[0],
-        min: min,
-        max: max,
-        onChanged: (v) {
-          setLocal(() => draft[0] = v);
-          onChanged(v);
-        },
-        onChangeEnd: (v) {
-          setLocal(() => draft[0] = null);
-          onChangeEnd?.call(v);
-        },
-        valueFormatter: valueFormatter,
-        isFirst: isFirst,
-        defaultValue: defaultValue,
-        showArrows: showArrows,
-        arrowStep: arrowStep,
-      ),
-    );
+    return Opacity(
+        opacity: enabled ? 1.0 : 0.65,
+        child: StatefulBuilder(
+          builder: (context, setLocal) => _buildSliderContent(
+            context,
+            icon: icon,
+            title: title,
+            subtitle: subtitle,
+            value: value,
+            draft: draft[0],
+            min: min,
+            max: max,
+            onChanged: (v) {
+              setLocal(() => draft[0] = v);
+              onChanged(v);
+            },
+            onChangeEnd: (v) {
+              setLocal(() => draft[0] = null);
+              onChangeEnd?.call(v);
+            },
+            valueFormatter: valueFormatter,
+            isFirst: isFirst,
+            defaultValue: defaultValue,
+            showArrows: showArrows,
+            arrowStep: arrowStep,
+            enabled: enabled,
+          ),
+        ));
   }
 
   static Widget _buildSliderContent(
@@ -218,8 +228,8 @@ class SettingsTiles {
     double? defaultValue,
     bool showArrows = false,
     double arrowStep = 0.05,
+    bool enabled = true,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final display = valueFormatter?.call(draft ?? value) ??
         (draft ?? value).toStringAsFixed(1);
     final snap = defaultValue != null ? (max - min) * 0.025 : 0.0;
@@ -239,8 +249,12 @@ class SettingsTiles {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _iconChip(context, icon, Theme.of(context).colorScheme.primary),
+              Padding(
+                padding: const EdgeInsets.only(top: 1),
+                child: _iconChip(context, icon, Colors.white),
+              ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -250,30 +264,13 @@ class SettingsTiles {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _tileTitle(title),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
-                                .withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.25),
-                            ),
-                          ),
-                          child: Text(
-                            display,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: FontConstants.fontFamily,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                        Text(
+                          display,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: FontConstants.fontFamily,
+                            color: Colors.white.withValues(alpha: 0.85),
                           ),
                         ),
                       ],
@@ -282,18 +279,22 @@ class SettingsTiles {
                     const SizedBox(height: 8),
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
-                        activeTrackColor: Theme.of(context).colorScheme.primary,
-                        inactiveTrackColor: isDark
-                            ? Colors.white.withValues(alpha: 0.1)
-                            : Colors.black.withValues(alpha: 0.1),
-                        thumbColor: Theme.of(context).colorScheme.primary,
-                        overlayColor: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.2),
+                        activeTrackColor: Colors.white,
+                        inactiveTrackColor:
+                            Colors.white.withValues(alpha: 0.18),
+                        disabledActiveTrackColor:
+                            Colors.white.withValues(alpha: 0.45),
+                        disabledInactiveTrackColor:
+                            Colors.white.withValues(alpha: 0.10),
+                        thumbColor: Colors.white,
+                        disabledThumbColor: Colors.white.withValues(alpha: 0.6),
+                        overlayColor: Colors.white.withValues(alpha: 0.12),
                         trackHeight: 4,
-                        thumbShape:
-                            const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        trackShape: const RoundedRectSliderTrackShape(),
+                        thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 8,
+                            elevation: 0,
+                            pressedElevation: 0),
                       ),
                       child: _buildSliderWidget(
                         context,
@@ -301,9 +302,9 @@ class SettingsTiles {
                         min: min,
                         max: max,
                         defaultValue: defaultValue,
-                        onChanged: wrappedOnChanged,
-                        onChangeEnd: wrappedOnChangeEnd,
-                        showArrows: showArrows,
+                        onChanged: enabled ? wrappedOnChanged : null,
+                        onChangeEnd: enabled ? wrappedOnChangeEnd : null,
+                        showArrows: showArrows && enabled,
                         arrowStep: arrowStep,
                       ),
                     ),
@@ -323,7 +324,7 @@ class SettingsTiles {
     required double min,
     required double max,
     double? defaultValue,
-    required ValueChanged<double> onChanged,
+    required ValueChanged<double>? onChanged,
     ValueChanged<double>? onChangeEnd,
     required bool showArrows,
     required double arrowStep,
@@ -355,10 +356,7 @@ class SettingsTiles {
                     width: 2,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.5),
+                      color: Colors.white.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(1),
                     ),
                   ),
@@ -380,13 +378,13 @@ class SettingsTiles {
 
     if (!showArrows) return slider;
 
-    final arrowColor = Theme.of(context).colorScheme.primary;
+    final arrowColor = Colors.white.withValues(alpha: 0.7);
     return Row(
       children: [
         GestureDetector(
           onTap: () {
             final v = (value - arrowStep).clamp(min, max);
-            onChanged(v);
+            onChanged?.call(v);
             onChangeEnd?.call(v);
           },
           child: Padding(
@@ -399,7 +397,7 @@ class SettingsTiles {
         GestureDetector(
           onTap: () {
             final v = (value + arrowStep).clamp(min, max);
-            onChanged(v);
+            onChanged?.call(v);
             onChangeEnd?.call(v);
           },
           child: Padding(
@@ -424,7 +422,6 @@ class SettingsTiles {
     required ValueChanged<int> onChanged,
     bool isFirst = false,
   }) {
-    final cs = Theme.of(context).colorScheme;
     return Column(
       children: [
         if (!isFirst) _divider(context),
@@ -435,19 +432,7 @@ class SettingsTiles {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: cs.primaryContainer.withValues(alpha: 0.55),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: IconTheme.merge(
-                      data: IconThemeData(color: cs.onPrimaryContainer),
-                      child: icon,
-                    ),
-                  ),
+                  _iconChip(context, icon, Colors.white),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -506,53 +491,45 @@ class SettingsTiles {
 
   // ── Shared micro-helpers ────────────────────────────────────────────────────
 
-  static Widget _divider(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Divider(
-      height: 1,
-      indent: 64,
-      endIndent: 16,
-      thickness: 0.5,
-      color: isDark
-          ? Colors.white.withValues(alpha: 0.07)
-          : Colors.black.withValues(alpha: 0.05),
-    );
-  }
+  static Widget _divider(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(left: 62, right: 16),
+        child: Divider(
+          height: 1,
+          thickness: 1,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+      );
 
   static Widget _iconChip(BuildContext context, Widget icon, Color color) =>
-      Container(
-        width: 40,
-        height: 40,
-        padding: const EdgeInsets.all(9),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.22)),
+      SizedBox(
+        width: 28,
+        child: Center(
+          child: ColorFiltered(
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+            child: icon,
+          ),
         ),
-        child: icon,
       );
 
   static Widget _tileTitle(String text) => Text(
         text,
         style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
           fontFamily: FontConstants.fontFamily,
+          color: Colors.white,
         ),
       );
 
   static Widget _tileSubtitle(BuildContext context, String text) => Padding(
-        padding: const EdgeInsets.only(top: 2),
+        padding: const EdgeInsets.only(top: 3),
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 13,
+            height: 1.35,
             fontFamily: FontConstants.fontFamily,
-            color: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.color
-                ?.withValues(alpha: 0.7),
+            color: Colors.white.withValues(alpha: 0.62),
           ),
         ),
       );
@@ -574,51 +551,34 @@ class SettingsChoiceChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bg = selected
-        ? cs.primaryContainer
-        : (isDark
-            ? Colors.white.withValues(alpha: 0.04)
-            : Colors.black.withValues(alpha: 0.03));
-    final border = selected
-        ? cs.primary.withValues(alpha: 0.0)
-        : (isDark
-            ? Colors.white.withValues(alpha: 0.10)
-            : Colors.black.withValues(alpha: 0.10));
-    final fg = selected
-        ? cs.onPrimaryContainer
-        : (isDark
-            ? Colors.white.withValues(alpha: 0.70)
-            : Colors.black.withValues(alpha: 0.65));
-
+    final borderRadius = BorderRadius.circular(14);
     return Material(
-      color: Colors.transparent,
+      type: MaterialType.transparency,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        splashColor: cs.primary.withValues(alpha: 0.12),
-        highlightColor: cs.primary.withValues(alpha: 0.06),
+        borderRadius: borderRadius,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
-          height: 38,
+          height: 40,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: border),
+            borderRadius: borderRadius,
+            color: Colors.white.withValues(alpha: selected ? 0.2 : 0.06),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: selected ? 0.5 : 0.12),
+            ),
           ),
-          child: AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
               fontFamily: FontConstants.fontFamily,
-              color: fg,
+              color: selected ? Colors.white : Colors.white70,
             ),
-            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           ),
         ),
       ),

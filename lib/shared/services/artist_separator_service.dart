@@ -174,6 +174,38 @@ class ArtistSeparatorService extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Compiled regexes for the current separators/exclusions. splitArtists runs
+  // for every song in the library, so recompiling them each time is costly.
+  _Matchers? _cachedMatchers;
+
+  _Matchers _matchers() {
+    final cached = _cachedMatchers;
+    if (cached != null &&
+        listEquals(cached.separatorSource, _separators) &&
+        listEquals(cached.exclusionSource, _exclusions)) {
+      return cached;
+    }
+
+    final sortedSeparators = List<String>.from(_separators)
+      ..sort((a, b) => b.length.compareTo(a.length));
+    final escapedSeparators =
+        sortedSeparators.map((s) => RegExp.escape(s)).join('|');
+
+    return _cachedMatchers = _Matchers(
+      separatorSource: List<String>.of(_separators),
+      exclusionSource: List<String>.of(_exclusions),
+      separator: escapedSeparators.isEmpty
+          ? null
+          : RegExp(escapedSeparators, caseSensitive: false),
+      exclusions: [
+        for (final exclusion in _exclusions)
+          exclusion.isEmpty
+              ? null
+              : RegExp(RegExp.escape(exclusion), caseSensitive: false),
+      ],
+    );
+  }
+
   /// Split artist string into individual artists
   /// Returns a list of artist names
   List<String> splitArtists(String artistString) {
@@ -184,14 +216,9 @@ class ArtistSeparatorService extends ChangeNotifier {
       return [artistString.trim()];
     }
 
-    // Build separator regex first
-    final sortedSeparators = List<String>.from(_separators)
-      ..sort((a, b) => b.length.compareTo(a.length));
-
-    final escapedSeparators =
-        sortedSeparators.map((s) => RegExp.escape(s)).join('|');
-
-    if (escapedSeparators.isEmpty) {
+    final matchers = _matchers();
+    final sepRegex = matchers.separator;
+    if (sepRegex == null) {
       return [artistString.trim()];
     }
 
@@ -202,10 +229,9 @@ class ArtistSeparatorService extends ChangeNotifier {
     // Map from placeholder → original matched text (preserves original casing)
     final restorations = <String, String>{};
 
-    for (int i = 0; i < _exclusions.length; i++) {
-      final exclusion = _exclusions[i];
-      if (exclusion.isEmpty) continue;
-      final excRegex = RegExp(RegExp.escape(exclusion), caseSensitive: false);
+    for (int i = 0; i < matchers.exclusions.length; i++) {
+      final excRegex = matchers.exclusions[i];
+      if (excRegex == null) continue;
       if (excRegex.hasMatch(modified)) {
         final placeholder = '\x00E$i\x00';
         // Keep the first matched casing for restoration
@@ -215,7 +241,6 @@ class ArtistSeparatorService extends ChangeNotifier {
     }
 
     // Split by separators
-    final sepRegex = RegExp(escapedSeparators, caseSensitive: false);
     final parts = modified
         .split(sepRegex)
         .map((s) => s.trim())
@@ -249,4 +274,20 @@ class ArtistSeparatorService extends ChangeNotifier {
   bool hasMultipleArtists(String artistString) {
     return splitArtists(artistString).length > 1;
   }
+}
+
+class _Matchers {
+  const _Matchers({
+    required this.separatorSource,
+    required this.exclusionSource,
+    required this.separator,
+    required this.exclusions,
+  });
+
+  final List<String> separatorSource;
+  final List<String> exclusionSource;
+  final RegExp? separator;
+
+  /// Parallel to the exclusion list; null for empty entries.
+  final List<RegExp?> exclusions;
 }

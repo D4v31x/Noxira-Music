@@ -9,5 +9,6 @@
     <string name="widget_recommended">Recomendado para ti</string>
     <string name="widget_queue">Cola</string>
     <string name="widget_next_up">A continuación</string>
+    <string name="widget_queue_empty">Nada en la cola</string>
     <string name="widget_after">Después</string>
 </resources>

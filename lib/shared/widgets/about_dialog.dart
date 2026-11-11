@@ -99,28 +99,28 @@ class AuroraAboutDialog extends StatelessWidget {
                           _buildInfoRow(
                             icon: const iconoir.Hashtag(
                                 color: Colors.white70, width: 20, height: 20),
-                            title: 'Version',
+                            title: AppLocalizations.of(context).settingsVersion,
                             value: version,
                           ),
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             icon: const iconoir.Label(
                                 color: Colors.white70, width: 20, height: 20),
-                            title: 'Codename',
+                            title: AppLocalizations.of(context).aboutCodename,
                             value: codename,
                           ),
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             icon: const iconoir.User(
                                 color: Colors.white70, width: 20, height: 20),
-                            title: 'Developer',
+                            title: AppLocalizations.of(context).aboutDeveloper,
                             value: 'D4v31x',
                           ),
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             icon: const iconoir.Copyright(
                                 color: Colors.white70, width: 20, height: 20),
-                            title: 'Copyright',
+                            title: AppLocalizations.of(context).aboutCopyright,
                             value:
                                 '© ${DateTime.now().year} Aurora Software CZ',
                           ),
@@ -180,9 +180,9 @@ class AuroraAboutDialog extends StatelessWidget {
                               ),
                               icon: const iconoir.Archive(
                                   color: Colors.white, width: 20, height: 20),
-                              label: const Text(
-                                'Open Source Packages',
-                                style: TextStyle(
+                              label: Text(
+                                AppLocalizations.of(context).openSourcePackages,
+                                style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w500,
                                   fontFamily: FontConstants.fontFamily,
@@ -211,7 +211,8 @@ class AuroraAboutDialog extends StatelessWidget {
                               _buildSocialButton(
                                 icon: const iconoir.Globe(
                                     color: Colors.white, width: 24, height: 24),
-                                label: 'Website',
+                                label:
+                                    AppLocalizations.of(context).aboutWebsite,
                                 onTap: () => _launchURL(
                                     'https://aurorasoftware.netlify.app'),
                               ),

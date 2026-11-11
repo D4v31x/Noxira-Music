@@ -21,6 +21,7 @@ import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/track_tag_service.dart';
 import '../../../shared/utils/formatters/duration_formatter.dart';
 import '../../../shared/widgets/app_background.dart';
+import '../../../shared/services/notification_manager.dart';
 
 /// Matches lines like "0:00 Intro", "00:00 - Chapter Name", "[1:23:45] Title",
 /// as commonly found in YouTube descriptions, podcast chapters, etc.
@@ -316,17 +317,13 @@ class _TrackTagEditorScreenState extends State<TrackTagEditorScreen> {
     final parsed = _parseTimestamps(text);
 
     if (parsed.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(loc.noTagsFoundInPaste)),
-      );
+      NotificationManager.show(loc.noTagsFoundInPaste);
       return;
     }
 
     await context.read<TrackTagService>().addTags(widget.song.id, parsed);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(loc.tagsImportedMessage(parsed.length))),
-    );
+    NotificationManager.show(loc.tagsImportedMessage(parsed.length));
   }
 
   // ──────────────────────────────── build ──────────────────────────────────

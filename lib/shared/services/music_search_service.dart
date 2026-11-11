@@ -1,6 +1,7 @@
 import 'package:on_audio_query/on_audio_query.dart';
 import '../models/artist_utils.dart';
 import '../models/separated_artist.dart';
+import 'artist_separator_service.dart';
 
 /// Improved search service with fuzzy matching and scoring
 class MusicSearchService {
@@ -10,43 +11,64 @@ class MusicSearchService {
     if (s1.isEmpty) return s2.length;
     if (s2.isEmpty) return s1.length;
 
-    final len1 = s1.length;
-    final len2 = s2.length;
-    final List<List<int>> d =
-        List.generate(len1 + 1, (_) => List.filled(len2 + 1, 0));
+    // Two rolling rows instead of a full matrix: same result, no per-call
+    // allocation of (len1 + 1) lists.
+    var previous = List<int>.generate(s2.length + 1, (j) => j);
+    var current = List<int>.filled(s2.length + 1, 0);
 
-    for (int i = 0; i <= len1; i++) {
-      d[i][0] = i;
-    }
-    for (int j = 0; j <= len2; j++) {
-      d[0][j] = j;
-    }
-
-    for (int i = 1; i <= len1; i++) {
-      for (int j = 1; j <= len2; j++) {
-        final cost = s1[i - 1] == s2[j - 1] ? 0 : 1;
-        d[i][j] = [
-          d[i - 1][j] + 1, // deletion
-          d[i][j - 1] + 1, // insertion
-          d[i - 1][j - 1] + cost, // substitution
-        ].reduce((a, b) => a < b ? a : b);
+    for (int i = 1; i <= s1.length; i++) {
+      current[0] = i;
+      final c1 = s1.codeUnitAt(i - 1);
+      for (int j = 1; j <= s2.length; j++) {
+        final cost = c1 == s2.codeUnitAt(j - 1) ? 0 : 1;
+        var best = previous[j] + 1; // deletion
+        final insertion = current[j - 1] + 1;
+        if (insertion < best) best = insertion;
+        final substitution = previous[j - 1] + cost;
+        if (substitution < best) best = substitution;
+        current[j] = best;
       }
+      final swap = previous;
+      previous = current;
+      current = swap;
     }
 
-    return d[len1][len2];
+    return previous[s2.length];
+  }
+
+  /// Lower-cased, pre-split text of a song. Building it runs the artist
+  /// separator regex, so it is cached instead of redone for every song on
+  /// every keystroke.
+  static final Map<int, _SearchEntry> _entries = {};
+  static bool _listeningForSeparatorChanges = false;
+
+  static _SearchEntry _entryFor(SongModel song) {
+    if (!_listeningForSeparatorChanges) {
+      _listeningForSeparatorChanges = true;
+      // Different separators change how artists are split.
+      ArtistSeparatorService().addListener(_entries.clear);
+    }
+    final cached = _entries[song.id];
+    if (cached != null &&
+        cached.title == song.title &&
+        cached.rawArtist == song.artist &&
+        cached.album == song.album) {
+      return cached;
+    }
+    final entry = _SearchEntry(song);
+    _entries[song.id] = entry;
+    return entry;
   }
 
   /// Calculate search score for a song (higher is better)
-  static double _calculateScore(SongModel song, String query) {
-    final title = song.title.toLowerCase();
-    final rawArtist = (song.artist ?? '').toLowerCase();
-    final album = (song.album ?? '').toLowerCase();
-    final queryLower = query.toLowerCase();
-
-    // Split artists for better matching
-    final artists =
-        splitArtists(song.artist ?? '').map((a) => a.toLowerCase()).toList();
-    final artist = artists.join(' '); // Combined for contains checks
+  static double _calculateScore(
+      SongModel song, String queryLower, List<String> queryWords) {
+    final entry = _entryFor(song);
+    final title = entry.titleLower;
+    final rawArtist = entry.rawArtistLower;
+    final album = entry.albumLower;
+    final artists = entry.artists;
+    final artist = entry.artistJoined; // Combined for contains checks
 
     double score = 0.0;
 
@@ -76,19 +98,15 @@ class MusicSearchService {
     if (album.contains(queryLower)) score += 20;
 
     // Word match bonus (matches whole words)
-    final titleWords = title.split(' ');
-    final artistWords = artist.split(' ');
-    final queryWords = queryLower.split(' ');
-
     for (final queryWord in queryWords) {
-      for (final titleWord in titleWords) {
+      for (final titleWord in entry.titleWords) {
         if (titleWord == queryWord) {
           score += 15;
         } else if (titleWord.startsWith(queryWord)) {
           score += 10;
         }
       }
-      for (final artistWord in artistWords) {
+      for (final artistWord in entry.artistWords) {
         if (artistWord == queryWord) {
           score += 12;
         } else if (artistWord.startsWith(queryWord)) {
@@ -126,10 +144,13 @@ class MusicSearchService {
   }) {
     if (query.isEmpty) return [];
 
+    final queryLower = query.toLowerCase();
+    final queryWords = queryLower.split(' ');
+
     // Calculate scores for all songs
     final scoredSongs = songs
         .map((song) {
-          final score = _calculateScore(song, query);
+          final score = _calculateScore(song, queryLower, queryWords);
           return MapEntry(song, score);
         })
         .where((entry) => entry.value >= minScore)
@@ -213,4 +234,34 @@ class MusicSearchService {
         .take(limit)
         .toList();
   }
+}
+
+class _SearchEntry {
+  _SearchEntry(SongModel song)
+      : title = song.title,
+        rawArtist = song.artist,
+        album = song.album,
+        titleLower = song.title.toLowerCase(),
+        rawArtistLower = (song.artist ?? '').toLowerCase(),
+        albumLower = (song.album ?? '').toLowerCase(),
+        artists = splitArtists(song.artist ?? '')
+            .map((a) => a.toLowerCase())
+            .toList(growable: false) {
+    artistJoined = artists.join(' ');
+    titleWords = titleLower.split(' ');
+    artistWords = artistJoined.split(' ');
+  }
+
+  // Original values, to detect when a song's tags changed.
+  final String title;
+  final String? rawArtist;
+  final String? album;
+
+  final String titleLower;
+  final String rawArtistLower;
+  final String albumLower;
+  final List<String> artists;
+  late final String artistJoined;
+  late final List<String> titleWords;
+  late final List<String> artistWords;
 }

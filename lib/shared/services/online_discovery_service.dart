@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'online_sources.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnlineArtist {
@@ -108,6 +109,8 @@ class OnlineDiscoveryService {
   /// GET + decode JSON; retries once on a transient failure. [ok] is false when
   /// the request failed, as opposed to a definitive "not found".
   Future<(bool ok, dynamic data)> _fetch(Uri uri) async {
+    // Switched off remotely (see OnlineSources): fail at once, without retrying.
+    if (!OnlineSources.isUriEnabled(uri)) return (false, null);
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
         final r = await http.get(uri, headers: _headers).timeout(_timeout);

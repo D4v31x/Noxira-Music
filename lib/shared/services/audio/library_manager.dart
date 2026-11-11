@@ -32,6 +32,22 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
     }
   }
 
+  static const _audioExtensions = [
+    '.mp3',
+    '.m4a',
+    '.flac',
+    '.wav',
+    '.aac',
+    '.ogg',
+    '.wma',
+    '.opus',
+  ];
+
+  bool _isAudioFile(String path) {
+    final lower = path.toLowerCase();
+    return _audioExtensions.any(lower.endsWith);
+  }
+
   // Scan common music directories to update MediaStore with new files
   Future<void> _scanMusicDirectories() async {
     try {
@@ -51,37 +67,46 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
       ];
 
       debugPrint('Scanning music directories for new files...');
-      int scannedCount = 0;
 
+      // /sdcard/* and /storage/emulated/0/* are the same folders, so resolve
+      // symlinks and visit each real directory once.
+      final visited = <String>{};
+      final audioFiles = <String>[];
       for (final basePath in musicPaths) {
         final dir = Directory(basePath);
-        if (await dir.exists()) {
-          try {
-            await for (final entity
-                in dir.list(recursive: true, followLinks: false)) {
-              if (entity is File) {
-                final path = entity.path.toLowerCase();
-                // Check for common audio file extensions
-                if (path.endsWith('.mp3') ||
-                    path.endsWith('.m4a') ||
-                    path.endsWith('.flac') ||
-                    path.endsWith('.wav') ||
-                    path.endsWith('.aac') ||
-                    path.endsWith('.ogg') ||
-                    path.endsWith('.wma') ||
-                    path.endsWith('.opus')) {
-                  await _audioQuery.scanMedia(entity.path);
-                  scannedCount++;
-                }
-              }
+        if (!await dir.exists()) continue;
+        try {
+          if (!visited.add(await dir.resolveSymbolicLinks())) continue;
+          await for (final entity
+              in dir.list(recursive: true, followLinks: false)) {
+            if (entity is File && _isAudioFile(entity.path)) {
+              audioFiles.add(entity.path);
             }
-          } catch (e) {
-            debugPrint('Error scanning $basePath: $e');
           }
+        } catch (e) {
+          debugPrint('Error scanning $basePath: $e');
         }
       }
 
-      debugPrint('Scanned $scannedCount audio files');
+      // A few scans in flight at once: awaiting each one in turn made large
+      // libraries wait on thousands of sequential platform-channel round trips.
+      const concurrency = 8;
+      var next = 0;
+      await Future.wait([
+        for (var i = 0; i < concurrency; i++)
+          () async {
+            while (next < audioFiles.length) {
+              final path = audioFiles[next++];
+              try {
+                await _audioQuery.scanMedia(path);
+              } catch (e) {
+                debugPrint('Error scanning $path: $e');
+              }
+            }
+          }(),
+      ]);
+
+      debugPrint('Scanned ${audioFiles.length} audio files');
 
       // Give MediaStore a moment to process the scanned files
       await Future.delayed(const Duration(milliseconds: 500));

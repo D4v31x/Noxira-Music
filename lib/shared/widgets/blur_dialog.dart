@@ -86,7 +86,7 @@ class BlurDialog extends StatelessWidget {
         color: backgroundColor ??
             (useGlass
                 ? Colors.white.withValues(alpha: 0.1)
-                : Colors.grey.shade900),
+                : Theme.of(context).colorScheme.surfaceContainerHigh),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: Colors.white.withValues(alpha: _kDefaultBorderOpacity),

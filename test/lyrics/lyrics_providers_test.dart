@@ -67,16 +67,16 @@ void main() {
           '[00:01.00]a');
     });
 
-    test('builds LRC from syllables and skips background lines', () {
+    test('joins untimed syllables and skips background lines', () {
       final lrc = YouLyPlusProvider.toLrc({
         'lyrics': [
           {
             'time': 1500,
             'text': 'ignored',
             'syllabus': [
-              {'text': 'Hel', 'time': 1500},
-              {'text': 'lo ', 'time': 1800},
-              {'text': 'you', 'time': 2000},
+              {'text': 'Hel'},
+              {'text': 'lo '},
+              {'text': 'you'},
             ],
           },
           {

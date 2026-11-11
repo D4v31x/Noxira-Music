@@ -36,7 +36,7 @@ class HomeScreenWidgetService {
   bool _initialized = false;
   StreamSubscription<Uri?>? _clickSubscription;
   String _recommendationSignature = '';
-  String _queueSignature = '';
+  String? _queueSignature;
 
   /// Call once during app startup.
   Future<void> initialize() async {
@@ -206,48 +206,21 @@ class HomeScreenWidgetService {
     _queueSignature = signature;
 
     try {
-      final directory = await getApplicationDocumentsDirectory();
       for (var i = 0; i < _queueCount; i++) {
         final n = i + 1;
-        if (i >= picked.length) {
-          await Future.wait([
-            HomeWidget.saveWidgetData<String>('widget_q_${n}_id', ''),
-            HomeWidget.saveWidgetData<String>('widget_q_${n}_title', ''),
-            HomeWidget.saveWidgetData<String>('widget_q_${n}_artist', ''),
-            HomeWidget.saveWidgetData<String?>('widget_q_${n}_artwork', null),
-          ]);
-          continue;
-        }
-
-        final song = picked[i];
-        String? artworkPath;
-        try {
-          final artwork = await OnAudioQuery().queryArtwork(
-            song.id,
-            ArtworkType.AUDIO,
-            format: ArtworkFormat.JPEG,
-            size: 200,
-            quality: 80,
-          );
-          if (artwork != null && artwork.isNotEmpty) {
-            final file = File('${directory.path}/widget_q_art_$n.jpg');
-            await file.writeAsBytes(artwork, flush: true);
-            artworkPath = file.path;
-          }
-        } catch (_) {}
-
+        final song = i < picked.length ? picked[i] : null;
         await Future.wait([
-          HomeWidget.saveWidgetData<String>('widget_q_${n}_id', '${song.id}'),
-          HomeWidget.saveWidgetData<String>('widget_q_${n}_title', song.title),
           HomeWidget.saveWidgetData<String>(
-              'widget_q_${n}_artist', song.artist ?? ''),
-          HomeWidget.saveWidgetData<String?>(
-              'widget_q_${n}_artwork', artworkPath),
+              'widget_q_${n}_id', song == null ? '' : '${song.id}'),
+          HomeWidget.saveWidgetData<String>(
+              'widget_q_${n}_title', song?.title ?? ''),
+          HomeWidget.saveWidgetData<String>(
+              'widget_q_${n}_artist', song?.artist ?? ''),
         ]);
       }
       await _updateWidget();
     } catch (e) {
-      _queueSignature = '';
+      _queueSignature = null;
       debugPrint('HomeScreenWidgetService: Failed to update queue - $e');
     }
   }

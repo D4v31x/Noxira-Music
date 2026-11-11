@@ -7,27 +7,36 @@ import 'package:palette_generator/palette_generator.dart';
 import 'artwork_cache_service.dart';
 import '../utils/performance_optimizations.dart';
 
-/// Arguments record for palette computation in a background isolate.
-typedef _PaletteArgs = ({Uint8List pixels, int width, int height});
-
-/// Top-level function for [compute] — runs in a background isolate.
-/// Returns ARGB int values for each extracted palette color in order:
-/// [dominant, vibrant, lightVibrant, darkVibrant, muted, lightMuted].
-/// A value of 0 means the corresponding color was not found.
-Future<List<int>> _computePaletteColors(_PaletteArgs args) async {
+/// Extracts background roles and a fuller accent palette for a worker isolate.
+/// Background roles retain their original six-color quantization.
+@visibleForTesting
+Future<({List<int> background, List<int> accents})> computeArtworkPalette(
+    ({Uint8List pixels, int width, int height}) args) async {
   final byteData = ByteData.sublistView(args.pixels);
   final palette = await PaletteGenerator.fromByteData(
     EncodedImage(byteData, width: args.width, height: args.height),
     maximumColorCount: 6,
   );
-  return [
-    palette.dominantColor?.color.toARGB32() ?? 0,
-    palette.vibrantColor?.color.toARGB32() ?? 0,
-    palette.lightVibrantColor?.color.toARGB32() ?? 0,
-    palette.darkVibrantColor?.color.toARGB32() ?? 0,
-    palette.mutedColor?.color.toARGB32() ?? 0,
-    palette.lightMutedColor?.color.toARGB32() ?? 0,
-  ];
+  final accents = await PaletteGenerator.fromByteData(
+    EncodedImage(byteData, width: args.width, height: args.height),
+    maximumColorCount: 24,
+  );
+  final population =
+      accents.paletteColors.fold(0, (sum, swatch) => sum + swatch.population);
+  return (
+    background: [
+      palette.dominantColor?.color.toARGB32() ?? 0,
+      palette.vibrantColor?.color.toARGB32() ?? 0,
+      palette.lightVibrantColor?.color.toARGB32() ?? 0,
+      palette.darkVibrantColor?.color.toARGB32() ?? 0,
+      palette.mutedColor?.color.toARGB32() ?? 0,
+      palette.lightMutedColor?.color.toARGB32() ?? 0,
+    ],
+    accents: accents.paletteColors
+        .where((swatch) => swatch.population >= population * 0.005)
+        .map((swatch) => swatch.color.toARGB32())
+        .toList(growable: false),
+  );
 }
 
 /// Service that manages background colors and artwork
@@ -43,6 +52,7 @@ class BackgroundManagerService extends ChangeNotifier {
   final ArtworkCacheService _artworkCache = ArtworkCacheService();
 
   List<Color> _currentColors = _getDefaultColors();
+  List<Color> _artworkColors = const [];
   bool _isDarkMode = true;
 
   // Artwork data for blurred background
@@ -57,7 +67,8 @@ class BackgroundManagerService extends ChangeNotifier {
   Timer? _artworkRetryTimer;
 
   // Performance optimizations
-  final Map<int, List<Color>> _colorCache = {}; // Cache colors by song ID
+  final Map<int, ({List<Color> background, List<Color> accents})> _colorCache =
+      {};
   final Throttler _updateThrottler =
       Throttler(interval: const Duration(milliseconds: 300));
 
@@ -82,6 +93,9 @@ class BackgroundManagerService extends ChangeNotifier {
 
   // Getters
   List<Color> get currentColors => _currentColors;
+
+  /// Untruncated artwork swatches, including small accents absent from the mesh.
+  List<Color> get artworkColors => _artworkColors;
   bool get isDarkMode => _isDarkMode;
   Uint8List? get currentArtwork => _currentArtwork;
   Uint8List? get previousArtwork => _previousArtwork;
@@ -100,6 +114,7 @@ class BackgroundManagerService extends ChangeNotifier {
 
     _previousArtwork = _currentArtwork;
     _currentArtwork = artwork;
+    _artworkColors = const [];
     _currentSong = song;
     _isTransitioning = artwork != null;
     final hasArtwork = artwork != null && artwork.isNotEmpty;
@@ -168,6 +183,7 @@ class BackgroundManagerService extends ChangeNotifier {
     if (stale()) return;
     if (artworkData == null || artworkData.isEmpty) {
       _currentColors = _noArtworkColors;
+      _artworkColors = const [];
       return;
     }
 
@@ -177,7 +193,9 @@ class BackgroundManagerService extends ChangeNotifier {
     // data is identical — making the old cache 100 % miss-prone in practice.
     final cacheKey = _currentSong?.id;
     if (cacheKey != null && _colorCache.containsKey(cacheKey)) {
-      _currentColors = _colorCache[cacheKey]!;
+      final cached = _colorCache[cacheKey]!;
+      _currentColors = cached.background;
+      _artworkColors = cached.accents;
       return;
     }
 
@@ -197,14 +215,17 @@ class BackgroundManagerService extends ChangeNotifier {
       codec.dispose();
 
       if (rawPixels == null) {
-        if (!stale()) _currentColors = _getDefaultColors();
+        if (!stale()) {
+          _currentColors = _getDefaultColors();
+          _artworkColors = const [];
+        }
         return;
       }
 
       // Run heavy color quantization in a background isolate so it cannot
       // block the UI thread and cause frame drops during song transitions.
-      final colorInts = await compute(
-        _computePaletteColors,
+      final extracted = await compute(
+        computeArtworkPalette,
         (
           pixels: rawPixels.buffer
               .asUint8List(rawPixels.offsetInBytes, rawPixels.lengthInBytes),
@@ -217,13 +238,14 @@ class BackgroundManagerService extends ChangeNotifier {
       if (stale()) return;
 
       // Reconstruct Color objects from isolate-returned ARGB ints.
-      // The order matches _computePaletteColors:
+      // The order matches computeArtworkPalette's background roles:
       // [dominant, vibrant, lightVibrant, darkVibrant, muted, lightMuted].
       final colors = <Color>[];
-      for (final argb in colorInts) {
+      for (final argb in extracted.background) {
         if (argb != 0) colors.add(Color(argb));
         if (colors.length == 4) break; // max 4 colours
       }
+      _artworkColors = extracted.accents.map(Color.new).toList(growable: false);
 
       // Ensure at least 2 colors.
       if (colors.length == 1) {
@@ -235,7 +257,7 @@ class BackgroundManagerService extends ChangeNotifier {
         _currentColors = colors;
         // Cache by song ID so subsequent calls for the same song are O(1).
         if (cacheKey != null) {
-          _colorCache[cacheKey] = colors;
+          _colorCache[cacheKey] = (background: colors, accents: _artworkColors);
 
           // Limit cache size to prevent memory leaks.
           if (_colorCache.length > 50) {
@@ -250,7 +272,11 @@ class BackgroundManagerService extends ChangeNotifier {
         _currentColors = _getDefaultColors();
       }
     } catch (e) {
-      if (!stale()) _currentColors = _getDefaultColors();
+      debugPrint('BackgroundManager palette error: $e');
+      if (!stale()) {
+        _currentColors = _getDefaultColors();
+        _artworkColors = const [];
+      }
     }
   }
 
@@ -299,6 +325,7 @@ class BackgroundManagerService extends ChangeNotifier {
     try {
       _isUpdating = true;
       _currentSong = song;
+      _artworkColors = const [];
       final currentUpdateId = ++_updateCounter;
       if (kDebugMode) {
         debugPrint(
@@ -357,6 +384,7 @@ class BackgroundManagerService extends ChangeNotifier {
         }
       } else {
         _currentArtwork = null;
+        _artworkColors = const [];
         if (kDebugMode) {
           debugPrint(
               '🎨 [BG_MGR] No artwork resolved for song id ${song.id}, using fallback/background colors');
@@ -414,6 +442,7 @@ class BackgroundManagerService extends ChangeNotifier {
   void _clearArtwork() {
     _previousArtwork = _currentArtwork;
     _currentArtwork = null;
+    _artworkColors = const [];
     _currentSong = null;
     _isTransitioning = true;
     final clearUpdateId = ++_updateCounter;
@@ -439,6 +468,7 @@ class BackgroundManagerService extends ChangeNotifier {
   /// Use default colors
   void _useDefaultColors() {
     _currentColors = _getDefaultColors();
+    _artworkColors = const [];
     notifyListeners();
   }
 

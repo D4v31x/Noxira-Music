@@ -16,14 +16,6 @@ class RecentlyAddedSection extends StatelessWidget {
 
   static final ArtworkCacheService _artworkService = ArtworkCacheService();
 
-  /// Get recently added songs for display - sorted and limited to 10
-  static List<SongModel> _getDisplaySongs(List<SongModel> songs) {
-    if (songs.isEmpty) return [];
-    final sorted = List<SongModel>.from(songs)
-      ..sort((a, b) => (b.dateAdded ?? 0).compareTo(a.dateAdded ?? 0));
-    return sorted.take(10).toList();
-  }
-
   /// Get full recently added playlist for playback - all songs sorted by date
   static List<SongModel> _getFullPlaylist(List<SongModel> songs) {
     if (songs.isEmpty) return [];
@@ -51,8 +43,9 @@ class RecentlyAddedSection extends StatelessWidget {
         return false;
       },
       builder: (context, allSongs, _) {
-        final displaySongs = _getDisplaySongs(allSongs);
+        // Sorted once; the visible cards are the first 10 of the same list.
         final fullPlaylist = _getFullPlaylist(allSongs);
+        final displaySongs = fullPlaylist.take(10).toList();
 
         if (displaySongs.isEmpty) {
           return Center(

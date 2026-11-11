@@ -323,6 +323,9 @@
   "settingsAbout": "About",
   "settingsAboutApp": "About Noxira Music",
   "settingsAboutSubtitle": "Version, feedback & updates",
+  "settingsGroupExperience": "Experience",
+  "settingsGroupLibrary": "Library & data",
+  "settingsGroupApp": "App",
   "settingsAccentColor": "Accent Color",
   "settingsAppearance": "Appearance",
   "settingsAppearanceSubtitle": "Theme, colors & layout",
@@ -364,8 +367,11 @@
   "settingsNormalizationDesc": "Consistent volume levels · Requires ReplayGain tags in your files",
   "playbackSpeed": "Playback Speed",
   "playbackSpeedDesc": "Adjust audio playback rate",
-  "adjustPitchWithSpeed": "Adjust pitch with speed",
-  "adjustPitchWithSpeedDesc": "When off, tempo changes without pitch shift",
+  "adjustPitchWithSpeed": "Link pitch to speed",
+  "adjustPitchWithSpeedDesc": "Pitch rises and falls with speed. Turn off to set it yourself.",
+  "playbackPitch": "Pitch",
+  "playbackPitchDesc": "Shift the sound up or down, independent of speed",
+  "playbackPitchLinkedDesc": "Following playback speed",
   "settingsPlayback": "Playback",
   "settingsPlaybackSubtitle": "Speed, gapless & normalization",
   "settingsRecapBannerDesc": "The banner appears on the home screen at the start of each new week or month counted from your very first play. Tapping \"Later\" hides it for the session; tapping \"Show\" marks it as seen.",
@@ -391,6 +397,7 @@
   "settingsResetSetupDesc": "Go through the welcome setup again",
   "settingsUpdateAvailable": "Update available!",
   "settingsUpToDate": "You're up to date",
+  "settingsUpdateCheckFailed": "Couldn't check for updates. Updates come from Google Play.",
   "settingsWeeklyRecap": "Weekly Recap",
   "settingsWeeklyRecapDesc": "Show a banner every week after your first play",
   "settingsVersion": "Version",
@@ -470,9 +477,6 @@
   "close": "Close",
   "settingsHighendUi": "High-end UI",
   "settingsHighendUiDesc": "Enable advanced visual effects and animations",
-  "restartRequired": "Restart Required",
-  "restartRequiredDesc": "The app needs to restart to apply the UI mode change. Restart now?",
-  "restartNow": "Restart Now",
   "clearUpcoming": "Clear upcoming",
   "addToQueue": "Add to queue",
   "playNext": "Play next",
@@ -687,11 +691,17 @@
   "rebrandSubtitle": "Same music app you know, with a new name, a fresh look and some new tricks.",
   "rebrandNewHeading": "What's new",
   "rebrandSlideLyricsTitle": "Lyrics, rebuilt",
-  "rebrandSlideLyricsBody": "A redesigned lyrics page and more lyric sources, so more songs find their words. Tap a line to jump to it. You can now translate lyrics into any language you like.",
+  "rebrandSlideLyricsBody": "A redesigned lyrics page and more lyric sources, so more songs find their words. Songs with word-by-word timing light up word by word. Tap a line to jump to it, and translate lyrics into any language you like.",
   "rebrandSlideWidgetTitle": "A refreshed home screen widget",
   "rebrandSlideWidgetBody": "Glass tinted with your artwork, and previous, play and next buttons that work without opening the app.",
   "rebrandSlideQueueTitle": "A redesigned queue",
   "rebrandSlideQueueBody": "See what played and what's next. Drag to reorder, swipe to remove.",
+  "rebrandSlideOutputTitle": "Choose where it plays",
+  "rebrandSlideOutputBody": "Tap the Bluetooth chip on the home screen, or the new button on Now Playing, to move playback between your phone speaker and connected devices, right inside the app.",
+  "rebrandSlideLibraryTitle": "A tidier library",
+  "rebrandSlideLibraryBody": "Noxira spots duplicate tracks and lets you pick which copy to keep. Playlists have a new layout with Favorites, automatic and smart playlists in one place.",
+  "rebrandMoreMessages": "Messages now appear as a small island at the bottom of the screen.",
+  "rebrandMorePerformance": "Faster search, a quicker start and lighter image loading.",
   "translateLyricsTo": "Translate lyrics to",
   "translateLyricsAppLanguage": "App language",
   "translateLyricsChooseLanguage": "Choose language…",
@@ -699,11 +709,14 @@
   "rebrandMoreSetup": "Setup now suggests the right mode for your phone.",
   "rebrandMoreLook": "Rounded play button on Favorite Songs and lyric controls that stay put.",
   "rebrandMoreMotion": "Smoother, better transitions across the whole app.",
-  "rebrandMoreFixes": "Stability and bug fixes across the app, including lyrics that no longer flicker.",
+  "rebrandMorePlayback": "Separate speed and pitch sliders, which you can link together.",
+  "rebrandMoreSearch": "A redesigned Search tab and a Settings page sorted into groups.",
+  "rebrandMoreFixes": "Stability fixes, including editing tags on voice recordings, the visualizer on Dolby tracks and phones without an equalizer.",
   "eqTitle": "Equalizer",
   "eqOn": "ON",
   "eqOff": "OFF",
   "eqNotAvailable": "Equalizer not available on this device.",
+  "eqWaitingForAudio": "Start playing a song to adjust the equalizer.",
   "eqOpenSystem": "Open System Equalizer",
   "eqSavePreset": "Save Preset",
   "eqPresetNameHint": "e.g. My Bass Boost",
@@ -789,6 +802,8 @@
   "searchFolders": "Search folders…",
   "songInfoPath": "Path",
   "closeVisualiser": "Close visualiser",
+  "visualizerWaitingForAudio": "Waiting for playback audio...",
+  "visualizerUnavailable": "Live audio analysis is unavailable for this output.",
   "previousMode": "Previous mode",
   "nextMode": "Next mode",
   "sortBy": "Sort by",
@@ -872,6 +887,434 @@
   "@onboardingHeaviestNote": {
     "placeholders": {
       "option": {
+        "type": "String"
+      }
+    }
+  },
+  "audioOutput": "Audio Output",
+  "audioOutputBluetoothDevice": "Bluetooth Device",
+  "audioOutputPhoneSpeaker": "Phone Speaker",
+  "audioOutputWired": "Wired Headphones",
+  "audioOutputUsb": "USB Audio",
+  "audioOutputOther": "Other output",
+  "audioOutputNoOthers": "No other devices detected",
+  "audioOutputCurrentDevice": "Current Device",
+  "audioOutputSwitchFailed": "Couldn't switch the audio output",
+  "duplicatesBannerTitle": "Duplicate tracks found",
+  "duplicatesBannerSubtitle": "{count, plural, =1{1 track exists in multiple copies} other{{count} tracks exist in multiple copies}}",
+  "@duplicatesBannerSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesReview": "Review",
+  "duplicatesScreenTitle": "Duplicate tracks",
+  "duplicatesEmpty": "No duplicates found",
+  "duplicatesIgnore": "Ignore",
+  "duplicatesIgnoreAll": "Ignore all",
+  "duplicatesKeepBest": "Best quality",
+  "duplicatesCopies": "{count} copies",
+  "@duplicatesCopies": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesDeleteOthers": "{count, plural, =1{Keep selected, delete 1 other} other{Keep selected, delete {count} others}}",
+  "@duplicatesDeleteOthers": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "duplicatesDeleteFailed": "Could not delete some copies",
+  "duplicatesResolved": "Duplicates removed",
+  "duplicatesHint": "Pick the copy to keep. The others will be deleted from your device.",
+  "remoteAnnouncementOpenLink": "Learn more",
+  "remoteAnnouncementOpenScreen": "Open",
+  "updateRequiredTitle": "Update required",
+  "updateRequiredMessage": "This version is no longer supported. Please update Noxira Music to keep using it.",
+  "settingsSupport": "Support",
+  "settingsSupportSubtitle": "Supporters and ways to help",
+  "supportSupporters": "Supporters",
+  "supportNoSupportersYet": "No supporters listed yet. Be the first to appear here!",
+  "musicInsightsTitle": "Music Insights",
+  "insightsActivityByTimeOfDay": "Activity by Time of Day",
+  "insightsActivityByDay": "Activity by Day",
+  "insightsGenreBreakdown": "Genre Breakdown",
+  "insightsNoDataTitle": "No listening data yet",
+  "insightsNoDataBody": "Play some music to start building your insights.",
+  "insightsMostActiveAround": "Most active around {time}",
+  "@insightsMostActiveAround": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "insightsMostActiveOn": "Most active on {day}",
+  "@insightsMostActiveOn": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "moreFromArtist": "More from {artist}",
+  "@moreFromArtist": {
+    "placeholders": {
+      "artist": {
+        "type": "String"
+      }
+    }
+  },
+  "tracksCountPlural": "{count, plural, =1{1 track} other{{count} tracks}}",
+  "@tracksCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "songsCountPlural": "{count, plural, =1{1 song} other{{count} songs}}",
+  "@songsCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "albumsCountPlural": "{count, plural, =1{1 album} other{{count} albums}}",
+  "@albumsCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playlistsCountPlural": "{count, plural, =1{1 playlist} other{{count} playlists}}",
+  "@playlistsCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersCountPlural": "{count, plural, =1{1 folder} other{{count} folders}}",
+  "@foldersCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "foldersExcludedCount": "{count} excluded",
+  "@foldersExcludedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "unknownAlbum": "Unknown Album",
+  "queueNextUp": "Next Up",
+  "queueNextFrom": "Next from {source}",
+  "@queueNextFrom": {
+    "placeholders": {
+      "source": {
+        "type": "String"
+      }
+    }
+  },
+  "queueNothingElse": "Nothing else queued",
+  "queueMoveToEnd": "Move to end",
+  "translateLyrics": "Translate lyrics",
+  "translateFailedTapToRetry": "Translation failed — tap to retry",
+  "translateShowOriginal": "Show original",
+  "translateShowTranslation": "Show translation",
+  "lyricsAiTranslatedNote": "AI translated · accuracy may vary",
+  "lyricsCantTranslateSameLanguage": "Can't translate — lyrics are already in the target language ({language})",
+  "@lyricsCantTranslateSameLanguage": {
+    "placeholders": {
+      "language": {
+        "type": "String"
+      }
+    }
+  },
+  "lyricsAddLyrics": "Add Lyrics",
+  "lyricsBlurOn": "Lyrics blur: on",
+  "lyricsBlurOff": "Lyrics blur: off",
+  "lyricsAutoHideOn": "Auto-hide controls: on",
+  "lyricsAutoHideOff": "Auto-hide controls: off",
+  "lyricsEditCreate": "Edit / Create Lyrics",
+  "sleepTimerMinShort": "min",
+  "sleepTimerMinutesValue": "{minutes} min",
+  "@sleepTimerMinutesValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "sleepTimerMusicStopsAfter": "Music stops after…",
+  "sleepTimerPickDuration": "Pick a duration below",
+  "visualizerBarSpectrum": "Bar Spectrum",
+  "visualizerCircularBars": "Circular Bars",
+  "visualizerMirrorBars": "Mirror Bars",
+  "visualizerFrequencyLine": "Frequency Line",
+  "visualizerDotMatrix": "Dot Matrix",
+  "visualizerPeakBars": "Peak Bars",
+  "visualizerCircularWave": "Circular Wave",
+  "visualizerAuroraWaves": "Aurora Waves",
+  "visualizerPulseRings": "Pulse Rings",
+  "smartFieldFolderPath": "Folder path",
+  "smartFieldLiked": "Liked",
+  "smartFieldPlayCount": "Play count",
+  "smartFieldDurationSeconds": "Duration (seconds)",
+  "smartFieldDaysSinceAdded": "Days since added",
+  "smartOpContains": "contains",
+  "smartOpNotContains": "does not contain",
+  "smartOpEquals": "equals",
+  "smartOpNotEquals": "does not equal",
+  "smartOpGreaterThan": "is greater than",
+  "smartOpLessThan": "is less than",
+  "smartOpIsTrue": "is true",
+  "smartOpIsFalse": "is false",
+  "smartSortTitleAZ": "Title (A-Z)",
+  "smartSortArtistAZ": "Artist (A-Z)",
+  "smartSortDateAddedNewest": "Date added (newest)",
+  "smartSortPlayCountHighest": "Play count (highest)",
+  "smartSortDurationLongest": "Duration (longest)",
+  "smartSortRandom": "Random",
+  "folderFilterTitle": "Folder Filter",
+  "artistSeparatorTestHint": "e.g. Artist One / Artist Two feat. Three",
+  "tracksPermissionRequired": "Permission to access media library is required. Please grant permissions in the onboarding or app settings.",
+  "tracksErrorFetching": "Error fetching songs: {error}",
+  "@tracksErrorFetching": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "seeAll": "See all",
+  "selectItemToViewDetails": "Select an item to view details",
+  "takeMeThere": "Take me there",
+  "notNow": "Not now",
+  "aboutCodename": "Codename",
+  "aboutDeveloper": "Developer",
+  "aboutCopyright": "Copyright",
+  "aboutWebsite": "Website",
+  "openSourcePackages": "Open Source Packages",
+  "packagesUsedCount": "{count} packages used",
+  "@packagesUsedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packagesThanks": "Thank you to all the open source contributors!",
+  "versionWithCodename": "Version {version} ({codename})",
+  "@versionWithCodename": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "codename": {
+        "type": "String"
+      }
+    }
+  },
+  "customColor": "Custom color",
+  "exportPlaylistAs": "Export ({format})",
+  "@exportPlaylistAs": {
+    "placeholders": {
+      "format": {
+        "type": "String"
+      }
+    }
+  },
+  "shareClipListeningTo": "LISTENING TO",
+  "shareClipNowOn": "NOW ON",
+  "splashInitializingServices": "Initializing Services",
+  "splashLoadingLibrary": "Loading Library",
+  "splashPreparingHome": "Preparing Home",
+  "splashCachingArtwork": "Caching Artwork",
+  "splashFinalPreparations": "Final Preparations",
+  "queueHistory": "History",
+  "sortName": "Name",
+  "bannerInsightsNewTitle": "Your Music Insights Are Here ✦",
+  "bannerInsightsNewBody": "See your top tracks, artists & listening patterns",
+  "bannerRecapTitle": "Your Music Recap Awaits",
+  "bannerRecapBody": "Discover your top songs and listening trends",
+  "musicalArtist": "Musical artist",
+  "eqPresetFlat": "Flat",
+  "eqPresetBassBoost": "Bass Boost",
+  "eqPresetBassCut": "Bass Cut",
+  "eqPresetTrebleBoost": "Treble Boost",
+  "eqPresetTrebleCut": "Treble Cut",
+  "eqPresetRock": "Rock",
+  "eqPresetPop": "Pop",
+  "eqPresetJazz": "Jazz",
+  "eqPresetClassical": "Classical",
+  "eqPresetElectronic": "Electronic",
+  "eqPresetHipHop": "Hip Hop",
+  "eqPresetRnB": "R&B",
+  "eqPresetVocal": "Vocal",
+  "eqPresetAcoustic": "Acoustic",
+  "eqPresetDance": "Dance",
+  "eqPresetMetal": "Metal",
+  "eqPresetLounge": "Lounge",
+  "eqPresetSpokenWord": "Spoken Word",
+  "supportOfMonthlyGoal": "of this month's goal",
+  "cl200Hl1": "Aurora Music is now Noxira Music, with a new look",
+  "cl200Hl2": "Translate lyrics into any language, from more lyric sources",
+  "cl200Hl3": "A redesigned home screen widget with playback controls",
+  "cl200Hl4": "A redesigned queue",
+  "cl200Hl5": "Choose where audio plays from the Bluetooth chip or Now Playing",
+  "cl200Hl6": "Word-by-word lyrics when the source has the timing",
+  "cl200Hl7": "Duplicate tracks are spotted, and you pick the copy to keep",
+  "cl200Hl8": "Glass surfaces that adapt to your phone",
+  "cl200Hl9": "Smoother transitions and faster detail pages",
+  "cl200SecWelcome": "Welcome to Noxira",
+  "cl200SecNew": "New Features",
+  "cl200SecLibrary": "Playlists & Library",
+  "cl200SecSetup": "Setup",
+  "cl200SecLook": "Look & Feel",
+  "cl200SecPerf": "Performance",
+  "cl200SecHood": "Under the Hood",
+  "cl200Welcome1": "Aurora Music is now Noxira Music, with a new name, wordmark and app icon",
+  "cl200Welcome2": "A new animated splash screen draws the Noxira wordmark",
+  "cl200Welcome3": "Existing users get a short welcome page explaining what is new, and you can open it again from Settings",
+  "cl200New1": "Translate lyrics into any language you like, not only the app languages",
+  "cl200New2": "Redesigned home screen widget: glass tinted with your artwork, previous / play / next buttons that work without opening the app, and recommended songs when the widget is tall",
+  "cl200New3": "Redesigned queue page — see what played and what is next, drag to reorder, swipe to remove; an Up next preview now sits on Now Playing",
+  "cl200New4": "A monthly support goal appears on the home app bar from time to time, and in Settings under About",
+  "cl200New5": "Pull down in the Library to refresh it",
+  "cl200New6": "Choose where audio plays: tap the Bluetooth chip on the home screen, or the new output island on Now Playing, to move playback between your phone speaker and connected devices without leaving the app",
+  "cl200New7": "Speed and pitch now have their own sliders, and you can link pitch to speed",
+  "cl200New8": "Five new visualizer styles, and a finer spectrum with more bars",
+  "cl200New9": "Optional announcements from the Noxira team can appear on the home screen, with a button that opens a link or a screen of the app",
+  "cl200Lyrics1": "Redesigned lyrics page: tap a line to jump to it, dots mark instrumental breaks, and the lyrics box on Now Playing follows along",
+  "cl200Lyrics2": "More lyric sources (BetterLyrics, YouLyPlus and KuGou) are tried when LRCLIB has nothing; choose which ones to use in Settings",
+  "cl200Lyrics3": "Lyrics stored in the audio file, or in a .lrc file next to the song, are used first and work offline",
+  "cl200Lyrics4": "Auto-hide controls on the full-screen lyrics is now an option and off by default",
+  "cl200Lyrics5": "Fixed lyrics that flickered and then disappeared with “no lyrics available”, including after a refresh or a manual search",
+  "cl200Lyrics6": "Word-by-word lyrics: when a source has per-word timing, each word lights up as it is sung",
+  "cl200Library1": "New add-to-playlist sheet: add, remove and create playlists in one place, with songs already in a playlist marked",
+  "cl200Library2": "A song can no longer be added to the same playlist twice, and a Remove duplicates option cleans up existing ones",
+  "cl200Library3": "Noxira now notices duplicate tracks in your library and, in the Library tab, offers to review them: you pick which copy to keep",
+  "cl200Library4": "Redesigned Playlists page: Favorites on top, automatic playlists as tiles and your own playlists as a grid with artwork mosaics",
+  "cl200Library5": "Redesigned Search tab: a glass search bar, result counts and clearer empty and no-result states",
+  "cl200Library6": "The playing-song icon now follows the track in playlists",
+  "cl200Library7": "Optional online suggestions: artist info and similar artists from Deezer and Wikipedia (only the artist name is sent)",
+  "cl200Library8": "The equalizer no longer reports itself as unavailable by mistake; it retries on its own and offers Retry and Open system equalizer",
+  "cl200Library9": "Cache Information now shows real sizes, its button closes the dialog, and Clear Cache also clears downloaded artist images",
+  "cl200Setup1": "Redesigned onboarding with glass panels, entrance animations and a flowing background",
+  "cl200Setup2": "Setup recommends the interface style that suits your phone (high-end or lightweight) and the matching background, and lets you try the other one",
+  "cl200Setup3": "The lightweight interface now always uses a plain background; the Animated Blobs option was removed",
+  "cl200Setup4": "Settings is now sorted into groups (Experience, Library & data, App) with the same simple glass look as setup",
+  "cl200Setup5": "Messages appear as a small island at the bottom of the screen instead of snack bars",
+  "cl200Look1": "New app font (Cal Sans) and slightly more compact text across the app",
+  "cl200Look2": "Frosted glass surfaces throughout, drawn as plain solid surfaces on low-end phones",
+  "cl200Look3": "Artwork flies from cards into album, artist, folder and playlist pages; pressed cards respond, liked songs burst into hearts, and the time labels roll",
+  "cl200Look4": "Rounded-square play button on Favorite Songs",
+  "cl200Look5": "Home and Library cards use the same glass look as setup, without an extra blur on top of the blurred background",
+  "cl200Perf1": "Noxira detects your phone's hardware and tunes glass effects, image caches and transitions to it",
+  "cl200Perf2": "Album, artist, folder and playlist pages open smoothly: they load after the opening animation, build a short first page of songs and blur their header artwork ahead of time",
+  "cl200Perf3": "Library queries that overlap are shared instead of repeated, which lowers memory use on big libraries",
+  "cl200Perf4": "Faster search and library rescans, lighter image loading and less work while lists scroll",
+  "cl200Hood1": "Fixed several crashes: tapping Close in the lyrics editor, the tag editor or the sleep timer after the page was gone, adding to the queue or setting a ringtone from a song menu, translating lyrics, and opening Noxira from the widget",
+  "cl200Hood2": "The app no longer crashes when storage permission is missing",
+  "cl200Hood3": "Playlists, liked songs, play counts and settings are saved safely, so an interrupted save can no longer leave an empty file",
+  "cl200Hood4": "FLAC files whose metadata blocks were left incomplete by a tag editor are repaired when saved, so they play again",
+  "cl200Hood5": "Media notification artwork is downscaled to avoid freezes while the notification is built",
+  "cl200Hood6": "Editing tags on voice recordings (M4A) no longer fails because of leftover data at the end of the file",
+  "cl200Hood7": "The visualizer no longer distorts Dolby Atmos tracks; they use the simulated animation instead",
+  "cl200Hood8": "Phones that cannot create an equalizer effect now play normally, and the equalizer waits for the first song instead of timing out",
+  "cl200Hood9": "Check for updates now shows its result, and says so when updates come from Google Play",
+  "cl200Hood10": "Announcements, the support goal and some online services can be adjusted without an app update",
+  "cl200Hood11": "Updated dependencies",
+  "pkgJustAudio": "Feature-rich audio player for Flutter",
+  "pkgAudioService": "Background audio playback and media controls",
+  "pkgAudioSession": "Audio session management for proper audio focus",
+  "pkgOnAudioQuery": "Query audio files from device storage",
+  "pkgHaudiotagger": "Read and write audio metadata tags",
+  "pkgProvider": "State management solution for Flutter",
+  "pkgSharedPreferences": "Persistent key-value storage",
+  "pkgPathProvider": "Access to device file system paths",
+  "pkgPermissionHandler": "Handle runtime permissions",
+  "pkgDynamicColor": "Material You dynamic color theming",
+  "pkgPaletteGenerator": "Extract colors from images",
+  "pkgLottie": "Lottie animations for Flutter",
+  "pkgStaggeredAnimations": "Staggered list animations",
+  "pkgMesh": "Mesh gradient backgrounds",
+  "pkgHttp": "HTTP requests for API calls",
+  "pkgUrlLauncher": "Launch URLs in browser",
+  "pkgSharePlus": "Share content with other apps",
+  "pkgPackageInfoPlus": "Get app version and package info",
+  "pkgDeviceInfoPlus": "Get device information",
+  "pkgFlutterDotenv": "Load environment variables from .env file",
+  "pkgCrypto": "Cryptographic hashing functions",
+  "pkgIntl": "Internationalization and localization",
+  "pkgVersion": "Version parsing and comparison",
+  "pkgPubSemver": "Semantic versioning utilities",
+  "pkgClarityFlutter": "Microsoft Clarity analytics",
+  "pkgFlutterHooks": "React-like hooks for Flutter",
+  "themeAurora": "Aurora",
+  "themeMidnight": "Midnight",
+  "themeOcean": "Ocean",
+  "themeTeal": "Teal",
+  "themeForest": "Forest",
+  "themeNeon": "Neon",
+  "themeGold": "Gold",
+  "themeEmber": "Ember",
+  "themeRose": "Rose",
+  "themeSakura": "Sakura",
+  "artistsCountPlural": "{count, plural, =1{1 artist} other{{count} artists}}",
+  "@artistsCountPlural": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "playbackInvalidPlaylist": "Invalid playlist or start index",
+  "playbackCouldNotPlayTitleSkipping": "Couldn't play \"{title}\" — skipping",
+  "@playbackCouldNotPlayTitleSkipping": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackCouldNotPlaySkipping": "Couldn't play this song — skipping",
+  "playbackCouldNotPlayTitle": "Couldn't play \"{title}\"",
+  "@playbackCouldNotPlayTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackFailed": "Playback failed",
+  "playbackSetPlaylistFailed": "Failed to set playlist: {error}",
+  "@playbackSetPlaylistFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "playbackUpdatePlaylistFailed": "Failed to update playlist: {error}",
+  "@playbackUpdatePlaylistFailed": {
+    "placeholders": {
+      "error": {
         "type": "String"
       }
     }

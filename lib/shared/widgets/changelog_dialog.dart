@@ -105,8 +105,8 @@ class ChangelogDialog extends StatelessWidget {
     final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
     const codename =
         String.fromEnvironment('CODE_NAME', defaultValue: 'Unknown');
-    final changelogSections =
-        ChangelogContent.getChangelogForVersion(currentVersion);
+    final changelogSections = ChangelogContent.localizedChangelog(
+        currentVersion, AppLocalizations.of(context));
 
     // Check if blur should be enabled based on performance mode
     final performanceProvider =
@@ -193,7 +193,8 @@ class ChangelogDialog extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Version $currentVersion ($codename)',
+                  AppLocalizations.of(context)
+                      .versionWithCodename(currentVersion, codename),
                   style: TextStyle(
                     color: isDarkMode ? Colors.blue[300] : Colors.blue[700],
                     fontWeight: FontWeight.bold,

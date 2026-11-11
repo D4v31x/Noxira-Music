@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 
 /// Optimized widgets for better performance in lists and grids
@@ -205,9 +206,9 @@ class OptimizedSectionHeader extends StatelessWidget {
             if (onSeeAll != null)
               TextButton(
                 onPressed: onSeeAll,
-                child: const Text(
-                  'See all',
-                  style: TextStyle(
+                child: Text(
+                  AppLocalizations.of(context).seeAll,
+                  style: const TextStyle(
                     fontFamily: FontConstants.fontFamily,
                     fontWeight: FontWeight.w500,
                   ),

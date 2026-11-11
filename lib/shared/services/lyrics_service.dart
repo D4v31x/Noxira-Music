@@ -207,6 +207,37 @@ class TimedLyricsService {
 
       _log('Primary artist: "$searchArtist" (original: "$artist")');
       _log('Cleaned title:  "$searchTitle" (original: "$title")');
+      // Word-by-word lyrics beat everything else, so the other services are
+      // asked alongside LRCLIB. A manual search (the user picks from a list)
+      // only looks at LRCLIB.
+      final providerLyrics = onMultipleResults == null
+          ? _collectProviderLyrics(
+              artist: searchArtist,
+              title: searchTitle,
+              album: album,
+              songDuration: songDuration,
+            ).catchError((_) => <_ProviderLyrics>[])
+          : null;
+
+      /// Saves LRCLIB's lyrics, unless a provider has word-by-word timing for
+      /// the song, which is shown instead.
+      Future<List<TimedLyric>> preferWordSynced(
+        List<TimedLyric> lrclibLyrics,
+        String lrclibContent,
+      ) async {
+        if (providerLyrics != null) {
+          final fromProviders = await providerLyrics.timeout(
+              const Duration(seconds: 8),
+              onTimeout: () => const <_ProviderLyrics>[]);
+          final wordSynced = fromProviders.where((c) => c.hasWords).firstOrNull;
+          if (wordSynced != null) {
+            return _useProviderLyrics(wordSynced, artist, title);
+          }
+        }
+        await _saveLyricsToFile(artist, title, lrclibContent, notify: false);
+        return lrclibLyrics;
+      }
+
       _log('─' * 60);
       _log('METHOD 1 & 2: Parallel API Search (Direct + Search)');
       _log('Search Artist: "$searchArtist"');
@@ -297,11 +328,10 @@ class TimedLyricsService {
             final lyrics = _parseLrc(normalizedContent);
             _log('✓ Parsed ${lyrics.length} lyric lines');
 
-            await _saveLyricsToFile(artist, title, normalizedContent,
-                notify: false);
+            final chosen = await preferWordSynced(lyrics, normalizedContent);
             _log('✓ USING direct match result');
             _log('=' * 60);
-            return lyrics;
+            return chosen;
           } else {
             _log('✗ Direct match rejected: title or artist score too low');
           }
@@ -454,10 +484,9 @@ class TimedLyricsService {
                 _log('📍 Got: "$foundTrack" by "$foundArtist"');
                 _log('✓ Parsed ${lyrics.length} lyric lines');
                 _log('✓ USING search result #${i + 1}');
-                await _saveLyricsToFile(artist, title, lrcContent,
-                    notify: false);
+                final chosen = await preferWordSynced(lyrics, lrcContent);
                 _log('=' * 60);
-                return lyrics;
+                return chosen;
               } else {
                 final lyricsDur = _getLyricsDuration(lyrics);
                 final diff = _getLyricsDurationDifference(lyrics, songDuration);
@@ -484,25 +513,29 @@ class TimedLyricsService {
               _log('⚠️ No exact duration match - using best result');
               _log('📍 Got: "$foundTrack" by "$foundArtist"');
               _log('✓ Parsed ${lyrics.length} lyric lines');
-              await _saveLyricsToFile(artist, title, lrcContent, notify: false);
+              final chosen = await preferWordSynced(lyrics, lrcContent);
               _log('=' * 60);
-              return lyrics;
+              return chosen;
             }
           }
         }
       }
 
       _log('✗ No lyrics found on LRCLIB, trying other sources...');
-      final fromProviders = await _fetchFromProviders(
-          artist: searchArtist,
-          title: searchTitle,
-          album: album,
-          songDuration: songDuration,
-          cacheArtist: artist,
-          cacheTitle: title);
-      if (fromProviders != null) {
+      final candidates = await (providerLyrics ??
+          _collectProviderLyrics(
+            artist: searchArtist,
+            title: searchTitle,
+            album: album,
+            songDuration: songDuration,
+          ));
+      if (candidates.isNotEmpty) {
+        // Word-by-word first, then the services' priority order.
+        final best =
+            candidates.where((c) => c.hasWords).firstOrNull ?? candidates.first;
+        final lyrics = await _useProviderLyrics(best, artist, title);
         _log('=' * 60);
-        return fromProviders;
+        return lyrics;
       }
 
       _log('✗ No lyrics found matching title+artist criteria');
@@ -516,17 +549,15 @@ class TimedLyricsService {
   }
 
   /// Asks the enabled secondary providers (see [LyricsProviders]) in parallel
-  /// and returns the first valid result in priority order.
-  Future<List<TimedLyric>?> _fetchFromProviders({
+  /// and returns every valid result, in provider priority order.
+  Future<List<_ProviderLyrics>> _collectProviderLyrics({
     required String artist,
     required String title,
     required String? album,
     required Duration? songDuration,
-    required String cacheArtist,
-    required String cacheTitle,
   }) async {
     final providers = await LyricsProviders.enabled();
-    if (providers.isEmpty) return null;
+    if (providers.isEmpty) return const [];
 
     final query = LyricsQuery(
       title: title,
@@ -545,10 +576,13 @@ class TimedLyricsService {
             .catchError((_) => null),
     ];
 
+    final valid = <_ProviderLyrics>[];
     for (var i = 0; i < providers.length; i++) {
       final raw = await results[i];
       if (raw == null) continue;
-      final lrc = sanitizeLrc(raw);
+      final hasWords = lrcHasWordTiming(raw);
+      // Line-level callers don't want inline word markup.
+      final lrc = hasWords ? stripLrcMarkers(raw) : sanitizeLrc(raw);
       final lyrics = _parseLrc(lrc);
       if (lyrics.isEmpty) continue;
       if (!lyricsMatchSongLanguage(lrc, query)) {
@@ -560,11 +594,23 @@ class TimedLyricsService {
         _log('✗ ${providers[i].name}: duration mismatch, skipped');
         continue;
       }
-      _log('✓ USING ${providers[i].name} (${lyrics.length} lines)');
-      await _saveLyricsToFile(cacheArtist, cacheTitle, lrc, notify: false);
-      return lyrics;
+      valid.add(_ProviderLyrics(providers[i].name, lrc, lyrics, hasWords));
     }
-    return null;
+    return valid;
+  }
+
+  /// Saves and returns [candidate] as the song's lyrics.
+  Future<List<TimedLyric>> _useProviderLyrics(
+    _ProviderLyrics candidate,
+    String cacheArtist,
+    String cacheTitle,
+  ) async {
+    _log('✓ USING ${candidate.name} '
+        '(${candidate.lyrics.length} lines'
+        '${candidate.hasWords ? ', word-by-word' : ''})');
+    await _saveLyricsToFile(cacheArtist, cacheTitle, candidate.lrc,
+        notify: false);
+    return candidate.lyrics;
   }
 
   /// Extracts the primary (first) artist from a potentially multi-artist tag.
@@ -660,64 +706,11 @@ class TimedLyricsService {
   }
 
   List<TimedLyric> _parseLrc(String lrcContent) {
-    _log('  Parsing LRC content...');
-    final List<TimedLyric> timedLyrics = [];
-
     // Properly decode and normalize the content
     final normalizedContent = utf8
         .decode(utf8.encode(lrcContent), allowMalformed: true)
         .replaceAll(RegExp(r'[\uFFFD]'), '');
-
-    final lines = normalizedContent.split('\n');
-    _log('  Processing ${lines.length} lines from LRC file');
-
-    // Basic LRC format regex
-    final timeRegex = RegExp(r'\[(\d{2}):(\d{2})[\.:](\d{2,3})\]');
-
-    for (var i = 0; i < lines.length; i++) {
-      try {
-        final line = lines[i];
-
-        // Skip empty lines and metadata
-        if (line.trim().isEmpty ||
-            line.startsWith('[ti:') ||
-            line.startsWith('[ar:') ||
-            line.startsWith('[al:')) {
-          continue;
-        }
-
-        final timeMatches = timeRegex.allMatches(line);
-        if (timeMatches.isEmpty) {
-          continue;
-        }
-
-        // Get the text content after the last time tag
-        var text = line.substring(line.lastIndexOf(']') + 1).trim();
-
-        // Additional UTF-8 normalization for the text content
-        text = utf8
-            .decode(utf8.encode(text), allowMalformed: true)
-            .replaceAll(RegExp(r'[\uFFFD]'), '');
-
-        if (text.isEmpty) {
-          continue;
-        }
-
-        // Process each time tag in the line
-        for (final match in timeMatches) {
-          final time = TimedLyric.parseTimestamp(
-              match.group(1)!, match.group(2)!, match.group(3));
-
-          timedLyrics.add(TimedLyric(time: time, text: text));
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-
-    timedLyrics.sort((a, b) => a.time.compareTo(b.time));
-
-    return timedLyrics;
+    return parseLrc(normalizedContent);
   }
 
   /// [notify] bumps [lyricsRevisionNotifier] so open lyrics views reload. Only
@@ -991,4 +984,17 @@ class TimedLyricsService {
 
     return matrix[s1.length][s2.length];
   }
+}
+
+/// Lyrics returned by a secondary provider that passed the language and
+/// length checks.
+class _ProviderLyrics {
+  const _ProviderLyrics(this.name, this.lrc, this.lyrics, this.hasWords);
+
+  final String name;
+  final String lrc;
+  final List<TimedLyric> lyrics;
+
+  /// Whether [lrc] is enhanced LRC with word-by-word timing.
+  final bool hasWords;
 }

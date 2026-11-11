@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:flutter/material.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// A mixin that provides common search functionality with debouncing.
 ///
@@ -90,7 +91,7 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
           fontFamily: FontConstants.fontFamily,
         ),
         decoration: InputDecoration(
-          hintText: hintText ?? 'Search...',
+          hintText: hintText ?? AppLocalizations.of(context).search,
           hintStyle: TextStyle(
             color: hintColor ?? Colors.white.withValues(alpha: 0.5),
             fontFamily: FontConstants.fontFamily,

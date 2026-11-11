@@ -29,6 +29,8 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
   /// Restores the queue state that was saved by [saveQueueState].
   /// Only restores metadata — playback is NOT automatically started.
   Future<void> loadQueueState() async {
+    if (_disposed) return;
+    final initialPlaylist = _playlist;
     try {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/$kQueueStateFileName');
@@ -37,6 +39,11 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
 
       final contents = await file.readAsString();
       final json = jsonDecode(contents) as Map<String, dynamic>;
+      if (_disposed || !identical(_playlist, initialPlaylist)) {
+        LoggingService.debug(
+            'Queue restore superseded by playback', 'QueueRestore');
+        return;
+      }
 
       final queueMaps = json['queue'] as List? ?? [];
       if (queueMaps.isEmpty) return;
@@ -105,6 +112,8 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
   /// This ensures the first tap on Play works immediately.
   Future<void> _primeAudioSourceAfterRestore(
       int savedIndex, Duration savedPosition) async {
+    final restoredPlaylist = _playlist;
+    bool superseded() => _disposed || !identical(_playlist, restoredPlaylist);
     try {
       if (_gaplessPlayback) {
         final mediaItems =
@@ -122,6 +131,7 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
           initialIndex: savedIndex,
           initialPosition: savedPosition,
         );
+        if (superseded()) return;
         // Pause immediately so we don't auto-play on restore.
         await _audioPlayer.pause();
         unawaited(_loadRemainingArtworkInBackground(_playlist));
@@ -136,17 +146,26 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
           ),
           initialPosition: savedPosition,
         );
+        if (superseded()) return;
         await _audioPlayer.pause();
       }
+      // The restored loop mode must reach the player too, or repeat-one
+      // shows as active while the player still advances.
+      await _audioPlayer.setLoopMode(_loopMode);
+      if (superseded()) return;
       // Notify the audio handler so the lock-screen / notification
       // shows the restored song without starting playback.
       audioHandler.updateNotificationMediaItem(
           _createMediaItemSync(_playlist[savedIndex]));
       debugPrint('Audio source primed after queue restore.');
-    } catch (e) {
+    } on PlayerInterruptedException {
+      LoggingService.debug(
+          'Queue priming interrupted by a newer request', 'QueueRestore');
+    } catch (e, stack) {
       // Non-fatal: if priming fails the user will see an error when they tap
       // Play, but the rest of the app is still usable.
-      debugPrint('Error priming audio source after queue restore: $e');
+      LoggingService.error('Error priming audio source after queue restore',
+          'QueueRestore', e, stack);
     }
   }
 }

@@ -216,37 +216,40 @@ class DetailHeader extends StatelessWidget {
                     child: Opacity(
                       opacity: ((collapseProgress - 0.3) / 0.4).clamp(0.0, 1.0),
                       child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              title,
-                              style: const TextStyle(
-                                fontFamily: FontConstants.fontFamily,
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                            if (subtitle != null) ...[
-                              const SizedBox(height: 1),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
                               Text(
-                                subtitle!,
-                                style: TextStyle(
+                                title,
+                                style: const TextStyle(
                                   fontFamily: FontConstants.fontFamily,
-                                  color: Colors.white.withValues(alpha: 0.6),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.bold,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                               ),
+                              if (subtitle != null) ...[
+                                const SizedBox(height: 1),
+                                Text(
+                                  subtitle!,
+                                  style: TextStyle(
+                                    fontFamily: FontConstants.fontFamily,
+                                    color: Colors.white.withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),

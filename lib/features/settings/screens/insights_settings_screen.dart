@@ -89,8 +89,8 @@ class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
               SettingsTiles.buildGlassmorphicCard(context, children: [
                 SettingsTiles.buildSwitchTile(
                   context,
-                  icon: Icon(Icons.calendar_view_week_rounded,
-                      color: cs.primary, size: 20),
+                  icon: iconoir.Calendar(
+                      color: cs.primary, width: 20, height: 20),
                   title: l10n.settingsWeeklyRecap,
                   subtitle: l10n.settingsWeeklyRecapDesc,
                   value: _weeklyEnabled,
@@ -102,8 +102,8 @@ class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
                 ),
                 SettingsTiles.buildSwitchTile(
                   context,
-                  icon: Icon(Icons.calendar_month_rounded,
-                      color: cs.primary, size: 20),
+                  icon: iconoir.CalendarPlus(
+                      color: cs.primary, width: 20, height: 20),
                   title: l10n.settingsMonthlyRecap,
                   subtitle: l10n.settingsMonthlyRecapDesc,
                   value: _monthlyEnabled,
@@ -133,8 +133,8 @@ class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
               SettingsTiles.buildGlassmorphicCard(context, children: [
                 SettingsTiles.buildSegmentedChoiceTile(
                   context,
-                  icon: Icon(Icons.bar_chart_rounded,
-                      color: cs.primary, size: 20),
+                  icon: iconoir.StatsReport(
+                      color: cs.primary, width: 20, height: 20),
                   title: l10n.settingsDataWindow,
                   subtitle: l10n.settingsDataWindowDesc,
                   options: [l10n.settingsLast7Days, l10n.settingsLast30Days],
@@ -148,8 +148,7 @@ class _InsightsSettingsScreenState extends State<InsightsSettingsScreen> {
                 ),
                 SettingsTiles.buildActionTile(
                   context,
-                  icon: Icon(Icons.play_circle_outline_rounded,
-                      color: cs.primary, size: 20),
+                  icon: iconoir.Play(color: cs.primary, width: 20, height: 20),
                   title: l10n.settingsPreviewRecap,
                   subtitle: l10n.settingsPreviewRecapDesc,
                   onTap: () {

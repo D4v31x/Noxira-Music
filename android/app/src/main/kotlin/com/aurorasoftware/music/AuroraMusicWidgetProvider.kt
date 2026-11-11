@@ -362,6 +362,15 @@ class AuroraMusicWidgetProvider : AppWidgetProvider() {
         val cardViews = intArrayOf(R.id.widget_q_card_1, R.id.widget_q_card_2)
         val labelRes = intArrayOf(R.string.widget_next_up, R.string.widget_after)
         views.setViewVisibility(cols[0].second, if (cards > 1) View.VISIBLE else View.GONE)
+        if (prefs.getString("widget_q_1_title", null).isNullOrBlank()) {
+            views.setViewVisibility(cols[0].first, View.VISIBLE)
+            views.setViewVisibility(cols[0].second, View.GONE)
+            text(context, views, labels[0], context.getString(R.string.widget_queue_empty), 12f,
+                0xD9FFFFFF.toInt(), cardW, 1, Layout.Alignment.ALIGN_CENTER)
+            views.setImageViewBitmap(cardViews[0], Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888))
+            views.setOnClickPendingIntent(cardViews[0], null)
+            return
+        }
         for (i in 0 until 2) {
             if (i >= cards) continue
             val n = i + 1

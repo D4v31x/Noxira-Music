@@ -5,8 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/services/home_layout_service.dart';
 import '../../../shared/widgets/app_background.dart';
+import '../../../shared/widgets/expanding_player.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/glassmorphic_dialog.dart';
+import '../widgets/settings_tile_builders.dart';
 
 /// Settings screen for customizing home tab layout and section order
 class HomeLayoutSettingsScreen extends StatefulWidget {
@@ -50,9 +52,10 @@ class _HomeLayoutSettingsScreenState extends State<HomeLayoutSettingsScreen> {
               builder: (context, layoutService, _) {
                 if (layoutService.isCustomLayout) {
                   return IconButton(
-                    icon: Icon(
-                      Icons.restore_rounded,
-                      color: Theme.of(context).colorScheme.primary,
+                    icon: const iconoir.Undo(
+                      color: Colors.white,
+                      width: 24,
+                      height: 24,
                     ),
                     tooltip: l10n.resetToDefault,
                     onPressed: () => _showResetDialog(context, layoutService),
@@ -71,33 +74,25 @@ class _HomeLayoutSettingsScreenState extends State<HomeLayoutSettingsScreen> {
                 // Instructions
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
+                  child: SettingsTiles.buildGlassRow(
+                    context,
+                    child: Padding(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: (isDark ? Colors.white : Colors.black)
-                            .withValues(alpha: 0.06),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: (isDark ? Colors.white : Colors.black)
-                              .withValues(alpha: 0.1),
-                        ),
-                      ),
                       child: Row(
                         children: [
-                          Icon(
-                            Icons.drag_indicator_rounded,
-                            color: Theme.of(context).colorScheme.primary,
+                          const iconoir.Menu(
+                            color: Colors.white,
+                            width: 24,
+                            height: 24,
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 14),
                           Expanded(
                             child: Text(
                               l10n.dragToReorder,
                               style: TextStyle(
                                 fontFamily: FontConstants.fontFamily,
                                 fontSize: 14,
-                                color: isDark ? Colors.white70 : Colors.black54,
+                                color: Colors.white.withValues(alpha: 0.7),
                               ),
                             ),
                           ),
@@ -112,7 +107,7 @@ class _HomeLayoutSettingsScreenState extends State<HomeLayoutSettingsScreen> {
                     padding: EdgeInsets.only(
                       left: 16,
                       right: 16,
-                      bottom: MediaQuery.of(context).padding.bottom + 16,
+                      bottom: ExpandingPlayer.bottomInsetFor(context, idle: 16),
                     ),
                     itemCount: layoutService.sectionOrder.length,
                     onReorderItem: (oldIndex, newIndex) {
@@ -230,22 +225,24 @@ class _SectionTile extends StatelessWidget {
     required this.onVisibilityChanged,
   });
 
-  IconData _getSectionIcon() {
+  Widget _sectionIcon(Color color) {
+    const size = 22.0;
     switch (section) {
       case HomeSection.forYou:
-        return Icons.auto_awesome_rounded;
+        return iconoir.Sparks(color: color, width: size, height: size);
       case HomeSection.suggestedArtists:
-        return Icons.person_rounded;
+        return iconoir.User(color: color, width: size, height: size);
       case HomeSection.recentlyPlayed:
-        return Icons.history_rounded;
+        return iconoir.ClockRotateRight(
+            color: color, width: size, height: size);
       case HomeSection.mostPlayed:
-        return Icons.trending_up_rounded;
+        return iconoir.StatsUpSquare(color: color, width: size, height: size);
       case HomeSection.listeningHistory:
-        return Icons.bar_chart_rounded;
+        return iconoir.StatsReport(color: color, width: size, height: size);
       case HomeSection.recentlyAdded:
-        return Icons.add_circle_outline_rounded;
+        return iconoir.PlusCircle(color: color, width: size, height: size);
       case HomeSection.libraryStats:
-        return Icons.library_music_rounded;
+        return iconoir.MusicDoubleNote(color: color, width: size, height: size);
     }
   }
 
@@ -255,69 +252,53 @@ class _SectionTile extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: (isDark ? Colors.white : Colors.black)
-                .withValues(alpha: isVisible ? 0.08 : 0.03),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: (isDark ? Colors.white : Colors.black)
-                  .withValues(alpha: isVisible ? 0.15 : 0.05),
+      child: SettingsTiles.buildGlassRow(
+        context,
+        active: isVisible,
+        child: ListTile(
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          leading: SizedBox(
+              width: 28,
+              child: Center(
+                  child: _sectionIcon(
+                isVisible
+                    ? Colors.white
+                    : (isDark ? Colors.white38 : Colors.black26),
+              ))),
+          title: Text(
+            section.localizedName(l10n),
+            style: TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: isVisible
+                  ? (isDark ? Colors.white : Colors.black)
+                  : (isDark ? Colors.white38 : Colors.black38),
             ),
           ),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: isVisible ? 0.15 : 0.05),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _getSectionIcon(),
-                size: 22,
-                color: isVisible
-                    ? Theme.of(context).colorScheme.primary
-                    : (isDark ? Colors.white38 : Colors.black26),
-              ),
-            ),
-            title: Text(
-              section.localizedName(l10n),
-              style: TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-                color: isVisible
-                    ? (isDark ? Colors.white : Colors.black)
-                    : (isDark ? Colors.white38 : Colors.black38),
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Visibility toggle
-                Switch.adaptive(
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Visibility toggle
+              SettingsTiles.glassSwitchTheme(
+                context,
+                Switch(
                   value: isVisible,
                   onChanged: onVisibilityChanged,
-                  activeTrackColor: Theme.of(context).colorScheme.primary,
                 ),
-                const SizedBox(width: 8),
-                // Drag handle
-                ReorderableDragStartListener(
-                  index: HomeLayoutService().sectionOrder.indexOf(section),
-                  child: Icon(
-                    Icons.drag_handle_rounded,
-                    color: isDark ? Colors.white38 : Colors.black26,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              // Drag handle
+              ReorderableDragStartListener(
+                index: HomeLayoutService().sectionOrder.indexOf(section),
+                child: iconoir.Menu(
+                  color: isDark ? Colors.white38 : Colors.black26,
+                  width: 24,
+                  height: 24,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

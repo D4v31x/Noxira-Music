@@ -3,8 +3,10 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/font_constants.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../services/artwork_cache_service.dart';
 import '../providers/performance_mode_provider.dart';
+import '../utils/image_sizing.dart';
 
 /// A card widget that displays album information with artwork
 /// Similar to ArtistCard but for albums - with cached artwork to prevent flickering
@@ -119,8 +121,7 @@ class _AlbumCardState extends State<AlbumCard>
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return Press3D(
         child: RepaintBoundary(
@@ -195,7 +196,8 @@ class _AlbumCardState extends State<AlbumCard>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.artistName ?? 'Unknown Artist',
+                      widget.artistName ??
+                          AppLocalizations.of(context).unknownArtist,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
@@ -228,6 +230,7 @@ class _AlbumCardState extends State<AlbumCard>
         fit: BoxFit.cover,
         width: 80,
         height: 80,
+        cacheWidth: decodePx(context, 80),
         gaplessPlayback: true, // Prevents flickering on reload
         frameBuilder: coverFadeFrameBuilder,
         errorBuilder: (_, __, ___) => _buildPlaceholder(),

@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import '../../core/constants/font_constants.dart';
+import '../../l10n/generated/app_localizations.dart';
 import './glassmorphic_container.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'adaptive_blur.dart';
@@ -10,7 +11,7 @@ import 'adaptive_blur.dart';
 class PackageInfo {
   final String name;
   final String version;
-  final String description;
+  final String Function(AppLocalizations l10n) description;
   final String? url;
 
   const PackageInfo({
@@ -26,161 +27,161 @@ class PackagesDialog extends StatelessWidget {
   const PackagesDialog({super.key});
 
   /// List of all packages used in Noxira Music
-  static const List<PackageInfo> packages = [
+  static final List<PackageInfo> packages = [
     PackageInfo(
       name: 'just_audio',
       version: '^0.10.4',
-      description: 'Feature-rich audio player for Flutter',
+      description: (l) => l.pkgJustAudio,
       url: 'https://pub.dev/packages/just_audio',
     ),
     PackageInfo(
       name: 'audio_service',
       version: '^0.18.15',
-      description: 'Background audio playback and media controls',
+      description: (l) => l.pkgAudioService,
       url: 'https://pub.dev/packages/audio_service',
     ),
     PackageInfo(
       name: 'audio_session',
       version: 'any',
-      description: 'Audio session management for proper audio focus',
+      description: (l) => l.pkgAudioSession,
       url: 'https://pub.dev/packages/audio_session',
     ),
     PackageInfo(
       name: 'on_audio_query',
       version: '^2.9.0',
-      description: 'Query audio files from device storage',
+      description: (l) => l.pkgOnAudioQuery,
       url: 'https://pub.dev/packages/on_audio_query',
     ),
     PackageInfo(
       name: 'haudiotagger',
       version: '^3.1.0',
-      description: 'Read and write audio metadata tags',
+      description: (l) => l.pkgHaudiotagger,
       url: 'https://pub.dev/packages/haudiotagger',
     ),
     PackageInfo(
       name: 'provider',
       version: '^6.1.2',
-      description: 'State management solution for Flutter',
+      description: (l) => l.pkgProvider,
       url: 'https://pub.dev/packages/provider',
     ),
     PackageInfo(
       name: 'shared_preferences',
       version: '^2.3.4',
-      description: 'Persistent key-value storage',
+      description: (l) => l.pkgSharedPreferences,
       url: 'https://pub.dev/packages/shared_preferences',
     ),
     PackageInfo(
       name: 'path_provider',
       version: '^2.1.3',
-      description: 'Access to device file system paths',
+      description: (l) => l.pkgPathProvider,
       url: 'https://pub.dev/packages/path_provider',
     ),
     PackageInfo(
       name: 'permission_handler',
       version: '^12.0.0+1',
-      description: 'Handle runtime permissions',
+      description: (l) => l.pkgPermissionHandler,
       url: 'https://pub.dev/packages/permission_handler',
     ),
     PackageInfo(
       name: 'dynamic_color',
       version: '^1.7.0',
-      description: 'Material You dynamic color theming',
+      description: (l) => l.pkgDynamicColor,
       url: 'https://pub.dev/packages/dynamic_color',
     ),
     PackageInfo(
       name: 'palette_generator',
       version: '^0.3.3+4',
-      description: 'Extract colors from images',
+      description: (l) => l.pkgPaletteGenerator,
       url: 'https://pub.dev/packages/palette_generator',
     ),
     PackageInfo(
       name: 'lottie',
       version: '^3.2.0',
-      description: 'Lottie animations for Flutter',
+      description: (l) => l.pkgLottie,
       url: 'https://pub.dev/packages/lottie',
     ),
     PackageInfo(
       name: 'flutter_staggered_animations',
       version: '^1.1.1',
-      description: 'Staggered list animations',
+      description: (l) => l.pkgStaggeredAnimations,
       url: 'https://pub.dev/packages/flutter_staggered_animations',
     ),
     PackageInfo(
       name: 'mesh',
       version: '^0.5.0',
-      description: 'Mesh gradient backgrounds',
+      description: (l) => l.pkgMesh,
       url: 'https://pub.dev/packages/mesh',
     ),
     PackageInfo(
       name: 'http',
       version: '^1.2.1',
-      description: 'HTTP requests for API calls',
+      description: (l) => l.pkgHttp,
       url: 'https://pub.dev/packages/http',
     ),
     PackageInfo(
       name: 'url_launcher',
       version: '^6.2.6',
-      description: 'Launch URLs in browser',
+      description: (l) => l.pkgUrlLauncher,
       url: 'https://pub.dev/packages/url_launcher',
     ),
     PackageInfo(
       name: 'share_plus',
       version: '^10.0.3',
-      description: 'Share content with other apps',
+      description: (l) => l.pkgSharePlus,
       url: 'https://pub.dev/packages/share_plus',
     ),
     PackageInfo(
       name: 'package_info_plus',
       version: '^8.0.0',
-      description: 'Get app version and package info',
+      description: (l) => l.pkgPackageInfoPlus,
       url: 'https://pub.dev/packages/package_info_plus',
     ),
     PackageInfo(
       name: 'device_info_plus',
       version: '^11.4.0',
-      description: 'Get device information',
+      description: (l) => l.pkgDeviceInfoPlus,
       url: 'https://pub.dev/packages/device_info_plus',
     ),
     PackageInfo(
       name: 'flutter_dotenv',
       version: '^5.1.0',
-      description: 'Load environment variables from .env file',
+      description: (l) => l.pkgFlutterDotenv,
       url: 'https://pub.dev/packages/flutter_dotenv',
     ),
     PackageInfo(
       name: 'crypto',
       version: '^3.0.6',
-      description: 'Cryptographic hashing functions',
+      description: (l) => l.pkgCrypto,
       url: 'https://pub.dev/packages/crypto',
     ),
     PackageInfo(
       name: 'intl',
       version: 'any',
-      description: 'Internationalization and localization',
+      description: (l) => l.pkgIntl,
       url: 'https://pub.dev/packages/intl',
     ),
     PackageInfo(
       name: 'version',
       version: '^3.0.2',
-      description: 'Version parsing and comparison',
+      description: (l) => l.pkgVersion,
       url: 'https://pub.dev/packages/version',
     ),
     PackageInfo(
       name: 'pub_semver',
       version: '^2.1.4',
-      description: 'Semantic versioning utilities',
+      description: (l) => l.pkgPubSemver,
       url: 'https://pub.dev/packages/pub_semver',
     ),
     PackageInfo(
       name: 'clarity_flutter',
       version: '^1.6.0',
-      description: 'Microsoft Clarity analytics',
+      description: (l) => l.pkgClarityFlutter,
       url: 'https://pub.dev/packages/clarity_flutter',
     ),
     PackageInfo(
       name: 'flutter_hooks',
       version: '^0.21.3+1',
-      description: 'React-like hooks for Flutter',
+      description: (l) => l.pkgFlutterHooks,
       url: 'https://pub.dev/packages/flutter_hooks',
     ),
   ];
@@ -234,9 +235,9 @@ class PackagesDialog extends StatelessWidget {
                           size: 40,
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Open Source Packages',
-                          style: TextStyle(
+                        Text(
+                          AppLocalizations.of(context).openSourcePackages,
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -245,7 +246,8 @@ class PackagesDialog extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${packages.length} packages used',
+                          AppLocalizations.of(context)
+                              .packagesUsedCount(packages.length),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 14,
@@ -291,7 +293,7 @@ class PackagesDialog extends StatelessWidget {
                     child: Column(
                       children: [
                         Text(
-                          'Thank you to all the open source contributors!',
+                          AppLocalizations.of(context).packagesThanks,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.6),
@@ -313,9 +315,9 @@ class PackagesDialog extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
-                              'Close',
-                              style: TextStyle(
+                            child: Text(
+                              AppLocalizations.of(context).close,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
@@ -409,7 +411,7 @@ class _PackageTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    package.description,
+                    package.description(AppLocalizations.of(context)),
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 12,

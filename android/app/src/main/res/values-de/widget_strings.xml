@@ -9,5 +9,6 @@
     <string name="widget_recommended">Für dich empfohlen</string>
     <string name="widget_queue">Warteschlange</string>
     <string name="widget_next_up">Als Nächstes</string>
+    <string name="widget_queue_empty">Warteschlange ist leer</string>
     <string name="widget_after">Danach</string>
 </resources>

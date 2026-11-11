@@ -75,10 +75,8 @@ class _StorageSettingsScreenState extends State<StorageSettingsScreen> {
               Navigator.pop(dialogContext);
               await _clearAllCaches();
               if (mounted) {
-                widget.notificationManager.showNotification(
-                  l10n.settingsCacheCleared,
-                  duration: const Duration(seconds: 2),
-                );
+                NotificationManager.showMessage(
+                    context, l10n.settingsCacheCleared);
               }
             },
             child: Text(l10n.delete,

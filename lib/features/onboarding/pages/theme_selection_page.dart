@@ -308,7 +308,7 @@ class _Swatch extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: preset.name,
+      label: preset.label(AppLocalizations.of(context)),
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(

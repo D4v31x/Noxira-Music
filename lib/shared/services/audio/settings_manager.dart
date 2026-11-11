@@ -1,18 +1,66 @@
 part of '../audio_player_service.dart';
 
+@visibleForTesting
+Future<Map<String, dynamic>?> readAudioSettings(File file) async {
+  if (!await file.exists()) return null;
+  final contents = await file.readAsString();
+  try {
+    final value = jsonDecode(contents);
+    if (value is! Map<String, dynamic>) {
+      throw const FormatException('Audio settings must be an object');
+    }
+    for (final key in [
+      'gaplessPlayback',
+      'volumeNormalization',
+      'pitchWithSpeed',
+      'mediaControls',
+      'crossfadeEnabled',
+      'automixEnabled',
+    ]) {
+      if (value[key] != null && value[key] is! bool) {
+        throw FormatException('Invalid boolean audio setting: $key');
+      }
+    }
+    for (final key in ['playbackSpeed', 'pitch']) {
+      final setting = value[key];
+      if (setting != null &&
+          (setting is! num || !setting.isFinite || setting <= 0)) {
+        throw FormatException('Invalid numeric audio setting: $key');
+      }
+    }
+    for (final key in ['cacheSize', 'crossfadeDurationMs']) {
+      if (value[key] != null && value[key] is! int) {
+        throw FormatException('Invalid integer audio setting: $key');
+      }
+    }
+    if (value['defaultSortOrder'] != null &&
+        value['defaultSortOrder'] is! String) {
+      throw const FormatException('Invalid sort order audio setting');
+    }
+    return value;
+  } on FormatException catch (error, stack) {
+    LoggingService.error(
+        'Corrupt audio settings; quarantining and using defaults',
+        'AudioSettings',
+        error,
+        stack);
+    await file.rename('${file.path}.corrupt');
+    return null;
+  }
+}
+
 extension AudioSettingsManagerExtension on AudioPlayerService {
   Future<void> _loadSettings() async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/settings.json');
 
-    if (await file.exists()) {
-      final contents = await file.readAsString();
-      final json = jsonDecode(contents);
-
+    final json = await readAudioSettings(file);
+    if (json != null) {
       _gaplessPlayback = json['gaplessPlayback'] ?? true;
       _volumeNormalization = json['volumeNormalization'] ?? false;
       _playbackSpeed = (json['playbackSpeed'] ?? 1.0).toDouble();
       _pitchWithSpeed = json['pitchWithSpeed'] ?? false;
+      _pitch = ((json['pitch'] ?? 1.0) as num).toDouble().clamp(0.5, 2.0);
       _defaultSortOrder = json['defaultSortOrder'] ?? 'title';
       _cacheSize = json['cacheSize'] ?? 100;
       _mediaControls = json['mediaControls'] ?? true;
@@ -34,6 +82,7 @@ extension AudioSettingsManagerExtension on AudioPlayerService {
       'volumeNormalization': _volumeNormalization,
       'playbackSpeed': _playbackSpeed,
       'pitchWithSpeed': _pitchWithSpeed,
+      'pitch': _pitch,
       'defaultSortOrder': _defaultSortOrder,
       'cacheSize': _cacheSize,
       'mediaControls': _mediaControls,
@@ -48,39 +97,12 @@ extension AudioSettingsManagerExtension on AudioPlayerService {
   Future<void> _applySettings() async {
     // Apply playback speed
     await _audioPlayer.setSpeed(_playbackSpeed);
-    // Apply pitch: locked to 1.0 unless pitchWithSpeed is enabled
-    await _audioPlayer.setPitch(_pitchWithSpeed ? _playbackSpeed : 1.0);
+    await _audioPlayer.setPitch(effectivePitch);
 
     // Volume normalization is applied per-song via a currentSongNotifier
     // listener registered in _init().  Reset to 1.0 when disabled.
     if (!_volumeNormalization) {
       await _audioPlayer.setVolume(1.0);
-    }
-
-    // Configure gapless playback
-    if (_gaplessPlayback) {
-      // Create a concatenating audio source for gapless playback
-      if (_playlist.isNotEmpty) {
-        // Use lightweight MediaItems for instant startup
-        final mediaItems =
-            _playlist.map((song) => _createMediaItemSync(song)).toList();
-
-        await _audioPlayer.setAudioSources(
-          _playlist
-              .asMap()
-              .entries
-              .map((entry) => AudioSource.uri(
-                    Uri.parse(entry.value.uri ?? entry.value.data),
-                    tag: mediaItems[entry.key],
-                  ))
-              .toList(),
-          initialIndex: _currentIndex,
-          initialPosition: _audioPlayer.position,
-        );
-
-        // Load artwork in background
-        unawaited(_loadRemainingArtworkInBackground(_playlist));
-      }
     }
   }
 
@@ -151,7 +173,7 @@ extension AudioSettingsManagerExtension on AudioPlayerService {
   Future<void> setPlaybackSpeed(double value) async {
     _playbackSpeed = value;
     await _audioPlayer.setSpeed(_playbackSpeed);
-    await _audioPlayer.setPitch(_pitchWithSpeed ? _playbackSpeed : 1.0);
+    await _audioPlayer.setPitch(effectivePitch);
     await _saveSettings();
     _scheduleNotify();
   }
@@ -159,7 +181,16 @@ extension AudioSettingsManagerExtension on AudioPlayerService {
   Future<void> setPitchWithSpeed(bool value) async {
     _pitchWithSpeed = value;
     // Re-apply pitch immediately
-    await _audioPlayer.setPitch(value ? _playbackSpeed : 1.0);
+    await _audioPlayer.setPitch(effectivePitch);
+    await _saveSettings();
+    _scheduleNotify();
+  }
+
+  /// Sets the independent pitch ratio (0.5-2.0). It takes effect while pitch
+  /// is not linked to speed.
+  Future<void> setPitch(double value) async {
+    _pitch = value.clamp(0.5, 2.0);
+    if (!_pitchWithSpeed) await _audioPlayer.setPitch(_pitch);
     await _saveSettings();
     _scheduleNotify();
   }
@@ -232,54 +263,68 @@ extension AudioSettingsManagerExtension on AudioPlayerService {
 
   Future<void> _manageCacheSize() async {
     final directory = await getApplicationDocumentsDirectory();
-    final cacheDir = Directory('${directory.path}/artwork_cache');
-    final spotifyCacheDir = Directory(directory.path);
+    // Directory listing and per-file stats are blocking I/O: keep them off the
+    // UI isolate.
+    await compute(
+      _trimCacheDirs,
+      _CacheTrimRequest(
+        artworkDir: '${directory.path}/artwork_cache',
+        documentsDir: directory.path,
+        maxBytes: _cacheSize * 1024 * 1024,
+      ),
+    );
+  }
+}
 
-    int totalSize = 0;
+class _CacheTrimRequest {
+  const _CacheTrimRequest({
+    required this.artworkDir,
+    required this.documentsDir,
+    required this.maxBytes,
+  });
 
-    // Clean artwork cache
-    if (await cacheDir.exists()) {
-      final files = await cacheDir.list().toList();
-      totalSize += files.fold<int>(
-          0, (sum, file) => sum + (file is File ? file.lengthSync() : 0));
+  final String artworkDir;
+  final String documentsDir;
+  final int maxBytes;
+}
 
-      if (totalSize > _cacheSize * 1024 * 1024) {
-        files.sort(
-            (a, b) => a.statSync().accessed.compareTo(b.statSync().accessed));
-        var currentSize = totalSize;
-        for (final file in files) {
-          if (currentSize <= _cacheSize * 1024 * 1024) break;
-          if (file is File) {
-            final fileSize = file.lengthSync();
-            await file.delete();
-            currentSize -= fileSize;
-          }
-        }
+/// Runs in a background isolate. Deletes the least recently accessed files
+/// until the caches fit in [_CacheTrimRequest.maxBytes].
+void _trimCacheDirs(_CacheTrimRequest request) {
+  var totalSize = 0;
+
+  void trim(List<FileSystemEntity> entries) {
+    totalSize += entries.fold<int>(
+        0, (sum, e) => sum + (e is File ? e.lengthSync() : 0));
+    if (totalSize <= request.maxBytes) return;
+
+    // Stat each entry once instead of inside the sort comparator.
+    final accessed = <String, DateTime>{
+      for (final e in entries) e.path: e.statSync().accessed,
+    };
+    entries.sort((a, b) => accessed[a.path]!.compareTo(accessed[b.path]!));
+
+    var currentSize = totalSize;
+    for (final entry in entries) {
+      if (currentSize <= request.maxBytes) break;
+      if (entry is File) {
+        try {
+          final size = entry.lengthSync();
+          entry.deleteSync();
+          currentSize -= size;
+        } catch (_) {}
       }
     }
+  }
 
-    // Clean Spotify song cache
-    if (await spotifyCacheDir.exists()) {
-      final files = await spotifyCacheDir.list().toList();
-      final spotifyFiles = files
-          .where((file) => file is File && file.path.endsWith('.mp3'))
-          .toList();
-      totalSize += spotifyFiles.fold<int>(
-          0, (sum, file) => sum + (file is File ? file.lengthSync() : 0));
+  final artworkDir = Directory(request.artworkDir);
+  if (artworkDir.existsSync()) trim(artworkDir.listSync());
 
-      if (totalSize > _cacheSize * 1024 * 1024) {
-        spotifyFiles.sort(
-            (a, b) => a.statSync().accessed.compareTo(b.statSync().accessed));
-        var currentSize = totalSize;
-        for (final file in spotifyFiles) {
-          if (currentSize <= _cacheSize * 1024 * 1024) break;
-          if (file is File) {
-            final fileSize = file.lengthSync();
-            await file.delete();
-            currentSize -= fileSize;
-          }
-        }
-      }
-    }
+  final documentsDir = Directory(request.documentsDir);
+  if (documentsDir.existsSync()) {
+    trim([
+      for (final e in documentsDir.listSync())
+        if (e is File && e.path.endsWith('.mp3')) e,
+    ]);
   }
 }

@@ -39,6 +39,8 @@ import 'fullscreen_artwork.dart';
 import 'music_visualizer_screen.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import '../../../shared/widgets/adaptive_blur.dart';
+import '../../../shared/widgets/audio_output_dialog.dart';
+import '../../../shared/utils/image_sizing.dart';
 
 // MARK: - Now Playing Screen
 
@@ -459,7 +461,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         showAddToPlaylistDialog(context, audioPlayerService);
         break;
       case 'share':
-        shareSong(audioPlayerService);
+        shareSong(context, audioPlayerService);
         break;
       case 'share_clip':
         _shareClip(audioPlayerService);
@@ -525,8 +527,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     final verticalPadding = isTablet ? 50.0 : 40.0;
     final maxContentWidth = isTablet ? 900.0 : double.infinity;
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return SafeArea(
@@ -599,12 +600,17 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: isTablet ? 28 : 20),
+                  SizedBox(height: isTablet ? 14 : 6),
                   Center(
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        const AudioOutputIsland(),
+                        // 99 + the like button's ~21 of tap-area padding puts
+                        // about 120 between the island and the heart; on a
+                        // narrow screen the gap gives way before anything
+                        // else does.
+                        const Flexible(child: SizedBox(width: 99)),
                         SongLikeButton(
                           audioPlayerService: audioPlayerService,
                           size: isTablet ? 34 : 30,
@@ -669,8 +675,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     bool isTablet,
   ) {
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       clipBehavior: Clip.none,
@@ -946,7 +951,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
       key: PlayerPageSources.title,
       child: _hideForShuttle(_hideDuringEntry(ScrollingText(
         textKey: widget.titleKey,
-        text: audioPlayerService.currentSong?.title ?? 'No song playing',
+        text: audioPlayerService.currentSong?.title ??
+            AppLocalizations.of(context).noSongPlaying,
         style: style,
       ))),
     );
@@ -954,8 +960,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
 
   Widget _buildArtistText(AudioPlayerService audioPlayerService,
       {required bool isTablet}) {
-    final artistString =
-        audioPlayerService.currentSong?.artist ?? 'Unknown artist';
+    final artistString = audioPlayerService.currentSong?.artist ??
+        AppLocalizations.of(context).unknownArtist;
     final artists = ArtistSeparatorService().splitArtists(artistString);
 
     final style = TextStyle(
@@ -1184,6 +1190,7 @@ class _ArtistSelectionSheetState extends State<_ArtistSelectionSheet> {
                                 ? Image.file(
                                     File(imagePath),
                                     fit: BoxFit.cover,
+                                    cacheWidth: decodePx(context, 36),
                                     errorBuilder: (_, __, ___) =>
                                         _ArtistInitialAvatar(name: artist),
                                   )

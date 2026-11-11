@@ -69,7 +69,9 @@ class _SongContextMenu extends StatelessWidget {
             ),
           ),
           child: Material(
-            color: Colors.grey[900]!.withValues(alpha: 0.88),
+            color: isBlurDisabled(context)
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey[900]!.withValues(alpha: 0.88),
             child: SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,

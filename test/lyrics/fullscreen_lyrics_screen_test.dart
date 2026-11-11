@@ -94,6 +94,12 @@ class _FakeAudio extends ChangeNotifier implements AudioPlayerService {
   bool get hasUpcoming => true;
 
   @override
+  bool get isShuffle => false;
+
+  @override
+  LoopMode get loopMode => LoopMode.off;
+
+  @override
   PlaybackSourceInfo get playbackSource =>
       PlaybackSourceInfo(source: PlaybackSource.values.first);
 

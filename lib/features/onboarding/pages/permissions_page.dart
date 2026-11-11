@@ -32,7 +32,6 @@ class _PermissionsPageState extends State<PermissionsPage>
   bool _storageGranted = false;
   bool _notificationGranted = false;
   bool _bluetoothGranted = false;
-  bool _microphoneGranted = false;
   bool _busy = false;
   bool _showStorage = false; // Android 12 and below
   bool _showBluetooth = false;
@@ -86,7 +85,6 @@ class _PermissionsPageState extends State<PermissionsPage>
   Future<void> _check() async {
     final notification = await Permission.notification.status;
     final bluetooth = await Permission.bluetoothConnect.status;
-    final microphone = await Permission.microphone.status;
     final audio = _showAudio ? await Permission.audio.status : null;
     final storage = _showStorage ? await Permission.storage.status : null;
     if (!mounted) return;
@@ -96,7 +94,6 @@ class _PermissionsPageState extends State<PermissionsPage>
       _storageGranted = storage?.isGranted ?? true;
       _notificationGranted = notification.isGranted;
       _bluetoothGranted = bluetooth.isGranted;
-      _microphoneGranted = microphone.isGranted;
       _busy = false;
     });
   }
@@ -114,7 +111,6 @@ class _PermissionsPageState extends State<PermissionsPage>
     if (_showAudio) await Permission.audio.request();
     if (_showStorage) await Permission.storage.request();
     if (_showBluetooth) await Permission.bluetoothConnect.request();
-    await Permission.microphone.request();
     await Permission.notification.request();
     if (!mounted) return;
     await _check();
@@ -167,14 +163,6 @@ class _PermissionsPageState extends State<PermissionsPage>
         granted: _notificationGranted,
         required: false,
         permission: Permission.notification,
-      ),
-      (
-        icon: const iconoir.SoundHigh(color: color, width: 24, height: 24),
-        title: l10n.onboardingVisualizerAccess,
-        body: l10n.onboardingVisualizerAccessDesc,
-        granted: _microphoneGranted,
-        required: false,
-        permission: Permission.microphone,
       ),
     ];
 

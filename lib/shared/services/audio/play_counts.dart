@@ -169,13 +169,47 @@ extension AudioPlayCountsExtension on AudioPlayerService {
     return sortedPlaylists.take(3).toList();
   }
 
+  /// The library tab's tracks: the most played first, then the newest songs
+  /// so the section is never empty for someone who has not played anything.
+  /// With [count] -1 the whole library is returned in that order (for playback).
+  Future<List<SongModel>> getLibraryTracks({int count = 10}) async {
+    final played = await getAllMostPlayedTracks();
+    final playedIds = {for (final s in played) s.id};
+    final rest = (await getAllRecentlyAdded())
+        .where((s) => !playedIds.contains(s.id))
+        .toList();
+    final all = [...played, ...rest];
+    return count < 0 ? all : all.take(count).toList();
+  }
+
+  /// The three folders for the library tab: the most opened ones, topped up
+  /// with the folders holding the most songs when fewer than three were opened.
   List<String> getThreeFolders() {
     final filterService = FolderFilterService();
     final folderAccessCounts = _folderAccessCounts.entries
         .where((e) => !filterService.isExcluded(e.key))
         .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    return folderAccessCounts.take(3).map((entry) => entry.key).toList();
+    final folders = folderAccessCounts.take(3).map((e) => e.key).toList();
+    if (folders.length >= 3) return folders;
+
+    final songsPerFolder = <String, int>{};
+    for (final song in _songs) {
+      final folder = File(song.data).parent.path;
+      if (filterService.isExcluded(folder)) continue;
+      songsPerFolder[folder] = (songsPerFolder[folder] ?? 0) + 1;
+    }
+    final byCount =
+        songsPerFolder.entries.where((e) => !folders.contains(e.key)).toList()
+          ..sort((a, b) {
+            final byCount = b.value.compareTo(a.value);
+            return byCount != 0 ? byCount : a.key.compareTo(b.key);
+          });
+    for (final entry in byCount) {
+      if (folders.length >= 3) break;
+      folders.add(entry.key);
+    }
+    return folders;
   }
 
   /// Returns recently played songs sorted by play count.
@@ -191,12 +225,24 @@ extension AudioPlayCountsExtension on AudioPlayerService {
             uriType: UriType.EXTERNAL,
             ignoreCase: true,
           );
-    final recentlyPlayedSongs = allSongs
+    final played = allSongs
         .where((song) => _trackPlayCounts.containsKey(song.id.toString()))
         .toList();
 
-    recentlyPlayedSongs.sort((a, b) => (_trackPlayCounts[b.id.toString()] ?? 0)
-        .compareTo(_trackPlayCounts[a.id.toString()] ?? 0));
+    // Newest play first. Songs played longer ago than the tracked history
+    // follow, most played first.
+    final recentIds = _smartSuggestions.recentTrackIds;
+    final rank = {for (var i = 0; i < recentIds.length; i++) recentIds[i]: i};
+    final recentlyPlayedSongs = played
+      ..sort((a, b) {
+        final ra = rank[a.id.toString()];
+        final rb = rank[b.id.toString()];
+        if (ra != null && rb != null) return ra.compareTo(rb);
+        if (ra != null) return -1;
+        if (rb != null) return 1;
+        return (_trackPlayCounts[b.id.toString()] ?? 0)
+            .compareTo(_trackPlayCounts[a.id.toString()] ?? 0);
+      });
 
     if (count == -1) {
       return recentlyPlayedSongs;

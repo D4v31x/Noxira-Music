@@ -927,6 +927,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsAboutSubtitle => 'Version, feedback & updates';
 
   @override
+  String get settingsGroupExperience => 'Experience';
+
+  @override
+  String get settingsGroupLibrary => 'Library & data';
+
+  @override
+  String get settingsGroupApp => 'App';
+
+  @override
   String get settingsAccentColor => 'Accent Color';
 
   @override
@@ -1057,11 +1066,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get playbackSpeedDesc => 'Adjust audio playback rate';
 
   @override
-  String get adjustPitchWithSpeed => 'Adjust pitch with speed';
+  String get adjustPitchWithSpeed => 'Link pitch to speed';
 
   @override
   String get adjustPitchWithSpeedDesc =>
-      'When off, tempo changes without pitch shift';
+      'Pitch rises and falls with speed. Turn off to set it yourself.';
+
+  @override
+  String get playbackPitch => 'Pitch';
+
+  @override
+  String get playbackPitchDesc =>
+      'Shift the sound up or down, independent of speed';
+
+  @override
+  String get playbackPitchLinkedDesc => 'Following playback speed';
 
   @override
   String get settingsPlayback => 'Playback';
@@ -1121,6 +1140,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUpToDate => 'You\'re up to date';
+
+  @override
+  String get settingsUpdateCheckFailed =>
+      'Couldn\'t check for updates. Updates come from Google Play.';
 
   @override
   String get settingsWeeklyRecap => 'Weekly Recap';
@@ -1367,16 +1390,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get settingsHighendUiDesc =>
       'Enable advanced visual effects and animations';
-
-  @override
-  String get restartRequired => 'Restart Required';
-
-  @override
-  String get restartRequiredDesc =>
-      'The app needs to restart to apply the UI mode change. Restart now?';
-
-  @override
-  String get restartNow => 'Restart Now';
 
   @override
   String get clearUpcoming => 'Clear upcoming';
@@ -1704,7 +1717,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rebrandSlideLyricsBody =>
-      'A redesigned lyrics page and more lyric sources, so more songs find their words. Tap a line to jump to it. You can now translate lyrics into any language you like.';
+      'A redesigned lyrics page and more lyric sources, so more songs find their words. Songs with word-by-word timing light up word by word. Tap a line to jump to it, and translate lyrics into any language you like.';
 
   @override
   String get rebrandSlideWidgetTitle => 'A refreshed home screen widget';
@@ -1719,6 +1732,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get rebrandSlideQueueBody =>
       'See what played and what\'s next. Drag to reorder, swipe to remove.';
+
+  @override
+  String get rebrandSlideOutputTitle => 'Choose where it plays';
+
+  @override
+  String get rebrandSlideOutputBody =>
+      'Tap the Bluetooth chip on the home screen, or the new button on Now Playing, to move playback between your phone speaker and connected devices, right inside the app.';
+
+  @override
+  String get rebrandSlideLibraryTitle => 'A tidier library';
+
+  @override
+  String get rebrandSlideLibraryBody =>
+      'Noxira spots duplicate tracks and lets you pick which copy to keep. Playlists have a new layout with Favorites, automatic and smart playlists in one place.';
+
+  @override
+  String get rebrandMoreMessages =>
+      'Messages now appear as a small island at the bottom of the screen.';
+
+  @override
+  String get rebrandMorePerformance =>
+      'Faster search, a quicker start and lighter image loading.';
 
   @override
   String get translateLyricsTo => 'Translate lyrics to';
@@ -1745,8 +1780,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Smoother, better transitions across the whole app.';
 
   @override
+  String get rebrandMorePlayback =>
+      'Separate speed and pitch sliders, which you can link together.';
+
+  @override
+  String get rebrandMoreSearch =>
+      'A redesigned Search tab and a Settings page sorted into groups.';
+
+  @override
   String get rebrandMoreFixes =>
-      'Stability and bug fixes across the app, including lyrics that no longer flicker.';
+      'Stability fixes, including editing tags on voice recordings, the visualizer on Dolby tracks and phones without an equalizer.';
 
   @override
   String get eqTitle => 'Equalizer';
@@ -1759,6 +1802,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get eqNotAvailable => 'Equalizer not available on this device.';
+
+  @override
+  String get eqWaitingForAudio =>
+      'Start playing a song to adjust the equalizer.';
 
   @override
   String get eqOpenSystem => 'Open System Equalizer';
@@ -1874,6 +1921,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get closeVisualiser => 'Close visualiser';
+
+  @override
+  String get visualizerWaitingForAudio => 'Waiting for playback audio...';
+
+  @override
+  String get visualizerUnavailable =>
+      'Live audio analysis is unavailable for this output.';
 
   @override
   String get previousMode => 'Previous mode';
@@ -2029,5 +2083,934 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String onboardingHeaviestNote(String option) {
     return '$option is the heaviest option and may feel less smooth on your device.';
+  }
+
+  @override
+  String get audioOutput => 'Audio Output';
+
+  @override
+  String get audioOutputBluetoothDevice => 'Bluetooth Device';
+
+  @override
+  String get audioOutputPhoneSpeaker => 'Phone Speaker';
+
+  @override
+  String get audioOutputWired => 'Wired Headphones';
+
+  @override
+  String get audioOutputUsb => 'USB Audio';
+
+  @override
+  String get audioOutputOther => 'Other output';
+
+  @override
+  String get audioOutputNoOthers => 'No other devices detected';
+
+  @override
+  String get audioOutputCurrentDevice => 'Current Device';
+
+  @override
+  String get audioOutputSwitchFailed => 'Couldn\'t switch the audio output';
+
+  @override
+  String get duplicatesBannerTitle => 'Duplicate tracks found';
+
+  @override
+  String duplicatesBannerSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tracks exist in multiple copies',
+      one: '1 track exists in multiple copies',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesReview => 'Review';
+
+  @override
+  String get duplicatesScreenTitle => 'Duplicate tracks';
+
+  @override
+  String get duplicatesEmpty => 'No duplicates found';
+
+  @override
+  String get duplicatesIgnore => 'Ignore';
+
+  @override
+  String get duplicatesIgnoreAll => 'Ignore all';
+
+  @override
+  String get duplicatesKeepBest => 'Best quality';
+
+  @override
+  String duplicatesCopies(int count) {
+    return '$count copies';
+  }
+
+  @override
+  String duplicatesDeleteOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Keep selected, delete $count others',
+      one: 'Keep selected, delete 1 other',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesDeleteFailed => 'Could not delete some copies';
+
+  @override
+  String get duplicatesResolved => 'Duplicates removed';
+
+  @override
+  String get duplicatesHint =>
+      'Pick the copy to keep. The others will be deleted from your device.';
+
+  @override
+  String get remoteAnnouncementOpenLink => 'Learn more';
+
+  @override
+  String get remoteAnnouncementOpenScreen => 'Open';
+
+  @override
+  String get updateRequiredTitle => 'Update required';
+
+  @override
+  String get updateRequiredMessage =>
+      'This version is no longer supported. Please update Noxira Music to keep using it.';
+
+  @override
+  String get settingsSupport => 'Support';
+
+  @override
+  String get settingsSupportSubtitle => 'Supporters and ways to help';
+
+  @override
+  String get supportSupporters => 'Supporters';
+
+  @override
+  String get supportNoSupportersYet =>
+      'No supporters listed yet. Be the first to appear here!';
+
+  @override
+  String get musicInsightsTitle => 'Music Insights';
+
+  @override
+  String get insightsActivityByTimeOfDay => 'Activity by Time of Day';
+
+  @override
+  String get insightsActivityByDay => 'Activity by Day';
+
+  @override
+  String get insightsGenreBreakdown => 'Genre Breakdown';
+
+  @override
+  String get insightsNoDataTitle => 'No listening data yet';
+
+  @override
+  String get insightsNoDataBody =>
+      'Play some music to start building your insights.';
+
+  @override
+  String insightsMostActiveAround(String time) {
+    return 'Most active around $time';
+  }
+
+  @override
+  String insightsMostActiveOn(String day) {
+    return 'Most active on $day';
+  }
+
+  @override
+  String moreFromArtist(String artist) {
+    return 'More from $artist';
+  }
+
+  @override
+  String tracksCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count tracks',
+      one: '1 track',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String songsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count songs',
+      one: '1 song',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String albumsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count albums',
+      one: '1 album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playlistsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count playlists',
+      one: '1 playlist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String foldersCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count folders',
+      one: '1 folder',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String foldersExcludedCount(int count) {
+    return '$count excluded';
+  }
+
+  @override
+  String get unknownAlbum => 'Unknown Album';
+
+  @override
+  String get queueNextUp => 'Next Up';
+
+  @override
+  String queueNextFrom(String source) {
+    return 'Next from $source';
+  }
+
+  @override
+  String get queueNothingElse => 'Nothing else queued';
+
+  @override
+  String get queueMoveToEnd => 'Move to end';
+
+  @override
+  String get translateLyrics => 'Translate lyrics';
+
+  @override
+  String get translateFailedTapToRetry => 'Translation failed — tap to retry';
+
+  @override
+  String get translateShowOriginal => 'Show original';
+
+  @override
+  String get translateShowTranslation => 'Show translation';
+
+  @override
+  String get lyricsAiTranslatedNote => 'AI translated · accuracy may vary';
+
+  @override
+  String lyricsCantTranslateSameLanguage(String language) {
+    return 'Can\'t translate — lyrics are already in the target language ($language)';
+  }
+
+  @override
+  String get lyricsAddLyrics => 'Add Lyrics';
+
+  @override
+  String get lyricsBlurOn => 'Lyrics blur: on';
+
+  @override
+  String get lyricsBlurOff => 'Lyrics blur: off';
+
+  @override
+  String get lyricsAutoHideOn => 'Auto-hide controls: on';
+
+  @override
+  String get lyricsAutoHideOff => 'Auto-hide controls: off';
+
+  @override
+  String get lyricsEditCreate => 'Edit / Create Lyrics';
+
+  @override
+  String get sleepTimerMinShort => 'min';
+
+  @override
+  String sleepTimerMinutesValue(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get sleepTimerMusicStopsAfter => 'Music stops after…';
+
+  @override
+  String get sleepTimerPickDuration => 'Pick a duration below';
+
+  @override
+  String get visualizerBarSpectrum => 'Bar Spectrum';
+
+  @override
+  String get visualizerCircularBars => 'Circular Bars';
+
+  @override
+  String get visualizerMirrorBars => 'Mirror Bars';
+
+  @override
+  String get visualizerFrequencyLine => 'Frequency Line';
+
+  @override
+  String get visualizerDotMatrix => 'Dot Matrix';
+
+  @override
+  String get visualizerPeakBars => 'Peak Bars';
+
+  @override
+  String get visualizerCircularWave => 'Circular Wave';
+
+  @override
+  String get visualizerAuroraWaves => 'Aurora Waves';
+
+  @override
+  String get visualizerPulseRings => 'Pulse Rings';
+
+  @override
+  String get smartFieldFolderPath => 'Folder path';
+
+  @override
+  String get smartFieldLiked => 'Liked';
+
+  @override
+  String get smartFieldPlayCount => 'Play count';
+
+  @override
+  String get smartFieldDurationSeconds => 'Duration (seconds)';
+
+  @override
+  String get smartFieldDaysSinceAdded => 'Days since added';
+
+  @override
+  String get smartOpContains => 'contains';
+
+  @override
+  String get smartOpNotContains => 'does not contain';
+
+  @override
+  String get smartOpEquals => 'equals';
+
+  @override
+  String get smartOpNotEquals => 'does not equal';
+
+  @override
+  String get smartOpGreaterThan => 'is greater than';
+
+  @override
+  String get smartOpLessThan => 'is less than';
+
+  @override
+  String get smartOpIsTrue => 'is true';
+
+  @override
+  String get smartOpIsFalse => 'is false';
+
+  @override
+  String get smartSortTitleAZ => 'Title (A-Z)';
+
+  @override
+  String get smartSortArtistAZ => 'Artist (A-Z)';
+
+  @override
+  String get smartSortDateAddedNewest => 'Date added (newest)';
+
+  @override
+  String get smartSortPlayCountHighest => 'Play count (highest)';
+
+  @override
+  String get smartSortDurationLongest => 'Duration (longest)';
+
+  @override
+  String get smartSortRandom => 'Random';
+
+  @override
+  String get folderFilterTitle => 'Folder Filter';
+
+  @override
+  String get artistSeparatorTestHint =>
+      'e.g. Artist One / Artist Two feat. Three';
+
+  @override
+  String get tracksPermissionRequired =>
+      'Permission to access media library is required. Please grant permissions in the onboarding or app settings.';
+
+  @override
+  String tracksErrorFetching(String error) {
+    return 'Error fetching songs: $error';
+  }
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get selectItemToViewDetails => 'Select an item to view details';
+
+  @override
+  String get takeMeThere => 'Take me there';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get aboutCodename => 'Codename';
+
+  @override
+  String get aboutDeveloper => 'Developer';
+
+  @override
+  String get aboutCopyright => 'Copyright';
+
+  @override
+  String get aboutWebsite => 'Website';
+
+  @override
+  String get openSourcePackages => 'Open Source Packages';
+
+  @override
+  String packagesUsedCount(int count) {
+    return '$count packages used';
+  }
+
+  @override
+  String get packagesThanks => 'Thank you to all the open source contributors!';
+
+  @override
+  String versionWithCodename(String version, String codename) {
+    return 'Version $version ($codename)';
+  }
+
+  @override
+  String get customColor => 'Custom color';
+
+  @override
+  String exportPlaylistAs(String format) {
+    return 'Export ($format)';
+  }
+
+  @override
+  String get shareClipListeningTo => 'LISTENING TO';
+
+  @override
+  String get shareClipNowOn => 'NOW ON';
+
+  @override
+  String get splashInitializingServices => 'Initializing Services';
+
+  @override
+  String get splashLoadingLibrary => 'Loading Library';
+
+  @override
+  String get splashPreparingHome => 'Preparing Home';
+
+  @override
+  String get splashCachingArtwork => 'Caching Artwork';
+
+  @override
+  String get splashFinalPreparations => 'Final Preparations';
+
+  @override
+  String get queueHistory => 'History';
+
+  @override
+  String get sortName => 'Name';
+
+  @override
+  String get bannerInsightsNewTitle => 'Your Music Insights Are Here ✦';
+
+  @override
+  String get bannerInsightsNewBody =>
+      'See your top tracks, artists & listening patterns';
+
+  @override
+  String get bannerRecapTitle => 'Your Music Recap Awaits';
+
+  @override
+  String get bannerRecapBody => 'Discover your top songs and listening trends';
+
+  @override
+  String get musicalArtist => 'Musical artist';
+
+  @override
+  String get eqPresetFlat => 'Flat';
+
+  @override
+  String get eqPresetBassBoost => 'Bass Boost';
+
+  @override
+  String get eqPresetBassCut => 'Bass Cut';
+
+  @override
+  String get eqPresetTrebleBoost => 'Treble Boost';
+
+  @override
+  String get eqPresetTrebleCut => 'Treble Cut';
+
+  @override
+  String get eqPresetRock => 'Rock';
+
+  @override
+  String get eqPresetPop => 'Pop';
+
+  @override
+  String get eqPresetJazz => 'Jazz';
+
+  @override
+  String get eqPresetClassical => 'Classical';
+
+  @override
+  String get eqPresetElectronic => 'Electronic';
+
+  @override
+  String get eqPresetHipHop => 'Hip Hop';
+
+  @override
+  String get eqPresetRnB => 'R&B';
+
+  @override
+  String get eqPresetVocal => 'Vocal';
+
+  @override
+  String get eqPresetAcoustic => 'Acoustic';
+
+  @override
+  String get eqPresetDance => 'Dance';
+
+  @override
+  String get eqPresetMetal => 'Metal';
+
+  @override
+  String get eqPresetLounge => 'Lounge';
+
+  @override
+  String get eqPresetSpokenWord => 'Spoken Word';
+
+  @override
+  String get supportOfMonthlyGoal => 'of this month\'s goal';
+
+  @override
+  String get cl200Hl1 => 'Aurora Music is now Noxira Music, with a new look';
+
+  @override
+  String get cl200Hl2 =>
+      'Translate lyrics into any language, from more lyric sources';
+
+  @override
+  String get cl200Hl3 =>
+      'A redesigned home screen widget with playback controls';
+
+  @override
+  String get cl200Hl4 => 'A redesigned queue';
+
+  @override
+  String get cl200Hl5 =>
+      'Choose where audio plays from the Bluetooth chip or Now Playing';
+
+  @override
+  String get cl200Hl6 => 'Word-by-word lyrics when the source has the timing';
+
+  @override
+  String get cl200Hl7 =>
+      'Duplicate tracks are spotted, and you pick the copy to keep';
+
+  @override
+  String get cl200Hl8 => 'Glass surfaces that adapt to your phone';
+
+  @override
+  String get cl200Hl9 => 'Smoother transitions and faster detail pages';
+
+  @override
+  String get cl200SecWelcome => 'Welcome to Noxira';
+
+  @override
+  String get cl200SecNew => 'New Features';
+
+  @override
+  String get cl200SecLibrary => 'Playlists & Library';
+
+  @override
+  String get cl200SecSetup => 'Setup';
+
+  @override
+  String get cl200SecLook => 'Look & Feel';
+
+  @override
+  String get cl200SecPerf => 'Performance';
+
+  @override
+  String get cl200SecHood => 'Under the Hood';
+
+  @override
+  String get cl200Welcome1 =>
+      'Aurora Music is now Noxira Music, with a new name, wordmark and app icon';
+
+  @override
+  String get cl200Welcome2 =>
+      'A new animated splash screen draws the Noxira wordmark';
+
+  @override
+  String get cl200Welcome3 =>
+      'Existing users get a short welcome page explaining what is new, and you can open it again from Settings';
+
+  @override
+  String get cl200New1 =>
+      'Translate lyrics into any language you like, not only the app languages';
+
+  @override
+  String get cl200New2 =>
+      'Redesigned home screen widget: glass tinted with your artwork, previous / play / next buttons that work without opening the app, and recommended songs when the widget is tall';
+
+  @override
+  String get cl200New3 =>
+      'Redesigned queue page — see what played and what is next, drag to reorder, swipe to remove; an Up next preview now sits on Now Playing';
+
+  @override
+  String get cl200New4 =>
+      'A monthly support goal appears on the home app bar from time to time, and in Settings under About';
+
+  @override
+  String get cl200New5 => 'Pull down in the Library to refresh it';
+
+  @override
+  String get cl200New6 =>
+      'Choose where audio plays: tap the Bluetooth chip on the home screen, or the new output island on Now Playing, to move playback between your phone speaker and connected devices without leaving the app';
+
+  @override
+  String get cl200New7 =>
+      'Speed and pitch now have their own sliders, and you can link pitch to speed';
+
+  @override
+  String get cl200New8 =>
+      'Five new visualizer styles, and a finer spectrum with more bars';
+
+  @override
+  String get cl200New9 =>
+      'Optional announcements from the Noxira team can appear on the home screen, with a button that opens a link or a screen of the app';
+
+  @override
+  String get cl200Lyrics1 =>
+      'Redesigned lyrics page: tap a line to jump to it, dots mark instrumental breaks, and the lyrics box on Now Playing follows along';
+
+  @override
+  String get cl200Lyrics2 =>
+      'More lyric sources (BetterLyrics, YouLyPlus and KuGou) are tried when LRCLIB has nothing; choose which ones to use in Settings';
+
+  @override
+  String get cl200Lyrics3 =>
+      'Lyrics stored in the audio file, or in a .lrc file next to the song, are used first and work offline';
+
+  @override
+  String get cl200Lyrics4 =>
+      'Auto-hide controls on the full-screen lyrics is now an option and off by default';
+
+  @override
+  String get cl200Lyrics5 =>
+      'Fixed lyrics that flickered and then disappeared with “no lyrics available”, including after a refresh or a manual search';
+
+  @override
+  String get cl200Lyrics6 =>
+      'Word-by-word lyrics: when a source has per-word timing, each word lights up as it is sung';
+
+  @override
+  String get cl200Library1 =>
+      'New add-to-playlist sheet: add, remove and create playlists in one place, with songs already in a playlist marked';
+
+  @override
+  String get cl200Library2 =>
+      'A song can no longer be added to the same playlist twice, and a Remove duplicates option cleans up existing ones';
+
+  @override
+  String get cl200Library3 =>
+      'Noxira now notices duplicate tracks in your library and, in the Library tab, offers to review them: you pick which copy to keep';
+
+  @override
+  String get cl200Library4 =>
+      'Redesigned Playlists page: Favorites on top, automatic playlists as tiles and your own playlists as a grid with artwork mosaics';
+
+  @override
+  String get cl200Library5 =>
+      'Redesigned Search tab: a glass search bar, result counts and clearer empty and no-result states';
+
+  @override
+  String get cl200Library6 =>
+      'The playing-song icon now follows the track in playlists';
+
+  @override
+  String get cl200Library7 =>
+      'Optional online suggestions: artist info and similar artists from Deezer and Wikipedia (only the artist name is sent)';
+
+  @override
+  String get cl200Library8 =>
+      'The equalizer no longer reports itself as unavailable by mistake; it retries on its own and offers Retry and Open system equalizer';
+
+  @override
+  String get cl200Library9 =>
+      'Cache Information now shows real sizes, its button closes the dialog, and Clear Cache also clears downloaded artist images';
+
+  @override
+  String get cl200Setup1 =>
+      'Redesigned onboarding with glass panels, entrance animations and a flowing background';
+
+  @override
+  String get cl200Setup2 =>
+      'Setup recommends the interface style that suits your phone (high-end or lightweight) and the matching background, and lets you try the other one';
+
+  @override
+  String get cl200Setup3 =>
+      'The lightweight interface now always uses a plain background; the Animated Blobs option was removed';
+
+  @override
+  String get cl200Setup4 =>
+      'Settings is now sorted into groups (Experience, Library & data, App) with the same simple glass look as setup';
+
+  @override
+  String get cl200Setup5 =>
+      'Messages appear as a small island at the bottom of the screen instead of snack bars';
+
+  @override
+  String get cl200Look1 =>
+      'New app font (Cal Sans) and slightly more compact text across the app';
+
+  @override
+  String get cl200Look2 =>
+      'Frosted glass surfaces throughout, drawn as plain solid surfaces on low-end phones';
+
+  @override
+  String get cl200Look3 =>
+      'Artwork flies from cards into album, artist, folder and playlist pages; pressed cards respond, liked songs burst into hearts, and the time labels roll';
+
+  @override
+  String get cl200Look4 => 'Rounded-square play button on Favorite Songs';
+
+  @override
+  String get cl200Look5 =>
+      'Home and Library cards use the same glass look as setup, without an extra blur on top of the blurred background';
+
+  @override
+  String get cl200Perf1 =>
+      'Noxira detects your phone\'s hardware and tunes glass effects, image caches and transitions to it';
+
+  @override
+  String get cl200Perf2 =>
+      'Album, artist, folder and playlist pages open smoothly: they load after the opening animation, build a short first page of songs and blur their header artwork ahead of time';
+
+  @override
+  String get cl200Perf3 =>
+      'Library queries that overlap are shared instead of repeated, which lowers memory use on big libraries';
+
+  @override
+  String get cl200Perf4 =>
+      'Faster search and library rescans, lighter image loading and less work while lists scroll';
+
+  @override
+  String get cl200Hood1 =>
+      'Fixed several crashes: tapping Close in the lyrics editor, the tag editor or the sleep timer after the page was gone, adding to the queue or setting a ringtone from a song menu, translating lyrics, and opening Noxira from the widget';
+
+  @override
+  String get cl200Hood2 =>
+      'The app no longer crashes when storage permission is missing';
+
+  @override
+  String get cl200Hood3 =>
+      'Playlists, liked songs, play counts and settings are saved safely, so an interrupted save can no longer leave an empty file';
+
+  @override
+  String get cl200Hood4 =>
+      'FLAC files whose metadata blocks were left incomplete by a tag editor are repaired when saved, so they play again';
+
+  @override
+  String get cl200Hood5 =>
+      'Media notification artwork is downscaled to avoid freezes while the notification is built';
+
+  @override
+  String get cl200Hood6 =>
+      'Editing tags on voice recordings (M4A) no longer fails because of leftover data at the end of the file';
+
+  @override
+  String get cl200Hood7 =>
+      'The visualizer no longer distorts Dolby Atmos tracks; they use the simulated animation instead';
+
+  @override
+  String get cl200Hood8 =>
+      'Phones that cannot create an equalizer effect now play normally, and the equalizer waits for the first song instead of timing out';
+
+  @override
+  String get cl200Hood9 =>
+      'Check for updates now shows its result, and says so when updates come from Google Play';
+
+  @override
+  String get cl200Hood10 =>
+      'Announcements, the support goal and some online services can be adjusted without an app update';
+
+  @override
+  String get cl200Hood11 => 'Updated dependencies';
+
+  @override
+  String get pkgJustAudio => 'Feature-rich audio player for Flutter';
+
+  @override
+  String get pkgAudioService => 'Background audio playback and media controls';
+
+  @override
+  String get pkgAudioSession =>
+      'Audio session management for proper audio focus';
+
+  @override
+  String get pkgOnAudioQuery => 'Query audio files from device storage';
+
+  @override
+  String get pkgHaudiotagger => 'Read and write audio metadata tags';
+
+  @override
+  String get pkgProvider => 'State management solution for Flutter';
+
+  @override
+  String get pkgSharedPreferences => 'Persistent key-value storage';
+
+  @override
+  String get pkgPathProvider => 'Access to device file system paths';
+
+  @override
+  String get pkgPermissionHandler => 'Handle runtime permissions';
+
+  @override
+  String get pkgDynamicColor => 'Material You dynamic color theming';
+
+  @override
+  String get pkgPaletteGenerator => 'Extract colors from images';
+
+  @override
+  String get pkgLottie => 'Lottie animations for Flutter';
+
+  @override
+  String get pkgStaggeredAnimations => 'Staggered list animations';
+
+  @override
+  String get pkgMesh => 'Mesh gradient backgrounds';
+
+  @override
+  String get pkgHttp => 'HTTP requests for API calls';
+
+  @override
+  String get pkgUrlLauncher => 'Launch URLs in browser';
+
+  @override
+  String get pkgSharePlus => 'Share content with other apps';
+
+  @override
+  String get pkgPackageInfoPlus => 'Get app version and package info';
+
+  @override
+  String get pkgDeviceInfoPlus => 'Get device information';
+
+  @override
+  String get pkgFlutterDotenv => 'Load environment variables from .env file';
+
+  @override
+  String get pkgCrypto => 'Cryptographic hashing functions';
+
+  @override
+  String get pkgIntl => 'Internationalization and localization';
+
+  @override
+  String get pkgVersion => 'Version parsing and comparison';
+
+  @override
+  String get pkgPubSemver => 'Semantic versioning utilities';
+
+  @override
+  String get pkgClarityFlutter => 'Microsoft Clarity analytics';
+
+  @override
+  String get pkgFlutterHooks => 'React-like hooks for Flutter';
+
+  @override
+  String get themeAurora => 'Aurora';
+
+  @override
+  String get themeMidnight => 'Midnight';
+
+  @override
+  String get themeOcean => 'Ocean';
+
+  @override
+  String get themeTeal => 'Teal';
+
+  @override
+  String get themeForest => 'Forest';
+
+  @override
+  String get themeNeon => 'Neon';
+
+  @override
+  String get themeGold => 'Gold';
+
+  @override
+  String get themeEmber => 'Ember';
+
+  @override
+  String get themeRose => 'Rose';
+
+  @override
+  String get themeSakura => 'Sakura';
+
+  @override
+  String artistsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count artists',
+      one: '1 artist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playbackInvalidPlaylist => 'Invalid playlist or start index';
+
+  @override
+  String playbackCouldNotPlayTitleSkipping(String title) {
+    return 'Couldn\'t play \"$title\" — skipping';
+  }
+
+  @override
+  String get playbackCouldNotPlaySkipping =>
+      'Couldn\'t play this song — skipping';
+
+  @override
+  String playbackCouldNotPlayTitle(String title) {
+    return 'Couldn\'t play \"$title\"';
+  }
+
+  @override
+  String get playbackFailed => 'Playback failed';
+
+  @override
+  String playbackSetPlaylistFailed(String error) {
+    return 'Failed to set playlist: $error';
+  }
+
+  @override
+  String playbackUpdatePlaylistFailed(String error) {
+    return 'Failed to update playlist: $error';
   }
 }

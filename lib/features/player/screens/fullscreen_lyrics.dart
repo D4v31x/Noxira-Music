@@ -681,16 +681,18 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
                 AppLocalizations.of(context).fontSize, 'font_size'),
             _buildMenuItem(
                 Icons.blur_on_rounded,
-                _blurEnabled ? 'Lyrics blur: on' : 'Lyrics blur: off',
+                _blurEnabled
+                    ? AppLocalizations.of(context).lyricsBlurOn
+                    : AppLocalizations.of(context).lyricsBlurOff,
                 'toggle_blur'),
             _buildMenuItem(
                 Icons.fullscreen_rounded,
                 _autoHideChrome
-                    ? 'Auto-hide controls: on'
-                    : 'Auto-hide controls: off',
+                    ? AppLocalizations.of(context).lyricsAutoHideOn
+                    : AppLocalizations.of(context).lyricsAutoHideOff,
                 'toggle_auto_hide'),
-            _buildMenuItem(
-                Icons.edit_note_rounded, 'Edit / Create Lyrics', 'edit_lyrics'),
+            _buildMenuItem(Icons.edit_note_rounded,
+                AppLocalizations.of(context).lyricsEditCreate, 'edit_lyrics'),
           ],
         ),
       ],
@@ -813,8 +815,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Can\'t translate — lyrics are already in the target language'
-            ' (${e.detectedLanguage.toUpperCase()})',
+            AppLocalizations.of(context).lyricsCantTranslateSameLanguage(
+                e.detectedLanguage.toUpperCase()),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -1552,12 +1554,12 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
       ),
       child: Tooltip(
         message: isError
-            ? 'Translation failed — tap to retry'
+            ? AppLocalizations.of(context).translateFailedTapToRetry
             : isActive
-                ? 'Show original'
+                ? AppLocalizations.of(context).translateShowOriginal
                 : _translationState == _TranslationState.done
-                    ? 'Show translation'
-                    : 'Translate lyrics',
+                    ? AppLocalizations.of(context).translateShowTranslation
+                    : AppLocalizations.of(context).translateLyrics,
         child: AnimatedContainer(
           key: _translateAnchorKey,
           duration: const Duration(milliseconds: 250),
@@ -1611,17 +1613,18 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
   }
 
   Widget _buildTranslationDisclaimerHeader() {
-    return const Padding(
-      padding: EdgeInsets.only(bottom: 16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.auto_awesome_rounded, size: 12, color: Colors.white30),
-          SizedBox(width: 5),
+          const Icon(Icons.auto_awesome_rounded,
+              size: 12, color: Colors.white30),
+          const SizedBox(width: 5),
           Text(
-            'AI translated \u00b7 accuracy may vary',
+            AppLocalizations.of(context).lyricsAiTranslatedNote,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: FontConstants.fontFamily,
               fontSize: 11,
               color: Colors.white30,
@@ -1670,6 +1673,8 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
           isPast: row < _focusRow,
           fontSize: _fontSize,
           blurEnabled: _blurEnabled && !_autoFollowPaused,
+          words: translatedText == null ? lyric.words : null,
+          clock: _clock,
           onTap: () {
             _setImmersive(false);
             _seekToLyric(index);
@@ -1723,7 +1728,7 @@ class _FullscreenLyricsScreenState extends State<FullscreenLyricsScreen>
           OutlinedButton.icon(
             onPressed: () => _openLyricsEditor(audioService),
             icon: const Icon(Icons.edit_note_rounded, size: 20),
-            label: const Text('Add Lyrics'),
+            label: Text(AppLocalizations.of(context).lyricsAddLyrics),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
               side: BorderSide(color: Colors.white.withValues(alpha: 0.3)),

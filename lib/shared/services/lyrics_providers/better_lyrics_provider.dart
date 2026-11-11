@@ -42,8 +42,10 @@ class BetterLyricsProvider extends LyricsProvider {
     }
   }
 
-  /// Converts TTML paragraphs to LRC lines. Background vocals
-  /// (`ttm:role="x-bg"`) are left out so they do not duplicate the main line.
+  /// Converts TTML paragraphs to LRC lines. Paragraphs whose spans carry their
+  /// own `begin` times become enhanced-LRC lines with word timing. Background
+  /// vocals (`ttm:role="x-bg"`) are left out so they do not duplicate the main
+  /// line.
   static String? ttmlToLrc(String ttml) {
     final XmlDocument doc;
     try {
@@ -59,12 +61,69 @@ class BetterLyricsProvider extends LyricsProvider {
       final ms = parseTime(begin);
       if (ms == null) continue;
 
+      final timed = _timedWords(p);
+      if (timed != null) {
+        lines.add('${lrcTag(ms)}$timed');
+        continue;
+      }
+
       final text = _text(p).replaceAll(RegExp(r'\s+'), ' ').trim();
       if (text.isEmpty) continue;
       lines.add('${lrcTag(ms)}$text');
     }
     return lines.isEmpty ? null : lines.join('\n');
   }
+
+  /// `<t>word <t>word<end>` for a paragraph whose spans are individually timed,
+  /// or null when they aren't.
+  static String? _timedWords(XmlElement p) {
+    final starts = <int>[];
+    final texts = <String>[];
+    var lastEnd = -1;
+
+    for (final child in p.children) {
+      if (child is XmlText) {
+        if (child.value.trim().isNotEmpty) return null; // untimed text
+        if (texts.isNotEmpty && child.value.isNotEmpty) {
+          texts[texts.length - 1] = '${texts.last.trimRight()} ';
+        }
+        continue;
+      }
+      if (child is! XmlElement || _role(child) == 'x-bg') continue;
+
+      final begin = child.getAttribute('begin');
+      final startMs = begin == null ? null : parseTime(begin);
+      if (startMs == null || (starts.isNotEmpty && startMs < starts.last)) {
+        return null;
+      }
+      final text = _text(child).replaceAll(RegExp(r'\s+'), ' ');
+      if (text.trim().isEmpty) {
+        if (texts.isNotEmpty) {
+          texts[texts.length - 1] = '${texts.last.trimRight()} ';
+        }
+        continue;
+      }
+      starts.add(startMs);
+      texts.add(texts.isEmpty ? text.trimLeft() : text);
+      final end = child.getAttribute('end');
+      lastEnd = end == null ? -1 : (parseTime(end) ?? -1);
+    }
+
+    if (starts.isEmpty) return null;
+    final buffer = StringBuffer();
+    for (var i = 0; i < starts.length; i++) {
+      buffer
+        ..write(lrcWordTag(starts[i]))
+        ..write(i == starts.length - 1 ? texts[i].trimRight() : texts[i]);
+    }
+    if (lastEnd > starts.last) buffer.write(lrcWordTag(lastEnd));
+    return buffer.toString();
+  }
+
+  static String? _role(XmlElement e) => e.attributes
+      .where((a) => a.name.local == 'role')
+      .map((a) => a.value)
+      .firstOrNull;
 
   static String _text(XmlNode node) {
     final buffer = StringBuffer();

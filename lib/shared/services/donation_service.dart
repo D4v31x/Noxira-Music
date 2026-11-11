@@ -7,28 +7,44 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/glassmorphic_container.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../widgets/adaptive_blur.dart';
+import 'remote_config_helper.dart';
 
 /// Service for handling donations via external platforms
 /// Uses free services like Ko-fi, Buy Me a Coffee, and PayPal
 class DonationService {
-  // Configure your donation links here
-  static const String kofiUsername =
-      'aurorasoftwarecz'; // Replace with your Ko-fi username
-  static const String buyMeCoffeeUsername =
-      'aurorasoftwareCZ'; // Replace with your BMC username
+  // The accounts come from Firebase Remote Config (`donation_kofi_username`,
+  // `donation_bmc_username`), so a link can change without an app update.
+  static final RegExp _validUsername = RegExp(r'^[A-Za-z0-9_.-]{1,40}$');
 
-  static const String kofiUrl = 'https://ko-fi.com/$kofiUsername';
-  static const String buyMeCoffeeUrl =
-      'https://buymeacoffee.com/$buyMeCoffeeUsername';
+  static String _username(String key) {
+    final value = RemoteConfigHelper.string(key);
+    return _validUsername.hasMatch(value)
+        ? value
+        : RemoteConfigHelper.defaults[key]! as String;
+  }
+
+  /// Every donation prompt and link is hidden when this is off
+  /// (`donation_enabled`).
+  static bool get enabled => RemoteConfigHelper.boolean('donation_enabled');
+
+  static String get kofiUrl =>
+      'https://ko-fi.com/${_username('donation_kofi_username')}';
+  static String get buyMeCoffeeUrl =>
+      'https://buymeacoffee.com/${_username('donation_bmc_username')}';
 
   // Reminder settings
   static const String _lastReminderKey = 'donation_last_reminder';
   static const String _reminderCountKey = 'donation_reminder_count';
   static const String _neverShowKey = 'donation_never_show';
-  static const int _reminderIntervalDays = 7; // Show reminder every 7 days
+
+  static int get _reminderIntervalDays => RemoteConfigHelper.integer(
+        'prompt_donation_interval_days',
+        min: 1,
+      );
 
   /// Check if we should show donation reminder
   static Future<bool> shouldShowReminder() async {
+    if (!enabled) return false;
     final prefs = await SharedPreferences.getInstance();
 
     // Check if user opted out
@@ -68,6 +84,7 @@ class DonationService {
   }
 
   static Future<bool> _launchUrl(String url) async {
+    if (!enabled) return false;
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
       return launchUrl(uri, mode: LaunchMode.externalApplication);

@@ -155,7 +155,9 @@ class _Island extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pill = Material(
-      color: blur ? Colors.white.withValues(alpha: 0.14) : Colors.grey[900],
+      color: blur
+          ? Colors.white.withValues(alpha: 0.14)
+          : Theme.of(context).colorScheme.surfaceContainerHigh,
       shape: StadiumBorder(
         side: BorderSide(color: Colors.white.withValues(alpha: 0.22)),
       ),

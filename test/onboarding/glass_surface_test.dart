@@ -1,6 +1,6 @@
-
 import 'package:aurora_music_v01/features/onboarding/widgets/onboarding_glass.dart';
 import 'package:aurora_music_v01/shared/providers/performance_mode_provider.dart';
+import 'package:aurora_music_v01/shared/providers/theme_provider.dart';
 import 'package:aurora_music_v01/shared/services/device_performance_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -89,8 +89,7 @@ void main() {
       final boundary =
           key.currentContext!.findRenderObject()! as RenderRepaintBoundary;
       final image = await boundary.toImage();
-      final data =
-          (await image.toByteData())!;
+      final data = (await image.toByteData())!;
       final x = image.width ~/ 2;
       final y = image.height ~/ 2;
       final i = (y * image.width + x) * 4;
@@ -110,6 +109,12 @@ void main() {
     await tester.pumpWidget(ChangeNotifierProvider.value(
       value: perf,
       child: MaterialApp(
+        theme: ThemeProvider.accentSolidTheme(ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF8B5CF6),
+            brightness: Brightness.dark,
+          ),
+        )),
         home: RepaintBoundary(
           key: key,
           child: const ColoredBox(
@@ -126,9 +131,13 @@ void main() {
     await tester.pump(const Duration(milliseconds: 800));
 
     final solid = await centrePixel(tester, key);
-    // The dark solid fill, clearly different from the blue behind it.
-    expect(solid.r, lessThan(0.25));
-    expect(solid.b, lessThan(0.3));
+    // The accent-tinted solid fill, not the blue backdrop behind it.
+    final fill = Theme.of(tester.element(find.byType(GlassSurface)))
+        .colorScheme
+        .surfaceContainerHigh;
+    expect((solid.r - fill.r).abs(), lessThan(0.02));
+    expect((solid.g - fill.g).abs(), lessThan(0.02));
+    expect((solid.b - fill.b).abs(), lessThan(0.02));
 
     // And it fades back to see-through glass, then to solid again.
     await perf.setPerformanceMode(PerformanceLevel.high);
@@ -141,6 +150,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 800));
     final again = await centrePixel(tester, key);
-    expect(again.b, lessThan(0.3));
+    expect((again.b - fill.b).abs(), lessThan(0.02));
   });
 }

@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../shared/providers/performance_mode_provider.dart';
+import '../../../shared/widgets/glass_fill.dart';
 import 'onboarding_kit.dart';
 
 /// Glass and motion for the onboarding.
@@ -173,6 +174,9 @@ class _RevealState extends State<Reveal> with SingleTickerProviderStateMixin {
 /// A pane of frosted glass: blurred backdrop, a faint sheen, and a light edge
 /// that is brighter at the top-left. Solid on low-end devices.
 ///
+/// With [blur] off it skips the backdrop blur and only keeps the sheen and
+/// edge, for panes that sit on a background that is already blurred.
+///
 /// With an [order] it rises in with the rest of the page (its blur, tint and
 /// edge fade up together); without one it is simply there.
 class GlassSurface extends StatefulWidget {
@@ -183,6 +187,7 @@ class GlassSurface extends StatefulWidget {
     this.radius = 24,
     this.selected = false,
     this.order,
+    this.blur = true,
   });
 
   final Widget child;
@@ -190,6 +195,7 @@ class GlassSurface extends StatefulWidget {
   final double radius;
   final bool selected;
   final int? order;
+  final bool blur;
 
   @override
   State<GlassSurface> createState() => _GlassSurfaceState();
@@ -266,19 +272,20 @@ class _GlassSurfaceState extends State<GlassSurface>
   Widget _surface(double a, double sel, double solidness) {
     final r = BorderRadius.circular(widget.radius);
     final glass = a * (1 - solidness);
-    final solidFill =
-        Color.lerp(const Color(0xFF1E1F25), const Color(0xFF2B2C34), sel)!;
+    final scheme = Theme.of(context).colorScheme;
+    final solidFill = Color.lerp(
+        scheme.surfaceContainerHigh, scheme.surfaceContainerHighest, sel)!;
     return ClipRRect(
       borderRadius: r,
       child: BackdropFilter(
         // No backdrop work at all once it is fully solid.
-        enabled: solidness < 1,
+        enabled: widget.blur && solidness < 1,
         filter: ui.ImageFilter.blur(
           sigmaX: 0.01 + 22 * glass,
           sigmaY: 0.01 + 22 * glass,
         ),
         child: CustomPaint(
-          foregroundPainter: _GlassEdgePainter(
+          foregroundPainter: GlassEdgePainter(
             radius: widget.radius,
             alpha: glass,
             boost: sel,
@@ -315,45 +322,6 @@ class _GlassSurfaceState extends State<GlassSurface>
       ),
     );
   }
-}
-
-class _GlassEdgePainter extends CustomPainter {
-  const _GlassEdgePainter({
-    required this.radius,
-    required this.alpha,
-    required this.boost,
-  });
-
-  final double radius;
-  final double alpha;
-  final double boost;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final rrect =
-        RRect.fromRectAndRadius(rect, Radius.circular(radius)).deflate(0.6);
-    final strong = 0.5 + 0.25 * boost;
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: strong * alpha),
-          Colors.white.withValues(alpha: 0.10 * alpha),
-          Colors.white.withValues(alpha: 0.04 * alpha),
-          Colors.white.withValues(alpha: 0.22 * alpha),
-        ],
-        stops: const [0, 0.38, 0.7, 1],
-      ).createShader(rect);
-    canvas.drawRRect(rrect, paint);
-  }
-
-  @override
-  bool shouldRepaint(_GlassEdgePainter old) =>
-      old.alpha != alpha || old.boost != boost || old.radius != radius;
 }
 
 /// The glass panel used for groups and single items.

@@ -9,5 +9,6 @@
     <string name="widget_recommended">आपके लिए सुझाए गए</string>
     <string name="widget_queue">कतार</string>
     <string name="widget_next_up">अगला</string>
+    <string name="widget_queue_empty">कतार में कुछ नहीं</string>
     <string name="widget_after">उसके बाद</string>
 </resources>

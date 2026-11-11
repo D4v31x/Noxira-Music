@@ -13,10 +13,12 @@ import 'package:audio_session/audio_session.dart';
 import 'audio_constants.dart';
 import 'background_manager_service.dart';
 import 'artwork_cache_service.dart';
+import 'logging_service.dart';
 import 'home_screen_widget_service.dart';
 import 'folder_filter_service.dart';
 import 'smart_suggestions_service.dart';
 import 'audio/replay_gain_reader.dart';
+import 'audio_analysis/audio_analysis_service.dart';
 import 'playlist_m3u_service.dart';
 import '../utils/album_sanitizer.dart';
 import '../utils/atomic_file.dart';
@@ -67,6 +69,7 @@ class PlaybackSourceInfo {
 }
 
 class AudioPlayerService extends ChangeNotifier {
+  bool _disposed = false;
   // Use the audio player from the global audio handler
   AudioPlayer get _audioPlayer => audioHandler.player;
   final OnAudioQuery _audioQuery = OnAudioQuery();
@@ -178,11 +181,11 @@ class AudioPlayerService extends ChangeNotifier {
 
   final _currentSongController = StreamController<SongModel?>.broadcast();
   Stream<SongModel?> get currentSongStream => _currentSongController.stream;
-  final _errorController = StreamController<String>.broadcast();
-  Stream<String> get errorStream => _errorController.stream;
+  final _errorController = StreamController<PlaybackError>.broadcast();
+  Stream<PlaybackError> get errorStream => _errorController.stream;
 
-  void _addError(String msg) {
-    if (!_errorController.isClosed) _errorController.add(msg);
+  void _addError(PlaybackError error) {
+    if (!_errorController.isClosed) _errorController.add(error);
   }
 
   // Sleep timer
@@ -222,6 +225,10 @@ class AudioPlayerService extends ChangeNotifier {
   /// When true, pitch shifts with speed (chipmunk effect).
   /// When false, pitch is locked to 1.0 regardless of speed.
   bool _pitchWithSpeed = false;
+
+  /// Independent pitch ratio (0.5-2.0), used while pitch isn't linked to
+  /// speed.
+  double _pitch = 1.0;
   String _defaultSortOrder = 'title';
   int _cacheSize = 100; // in MB
   bool _mediaControls = true;
@@ -244,6 +251,10 @@ class AudioPlayerService extends ChangeNotifier {
   bool get volumeNormalization => _volumeNormalization;
   double get playbackSpeed => _playbackSpeed;
   bool get pitchWithSpeed => _pitchWithSpeed;
+  double get pitch => _pitch;
+
+  /// The pitch ratio actually applied: the speed when linked, else [pitch].
+  double get effectivePitch => _pitchWithSpeed ? _playbackSpeed : _pitch;
   String get defaultSortOrder => _defaultSortOrder;
   int get cacheSize => _cacheSize;
   bool get mediaControls => _mediaControls;
@@ -274,11 +285,14 @@ class AudioPlayerService extends ChangeNotifier {
   /// Debounced notification to batch multiple state changes
   /// This prevents excessive rebuilds when multiple changes happen in quick succession
   void _scheduleNotify() {
+    if (_disposed) return;
     if (_notifyScheduled) return;
     _notifyScheduled = true;
     _notifyDebounceTimer?.cancel();
     _notifyDebounceTimer = Timer(const Duration(milliseconds: 16), () {
+      if (_disposed) return;
       _notifyScheduled = false;
+      _syncWidgetQueue();
       notifyListeners();
     });
   }
@@ -300,8 +314,7 @@ class AudioPlayerService extends ChangeNotifier {
   }
 
   AudioPlayerService() {
-    _init();
-    _loadSettings();
+    unawaited(_init());
 
     // Initialize with empty data first - don't try to load music yet
     _updateSongs([]);
@@ -342,6 +355,8 @@ class AudioPlayerService extends ChangeNotifier {
 
     await _loadPlayCounts();
     await _loadPlaylists();
+    await _loadSettings();
+    if (_disposed) return;
 
     // Initialize home screen widget
     unawaited(_homeWidgetService.initialize().then((_) {
@@ -415,6 +430,8 @@ class AudioPlayerService extends ChangeNotifier {
   /// crossfade mode. Without re-binding, these listeners would remain
   /// attached to the disposed outgoing player and silently stop firing.
   void _bindCorePlayerListeners() {
+    // The audio analysis engine follows whichever player is currently active.
+    AudioAnalysisService.instance.bindPlayer(_audioPlayer);
     _playerStateSub?.cancel();
     _maxPositionSub?.cancel();
     _playingSub?.cancel();
@@ -527,6 +544,15 @@ class AudioPlayerService extends ChangeNotifier {
             _scheduleNotify();
           }
         } else {
+          if (!_gaplessPlayback &&
+              _loopMode == LoopMode.all &&
+              _playlist.isNotEmpty) {
+            // Non-gapless players hold a single song, so wrap manually.
+            unawaited(play(
+                index: _currentIndex + 1 < _playlist.length
+                    ? _currentIndex + 1
+                    : 0));
+          }
           debugPrint(
               '🎵 [PROCESSING_STATE] Loop mode: $_loopMode, should loop automatically');
         }
@@ -570,12 +596,22 @@ class AudioPlayerService extends ChangeNotifier {
             : 'Noxira Music',
       );
       unawaited(_refreshWidgetRecommendations());
-      unawaited(_homeWidgetService
-          .updateQueue(_playlist.skip(_currentIndex + 1).toList()));
+      _syncWidgetQueue();
     } else {
       _homeWidgetService.clearWidget();
+      unawaited(_homeWidgetService.updateQueue(const []));
       unawaited(_refreshWidgetRecommendations());
     }
+  }
+
+  /// Pushes the up-next songs to the widget; deduplicated by the service.
+  void _syncWidgetQueue() {
+    if (currentSongNotifier.value == null) return;
+    final from = _currentIndex + 1;
+    final upNext = from >= _playlist.length
+        ? const <SongModel>[]
+        : _playlist.sublist(from, (from + 2).clamp(0, _playlist.length));
+    unawaited(_homeWidgetService.updateQueue(upNext));
   }
 
   /// Songs currently offered in the widget's "Recommended for you" row.
@@ -721,6 +757,12 @@ class AudioPlayerService extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    unawaited(_playerStateSub?.cancel());
+    unawaited(_maxPositionSub?.cancel());
+    unawaited(_playingSub?.cancel());
+    unawaited(_currentIndexSub?.cancel());
+    unawaited(_processingStateSub?.cancel());
     FolderFilterService().removeListener(_onFolderFilterChanged);
     // Cancel debounce timers
     _notifyDebounceTimer?.cancel();

@@ -14,7 +14,7 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
     try {
       if (songs.isEmpty || startIndex < 0 || startIndex >= songs.length) {
         if (kDebugMode) debugPrint('Invalid playlist or start index');
-        _addError('Invalid playlist or start index');
+        _addError(const PlaybackError(PlaybackErrorKind.invalidPlaylist));
         return;
       }
 
@@ -207,9 +207,8 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
       // rest of the queue rather than leaving playback dead with no feedback.
       final failedTitle = _playlist.isNotEmpty ? _playlist.first.title : null;
       if (_playlist.length > 1 && retryCount < 3) {
-        _addError(failedTitle != null
-            ? "Couldn't play \"$failedTitle\" — skipping"
-            : "Couldn't play this song — skipping");
+        _addError(PlaybackError(PlaybackErrorKind.couldNotPlaySkipping,
+            title: failedTitle));
         _scheduleNotify();
         unawaited(setPlaylist(
           _playlist.sublist(1),
@@ -219,8 +218,8 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
         ));
       } else {
         _addError(failedTitle != null
-            ? "Couldn't play \"$failedTitle\""
-            : 'Failed to set playlist: $e');
+            ? PlaybackError(PlaybackErrorKind.couldNotPlay, title: failedTitle)
+            : PlaybackError(PlaybackErrorKind.setPlaylistFailed, detail: '$e'));
         _scheduleNotify();
       }
     }
@@ -263,7 +262,8 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
         await setPlaylist(newSongs, 0);
       }
     } catch (e) {
-      _addError('Failed to update playlist: $e');
+      _addError(
+          PlaybackError(PlaybackErrorKind.updatePlaylistFailed, detail: '$e'));
       _scheduleNotify();
     }
   }
@@ -387,17 +387,17 @@ extension AudioPlaybackControllerExtension on AudioPlayerService {
               : null;
       final hasNext = _currentIndex + 1 < _playlist.length;
       if (hasNext && skipAttempt < 3) {
-        _addError(failedSong != null
-            ? 'Couldn\'t play "${failedSong.title}" — skipping'
-            : 'Couldn\'t play this song — skipping');
+        _addError(PlaybackError(PlaybackErrorKind.couldNotPlaySkipping,
+            title: failedSong?.title));
         _scheduleNotify();
         unawaited(
           _playInternal(index: _currentIndex + 1, skipAttempt: skipAttempt + 1),
         );
       } else {
         _addError(failedSong != null
-            ? 'Couldn\'t play "${failedSong.title}"'
-            : 'Playback failed');
+            ? PlaybackError(PlaybackErrorKind.couldNotPlay,
+                title: failedSong.title)
+            : const PlaybackError(PlaybackErrorKind.playbackFailed));
         _scheduleNotify();
       }
     } finally {

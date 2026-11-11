@@ -7,7 +7,15 @@ class VersionCheckResult {
   final bool isUpdateAvailable;
   final String? latestVersion;
 
-  VersionCheckResult({required this.isUpdateAvailable, this.latestVersion});
+  /// True when the check itself failed (e.g. the app wasn't installed from
+  /// Google Play), as opposed to finding no update.
+  final bool failed;
+
+  VersionCheckResult({
+    required this.isUpdateAvailable,
+    this.latestVersion,
+    this.failed = false,
+  });
 }
 
 class VersionService {
@@ -29,6 +37,7 @@ class VersionService {
       }
     } catch (e) {
       debugPrint('[VersionService] Play Core check error: $e');
+      return VersionCheckResult(isUpdateAvailable: false, failed: true);
     }
     debugPrint('[VersionService] No update available.');
     return VersionCheckResult(isUpdateAvailable: false);

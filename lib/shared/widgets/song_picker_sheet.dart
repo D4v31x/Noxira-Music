@@ -378,6 +378,7 @@ class SongPickerSheet extends HookWidget {
                                   selectedSongIds.value.contains(song.id);
 
                               return _buildSongTile(
+                                context,
                                 song,
                                 isSelected,
                                 isDark,
@@ -396,6 +397,7 @@ class SongPickerSheet extends HookWidget {
   }
 
   static Widget _buildSongTile(
+    BuildContext context,
     SongModel song,
     bool isSelected,
     bool isDark,
@@ -468,7 +470,9 @@ class SongPickerSheet extends HookWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    splitArtists(song.artist ?? 'Unknown').join(', '),
+                    splitArtists(song.artist ??
+                            AppLocalizations.of(context).unknownArtist)
+                        .join(', '),
                     style: TextStyle(
                       fontFamily: FontConstants.fontFamily,
                       color: isDark ? Colors.white54 : Colors.black45,

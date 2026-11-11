@@ -18,6 +18,17 @@ subprojects {
     }
 }
 
+// firebase_remote_config is written in Kotlin and, on AGP 9, expects built-in
+// Kotlin support, which this project keeps disabled (android.builtInKotlin=false)
+// for the sake of other plugins. Apply the Kotlin plugin to it explicitly.
+subprojects {
+    if (project.name == 'firebase_remote_config') {
+        project.plugins.withId('com.android.library') {
+            project.apply plugin: 'org.jetbrains.kotlin.android'
+        }
+    }
+}
+
 ext.kotlin_version = '2.2.20'
 
 rootProject.buildDir = '../build'

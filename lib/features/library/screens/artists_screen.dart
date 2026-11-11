@@ -17,6 +17,7 @@ import '../../../shared/widgets/library_screen_header.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/utils/sort_preferences.dart';
 import 'artist_detail_screen.dart';
+import '../../../shared/utils/image_sizing.dart';
 
 enum ArtistSortOption { name, tracks, albums }
 
@@ -219,11 +220,9 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
           physics: const ClampingScrollPhysics(),
           slivers: [
             LibraryScreenHeader(
-              badge: 'Library',
+              badge: AppLocalizations.of(context).library,
               title: loc.artists,
-              subtitle: _isLoading
-                  ? null
-                  : '$count ${count == 1 ? 'artist' : 'artists'}',
+              subtitle: _isLoading ? null : loc.artistsCountPlural(count),
               accentColor: Colors.teal,
               showBackButton: true,
               searchField: LibrarySearchField(
@@ -268,11 +267,12 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                         ),
                       ),
                       itemBuilder: (context) => [
-                        _buildArtistSortMenuItem(ArtistSortOption.name, 'Name'),
-                        _buildArtistSortMenuItem(
-                            ArtistSortOption.tracks, 'Tracks'),
-                        _buildArtistSortMenuItem(
-                            ArtistSortOption.albums, 'Albums'),
+                        _buildArtistSortMenuItem(ArtistSortOption.name,
+                            AppLocalizations.of(context).sortName),
+                        _buildArtistSortMenuItem(ArtistSortOption.tracks,
+                            AppLocalizations.of(context).tracks),
+                        _buildArtistSortMenuItem(ArtistSortOption.albums,
+                            AppLocalizations.of(context).albums),
                       ],
                     ),
                   ),
@@ -375,13 +375,14 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
   }
 
   String _getArtistSortLabel(ArtistSortOption option) {
+    final l10n = AppLocalizations.of(context);
     switch (option) {
       case ArtistSortOption.name:
-        return 'Name';
+        return l10n.sortName;
       case ArtistSortOption.tracks:
-        return 'Tracks';
+        return l10n.tracks;
       case ArtistSortOption.albums:
-        return 'Albums';
+        return l10n.albums;
     }
   }
 
@@ -436,6 +437,7 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                           fit: BoxFit.cover,
                           width: 80,
                           height: 80,
+                          cacheWidth: decodePx(context, 80),
                         )
                       : Image.asset(
                           'assets/images/UI/unknown.png',
@@ -458,7 +460,8 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                 overflow: TextOverflow.ellipsis,
               ),
               Text(
-                '${artist.numberOfTracks} songs',
+                AppLocalizations.of(context)
+                    .songsCountPlural(artist.numberOfTracks),
                 style: TextStyle(
                   color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 10,
@@ -527,6 +530,7 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                           fit: BoxFit.cover,
                           width: 60,
                           height: 60,
+                          cacheWidth: decodePx(context, 60),
                         )
                       : Image.asset(
                           'assets/images/UI/unknown.png',
@@ -559,7 +563,8 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                             color: Colors.white.withValues(alpha: 0.6)),
                         const SizedBox(width: 4),
                         Text(
-                          '${artist.numberOfTracks} songs',
+                          AppLocalizations.of(context)
+                              .songsCountPlural(artist.numberOfTracks),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 13,
@@ -571,7 +576,8 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                             color: Colors.white.withValues(alpha: 0.6)),
                         const SizedBox(width: 4),
                         Text(
-                          '$albumCount albums',
+                          AppLocalizations.of(context)
+                              .albumsCountPlural(albumCount),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 13,
@@ -645,7 +651,10 @@ class _ArtistsScreenState extends State<ArtistsScreen> {
                         borderRadius: BorderRadius.circular(25),
                         child: imagePath != null
                             ? Image.file(File(imagePath),
-                                width: 50, height: 50, fit: BoxFit.cover)
+                                width: 50,
+                                height: 50,
+                                cacheWidth: decodePx(context, 50),
+                                fit: BoxFit.cover)
                             : Image.asset(
                                 'assets/images/UI/unknown.png',
                                 width: 50,

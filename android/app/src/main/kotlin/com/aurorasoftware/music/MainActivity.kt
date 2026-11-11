@@ -6,6 +6,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.ContentValues
 import android.content.Intent
+import android.media.AudioManager
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
@@ -14,11 +17,13 @@ import android.provider.MediaStore
 import android.provider.Settings
 import androidx.core.view.WindowCompat
 import com.ryanheise.audioservice.AudioServiceActivity
+import android.media.audiofx.Equalizer
 import android.media.audiofx.Visualizer
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.SystemClock
+import android.util.Log
 import java.util.concurrent.atomic.AtomicReference
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
@@ -29,10 +34,11 @@ import java.io.FileInputStream
 class MainActivity : AudioServiceActivity() {
 
     companion object {
+        private const val EFFECTS_CHANNEL = "aurora/effects"
         private const val SAF_CHANNEL = "aurora/saf_write"
         private const val MEDIA_ACTIONS_CHANNEL = "aurora/media_actions"
-        private const val VISUALIZER_CHANNEL = "aurora/visualizer"
         private const val DEVICE_PROBE_CHANNEL = "aurora/device_probe"
+        private const val VISUALIZER_CHANNEL = "aurora/visualizer"
         private const val FFT_POLL_INTERVAL_MS = 16L
         private const val REQUEST_WRITE_PERMISSION = 42
         private const val REQUEST_DELETE_PERMISSION = 43
@@ -50,17 +56,12 @@ class MainActivity : AudioServiceActivity() {
     // Holds state for a pending delete awaiting MediaStore.createDeleteRequest approval.
     private var pendingDeleteResult: MethodChannel.Result? = null
 
-    // ---- Visualizer lifecycle fields ----------------------------------------
-    // Kept as instance fields so onDestroy() can always release them, even if
-    // the EventChannel's onCancel() was never called (e.g. app force-stopped).
+    private var audioOutputChannel: AudioOutputChannel? = null
     private var activeVisualizer: Visualizer? = null
     private val visualizerHandler = Handler(Looper.getMainLooper())
     private var vizThread: HandlerThread? = null
     private var vizPoller: Handler? = null
-    // Set false in onCancel / onDestroy so pending mainHandler posts are
-    // dropped before they reach a detached FlutterJNI.
     @Volatile private var isStreamingFft = false
-    // -------------------------------------------------------------------------
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -116,12 +117,26 @@ class MainActivity : AudioServiceActivity() {
         )
     }
 
+    /**
+     * Whether an [Equalizer] can be created on a fresh audio session. Devices
+     * that refuse (or have run out of effect instances) make the player fail
+     * with "Cannot initialize effect engine".
+     */
+    private fun canCreateEqualizer(): Boolean {
+        return try {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+            val equalizer = Equalizer(0, audioManager.generateAudioSessionId())
+            equalizer.release()
+            true
+        } catch (_: Throwable) {
+            false
+        }
+    }
+
     override fun onDestroy() {
-        // Stop all pending FFT posts and release the Visualizer before the
-        // Flutter engine detaches. Without this, mainHandler.post() callbacks
-        // keep firing into a dead FlutterJNI, producing hundreds of
-        // "Could not send. Channel: aurora/visualizer" warnings.
         stopFftPolling()
+        audioOutputChannel?.dispose()
+        audioOutputChannel = null
         super.onDestroy()
     }
 
@@ -131,6 +146,14 @@ class MainActivity : AudioServiceActivity() {
             .setMethodCallHandler { call, result ->
                 when (call.method) {
                     "probe" -> result.success(probeHardware())
+                    else -> result.notImplemented()
+                }
+            }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, EFFECTS_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "canCreateEqualizer" -> result.success(canCreateEqualizer())
                     else -> result.notImplemented()
                 }
             }
@@ -170,6 +193,65 @@ class MainActivity : AudioServiceActivity() {
                         }
                         handleDeleteSong(path, result)
                     }
+                    "isDolbyAudio" -> {
+                        val path = call.argument<String>("path")
+                        if (path == null) {
+                            result.error("INVALID_ARGS", "path is required", null)
+                            return@setMethodCallHandler
+                        }
+                        Thread {
+                            try {
+                                val isDolby = isDolbyAudio(path)
+                                runOnUiThread { result.success(isDolby) }
+                            } catch (error: Exception) {
+                                Log.e("AuroraVisualizer", "Audio format probe failed", error)
+                                runOnUiThread {
+                                    result.error("PROBE_FAILED", error.message, null)
+                                }
+                            }
+                        }.start()
+                    }
+                    "analyzeSpectrum" -> {
+                        val path = call.argument<String>("path")
+                        val startFrame = call.argument<Int>("startFrame")
+                        val frameCount = call.argument<Int>("frameCount")
+                        if (path == null || startFrame == null || startFrame < 0 ||
+                            frameCount == null || frameCount !in 1..300
+                        ) {
+                            result.error(
+                                "INVALID_ARGS",
+                                "path, nonnegative startFrame and frameCount (1..300) are required",
+                                null,
+                            )
+                            return@setMethodCallHandler
+                        }
+                        Thread {
+                            try {
+                                val analysis = OfflineSpectrumAnalyzer(applicationContext)
+                                    .analyze(
+                                        path, getMediaUriForPath(path), startFrame, frameCount,
+                                    ) { false }
+                                runOnUiThread {
+                                    result.success(
+                                        analysis?.let {
+                                            mapOf(
+                                                "sampleRate" to it.sampleRate,
+                                                "frameRate" to OfflineSpectrumAnalyzer.FRAME_RATE,
+                                                "bins" to it.bins,
+                                                "durationUs" to it.durationUs,
+                                                "data" to it.data,
+                                            )
+                                        }
+                                    )
+                                }
+                            } catch (error: Exception) {
+                                Log.e("AuroraVisualizer", "Dolby spectrum decode failed", error)
+                                runOnUiThread {
+                                    result.error("ANALYSIS_FAILED", error.message, null)
+                                }
+                            }
+                        }.start()
+                    }
                     "openSystemEqualizer" -> {
                         try {
                             val intent = Intent("android.media.audiofx.AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL").apply {
@@ -194,55 +276,40 @@ class MainActivity : AudioServiceActivity() {
                 }
             }
 
+        audioOutputChannel?.dispose()
+        audioOutputChannel = AudioOutputChannel(this, flutterEngine)
         setupVisualizerChannel(flutterEngine)
     }
 
-    /**
-     * Streams FFT data from the Android [Visualizer] API to Dart
-     * (0x01-prefixed FFT frames; a one-off 0x03-prefixed packet carries the
-     * sampling rate in milliHz as a big-endian Int32).
-     *
-     * The Dart side passes the audio session ID as the [EventChannel] stream
-     * argument. When the stream is cancelled the Visualizer is released.
-     */
     private fun setupVisualizerChannel(flutterEngine: FlutterEngine) {
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, VISUALIZER_CHANNEL)
             .setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                     stopFftPolling()
-
                     val sessionId = when (arguments) {
-                        is Int  -> arguments
+                        is Int -> arguments
                         is Long -> arguments.toInt()
-                        else    -> 0
+                        else -> 0
                     }
-
                     try {
-                        val capSize = try {
-                            Visualizer.getCaptureSizeRange()[1]
-                        } catch (_: Exception) {
-                            1024
-                        }
-                        val viz = Visualizer(sessionId).apply {
-                            captureSize = capSize
-                            enabled = true
-                        }
+                        val capSize = Visualizer.getCaptureSizeRange()[1]
+                        val viz = Visualizer(sessionId)
                         activeVisualizer = viz
+                        viz.captureSize = capSize
+                        viz.enabled = true
                         isStreamingFft = true
-
-                        // Sampling rate (milliHz, big-endian) so Dart can map bins to Hz.
                         val rate = viz.samplingRate
-                        val rateMsg = byteArrayOf(
-                            3,
-                            (rate shr 24).toByte(), (rate shr 16).toByte(),
-                            (rate shr 8).toByte(), rate.toByte()
+                        events?.success(
+                            byteArrayOf(
+                                3,
+                                (rate shr 24).toByte(), (rate shr 16).toByte(),
+                                (rate shr 8).toByte(), rate.toByte(),
+                            )
                         )
-                        events?.success(rateMsg)
-
                         startFftPolling(viz, capSize, events)
-                    } catch (e: Exception) {
+                    } catch (error: Exception) {
                         stopFftPolling()
-                        events?.error("VISUALIZER_ERROR", e.message ?: "Visualizer init failed", null)
+                        events?.error("VISUALIZER_ERROR", error.message, null)
                     }
                 }
 
@@ -252,12 +319,6 @@ class MainActivity : AudioServiceActivity() {
             })
     }
 
-    /**
-     * Polls the Visualizer on a background thread at ~display rate instead of
-     * relying on the capture listener, which is throttled to ~20 Hz on most
-     * devices. Frames are coalesced: if Dart hasn't consumed the previous
-     * one yet the new one replaces it, so latency never accumulates.
-     */
     private fun startFftPolling(
         viz: Visualizer,
         captureSize: Int,
@@ -267,10 +328,8 @@ class MainActivity : AudioServiceActivity() {
         val poller = Handler(thread.looper)
         vizThread = thread
         vizPoller = poller
-
         val scratch = ByteArray(captureSize)
         val latest = AtomicReference<ByteArray?>(null)
-
         val task = object : Runnable {
             override fun run() {
                 if (!isStreamingFft) return
@@ -280,16 +339,20 @@ class MainActivity : AudioServiceActivity() {
                         val frame = ByteArray(captureSize + 1)
                         frame[0] = 1
                         scratch.copyInto(frame, destinationOffset = 1)
-                        // Only schedule a main-thread delivery if none is queued.
                         if (latest.getAndSet(frame) == null) {
                             visualizerHandler.post {
-                                val f = latest.getAndSet(null)
-                                if (isStreamingFft && f != null) events?.success(f)
+                                val pending = latest.getAndSet(null)
+                                if (isStreamingFft && pending != null) events?.success(pending)
                             }
                         }
                     }
-                } catch (_: Exception) {
-                    return // Visualizer released while polling.
+                } catch (error: IllegalStateException) {
+                    if (isStreamingFft) {
+                        visualizerHandler.post {
+                            events?.error("VISUALIZER_ERROR", error.message, null)
+                        }
+                    }
+                    return
                 }
                 val elapsed = SystemClock.uptimeMillis() - startedAt
                 poller.postDelayed(this, maxOf(1L, FFT_POLL_INTERVAL_MS - elapsed))
@@ -304,10 +367,24 @@ class MainActivity : AudioServiceActivity() {
         vizThread?.quitSafely()
         vizThread = null
         vizPoller = null
-        // Drop queued deliveries so they don't fire after FlutterJNI detached.
         visualizerHandler.removeCallbacksAndMessages(null)
         activeVisualizer?.release()
         activeVisualizer = null
+    }
+
+    private fun isDolbyAudio(path: String): Boolean {
+        val extractor = MediaExtractor()
+        return try {
+            val uri = getMediaUriForPath(path)
+            if (uri != null) extractor.setDataSource(this, uri, null)
+            else extractor.setDataSource(path)
+            (0 until extractor.trackCount).any { index ->
+                val mime = extractor.getTrackFormat(index).getString(MediaFormat.KEY_MIME)
+                mime != null && (mime == "audio/ac3" || mime.startsWith("audio/eac3"))
+            }
+        } finally {
+            extractor.release()
+        }
     }
 
     /**

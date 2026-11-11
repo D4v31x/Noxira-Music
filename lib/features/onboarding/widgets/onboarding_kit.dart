@@ -265,42 +265,51 @@ class StepScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    final content = custom ??
-        <Widget>[
-          Reveal(
-            child: Text(title,
-                textAlign: TextAlign.center, style: OnboardingText.headline),
-          ),
-          if (lead != null) ...[
-            const SizedBox(height: 16),
-            Reveal(
-              order: 1,
-              child: Text(lead!,
-                  textAlign: TextAlign.center, style: OnboardingText.lead),
-            ),
-          ],
-          const SizedBox(height: 28),
-          ...children,
-        ];
+    final header = <Widget>[
+      Reveal(
+        child: Text(title,
+            textAlign: TextAlign.center, style: OnboardingText.headline),
+      ),
+      if (lead != null) ...[
+        const SizedBox(height: 16),
+        Reveal(
+          order: 1,
+          child: Text(lead!,
+              textAlign: TextAlign.center, style: OnboardingText.lead),
+        ),
+      ],
+    ];
+
+    // Breathing room above and below, so a tall step still starts a good way
+    // down the screen instead of at its very top.
+    final inset = (MediaQuery.sizeOf(context).height * 0.06).clamp(24.0, 72.0);
 
     return Column(
       children: [
         Expanded(
           child: LayoutBuilder(
-            builder: (context, constraints) => SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(
-                  kOnboardingMargin, 8, kOnboardingMargin, 28),
-              physics: const BouncingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints:
-                    BoxConstraints(minHeight: constraints.maxHeight - 36),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: content,
+            builder: (context, constraints) {
+              final content = custom ??
+                  <Widget>[...header, const SizedBox(height: 28), ...children];
+
+              return SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                    kOnboardingMargin, inset, kOnboardingMargin, inset),
+                physics: const BouncingScrollPhysics(),
+                // The whole step (heading, text and content) is centred as one
+                // block; when it is taller than the screen it simply scrolls.
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: math.max(0, constraints.maxHeight - inset * 2),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: content,
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
         Padding(

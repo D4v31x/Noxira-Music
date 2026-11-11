@@ -44,6 +44,8 @@ dependencies:
   on_audio_query: ^2.9.0
   path_provider: ^2.1.3
   provider: ^6.1.2
+  # Native audio analysis engine (dart:ffi helpers, already resolved transitively)
+  ffi: ^2.1.3
   flutter_localizations:
     sdk: flutter
   intl: any
@@ -73,9 +75,15 @@ dependencies:
   xml: ^7.0.1
   path_drawing: ^1.0.1
   on_audio_query_platform_interface: ^1.7.0
+  firebase_remote_config: ^6.5.0
 
 dependency_overrides:
   sqflite_android: ^2.4.2+2
+  # Local copy of just_audio 0.10.6 with an AudioProcessor hook (see
+  # packages/just_audio/android/.../AudioProcessorHook.java and
+  # docs/audio_analysis.md). Remove once upstream exposes the hook.
+  just_audio:
+    path: packages/just_audio
 
 dev_dependencies:
   sentry_dart_plugin: ^3.2.1

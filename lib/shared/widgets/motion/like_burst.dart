@@ -205,7 +205,9 @@ class _HeartFlightState extends State<_HeartFlight>
   @override
   void dispose() {
     _c.dispose();
-    LikeBurst.landing.value = 1;
+    // Listeners can't be notified while the tree is being finalized.
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => LikeBurst.landing.value = 1);
     super.dispose();
   }
 

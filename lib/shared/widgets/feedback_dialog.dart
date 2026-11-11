@@ -3,6 +3,7 @@ import '../../core/constants/font_constants.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../services/feedback_email_service.dart';
 import 'glassmorphic_dialog.dart';
+import '../services/notification_manager.dart';
 
 /// Dialog for submitting a bug report / suggestion, sent to Sentry.
 class FeedbackDialog extends StatefulWidget {
@@ -31,17 +32,16 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
     setState(() => _sending = true);
-    final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context);
     try {
       await FeedbackEmailService.sendText(type: _type, description: text);
       if (!mounted) return;
       Navigator.pop(context);
-      messenger.showSnackBar(SnackBar(content: Text(loc.feedbackSentThanks)));
+      NotificationManager.show(loc.feedbackSentThanks);
     } catch (_) {
       if (!mounted) return;
       setState(() => _sending = false);
-      messenger.showSnackBar(SnackBar(content: Text(loc.feedbackSentError)));
+      NotificationManager.show(loc.feedbackSentError);
     }
   }
 

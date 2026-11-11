@@ -214,8 +214,8 @@ class _LyricsSectionState extends State<LyricsSection>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Can\'t translate — lyrics are already in the target language'
-            ' (${e.detectedLanguage.toUpperCase()})',
+            AppLocalizations.of(context).lyricsCantTranslateSameLanguage(
+                e.detectedLanguage.toUpperCase()),
           ),
           behavior: SnackBarBehavior.floating,
         ),
@@ -321,8 +321,7 @@ class _LyricsSectionState extends State<LyricsSection>
     double screenWidth,
   ) {
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Stack(
@@ -451,18 +450,19 @@ class _LyricsSectionState extends State<LyricsSection>
     if (_showTranslated) {
       lines.insert(
         0,
-        const Padding(
-          key: ValueKey('ai-disclaimer'),
-          padding: EdgeInsets.only(bottom: 6),
+        Padding(
+          key: const ValueKey('ai-disclaimer'),
+          padding: const EdgeInsets.only(bottom: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.auto_awesome_rounded, size: 10, color: Colors.white38),
-              SizedBox(width: 4),
+              const Icon(Icons.auto_awesome_rounded,
+                  size: 10, color: Colors.white38),
+              const SizedBox(width: 4),
               Text(
-                'AI translated \u00b7 accuracy may vary',
-                style: TextStyle(
+                AppLocalizations.of(context).lyricsAiTranslatedNote,
+                style: const TextStyle(
                   fontFamily: FontConstants.fontFamily,
                   fontSize: 10,
                   color: Colors.white38,
@@ -611,8 +611,7 @@ class _LyricsSectionState extends State<LyricsSection>
 
   Widget _buildExpandButton(BuildContext context) {
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return Positioned(
       bottom: 28,
@@ -636,8 +635,7 @@ class _LyricsSectionState extends State<LyricsSection>
 
   Widget _buildTranslateButton(BuildContext context) {
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     final isActive =
@@ -645,15 +643,16 @@ class _LyricsSectionState extends State<LyricsSection>
     final isError = _translationState == _TranslationState.error;
     final isLoading = _translationState == _TranslationState.loading;
 
+    final l10n = AppLocalizations.of(context);
     final String tooltip;
     if (isError) {
-      tooltip = 'Translation failed — tap to retry';
+      tooltip = l10n.translateFailedTapToRetry;
     } else if (isActive) {
-      tooltip = 'Show original lyrics';
+      tooltip = l10n.translateShowOriginal;
     } else if (_translationState == _TranslationState.done) {
-      tooltip = 'Show translation';
+      tooltip = l10n.translateShowTranslation;
     } else {
-      tooltip = 'Translate lyrics';
+      tooltip = l10n.translateLyrics;
     }
 
     return Positioned(

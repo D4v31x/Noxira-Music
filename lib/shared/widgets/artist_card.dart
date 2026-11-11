@@ -3,11 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../core/constants/font_constants.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../services/local_caching_service.dart';
 import '../services/online_discovery_service.dart';
 import '../services/performance_manager.dart';
 import '../services/artist_separator_service.dart';
 import '../providers/performance_mode_provider.dart';
+import '../utils/image_sizing.dart';
 
 class ArtistCard extends StatefulWidget {
   final String artistName;
@@ -22,6 +24,9 @@ class ArtistCard extends StatefulWidget {
   // Static cache to prevent duplicate API calls for artist info
   static final Map<String, String> _artistInfoCache = {};
   static final Set<String> _pendingRequests = {};
+
+  /// Stored when no profile is found; shown as the localized "Musical artist".
+  static const String _defaultInfo = 'Musical artist';
 
   static List<String> splitArtistNames(String artistNames) {
     return ArtistSeparatorService().splitArtists(artistNames);
@@ -88,7 +93,7 @@ class _ArtistCardState extends State<ArtistCard>
     try {
       ArtistCard._pendingRequests.add(primaryArtist);
 
-      String artistInfo = 'Musical artist'; // Default value
+      String artistInfo = ArtistCard._defaultInfo; // Default value
 
       // The verified profile rejects same-named non-musician pages.
       final bio = OnlineDiscoveryService.instance.enabled.value
@@ -102,7 +107,7 @@ class _ArtistCardState extends State<ArtistCard>
         final match = regExp.firstMatch(bio);
 
         if (match != null) {
-          artistInfo = match.group(1)?.trim() ?? 'Musical artist';
+          artistInfo = match.group(1)?.trim() ?? ArtistCard._defaultInfo;
         }
       }
 
@@ -121,7 +126,7 @@ class _ArtistCardState extends State<ArtistCard>
       }
     } catch (e) {
       // Cache default value to prevent repeated failed requests
-      ArtistCard._artistInfoCache[primaryArtist] = 'Musical artist';
+      ArtistCard._artistInfoCache[primaryArtist] = ArtistCard._defaultInfo;
 
       // Clean up cache if needed
       if (PerformanceManager.shouldCleanup(ArtistCard._artistInfoCache)) {
@@ -130,7 +135,7 @@ class _ArtistCardState extends State<ArtistCard>
 
       if (mounted) {
         setState(() {
-          _artistInfo = 'Musical artist';
+          _artistInfo = ArtistCard._defaultInfo;
         });
       }
     } finally {
@@ -171,8 +176,7 @@ class _ArtistCardState extends State<ArtistCard>
     super.build(context); // Required for AutomaticKeepAliveClientMixin
 
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
     return Press3D(
         child: RepaintBoundary(
@@ -230,6 +234,7 @@ class _ArtistCardState extends State<ArtistCard>
                             fit: BoxFit.cover,
                             width: 80,
                             height: 80,
+                            cacheWidth: decodePx(context, 80),
                           )
                         : Image.asset(
                             'assets/images/UI/unknown.png',
@@ -258,7 +263,9 @@ class _ArtistCardState extends State<ArtistCard>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _artistInfo,
+                      _artistInfo == ArtistCard._defaultInfo
+                          ? AppLocalizations.of(context).musicalArtist
+                          : _artistInfo,
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,

@@ -187,8 +187,7 @@ class _TracksScreenState extends State<TracksScreen> {
       if (!permissionStatus) {
         debugPrint('🎵 [TRACKS] Permission denied — cannot fetch songs');
         setState(() {
-          _errorMessage = 'Permission to access media library is required. '
-              'Please grant permissions in the onboarding or app settings.';
+          _errorMessage = AppLocalizations.of(context).tracksPermissionRequired;
           _isLoading = false;
         });
         return;
@@ -209,7 +208,7 @@ class _TracksScreenState extends State<TracksScreen> {
       if (_allSongs.isEmpty) {
         debugPrint('🎵 [TRACKS] No songs found on device');
         setState(() {
-          _errorMessage = 'No songs found on the device.';
+          _errorMessage = AppLocalizations.of(context).noSongsFound;
         });
       } else {
         unawaited(_applySorting());
@@ -217,7 +216,7 @@ class _TracksScreenState extends State<TracksScreen> {
     } catch (e) {
       debugPrint('🎵 [TRACKS] Error fetching songs: $e');
       setState(() {
-        _errorMessage = 'Error fetching songs: $e';
+        _errorMessage = AppLocalizations.of(context).tracksErrorFetching('$e');
         _isLoading = false;
       });
     }
@@ -332,7 +331,7 @@ class _TracksScreenState extends State<TracksScreen> {
           physics: const ClampingScrollPhysics(),
           slivers: [
             LibraryScreenHeader(
-              badge: 'Library',
+              badge: AppLocalizations.of(context).library,
               title: loc.tracks,
               subtitle: totalCount > 0 ? '$totalCount songs' : null,
               showBackButton: true,
@@ -569,7 +568,9 @@ class _TracksScreenState extends State<TracksScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           subtitle: Text(
-            splitArtists(song.artist ?? 'Unknown Artist').join(', '),
+            splitArtists(
+                    song.artist ?? AppLocalizations.of(context).unknownArtist)
+                .join(', '),
             style: TextStyle(color: Colors.grey[400]),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

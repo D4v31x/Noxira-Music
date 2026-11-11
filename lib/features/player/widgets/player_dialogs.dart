@@ -30,17 +30,18 @@ void showAddToPlaylistDialog(
 }
 
 /// Share the current song.
-void shareSong(AudioPlayerService audioPlayerService) {
+void shareSong(BuildContext context, AudioPlayerService audioPlayerService) {
   if (audioPlayerService.currentSong == null) return;
 
+  final l10n = AppLocalizations.of(context);
   final song = audioPlayerService.currentSong!;
   final shareText =
-      '${song.title} - ${splitArtists(song.artist ?? "Unknown Artist").join(", ")}';
+      '${song.title} - ${splitArtists(song.artist ?? l10n.unknownArtist).join(", ")}';
 
   SharePlus.instance.share(
     ShareParams(
       text: shareText,
-      subject: 'Check out this song!',
+      subject: l10n.checkOutThisSong,
     ),
   );
 }
@@ -61,8 +62,9 @@ void showQueueDialog(
                 image:
                     ArtworkCacheService().getCachedImageProviderSync(song.id),
                 title: song.title,
-                artist:
-                    splitArtists(song.artist ?? 'Unknown Artist').join(', '),
+                artist: splitArtists(song.artist ??
+                        AppLocalizations.of(context).unknownArtist)
+                    .join(', '),
               ),
           ]
         : const [],
@@ -141,12 +143,12 @@ void showSongInfoDialog(
           InfoRow(
             icon: Icons.person_outline_rounded,
             label: l10n.artist,
-            value: splitArtists(song.artist ?? 'Unknown').join(', '),
+            value: splitArtists(song.artist ?? l10n.unknownArtist).join(', '),
           ),
           InfoRow(
             icon: Icons.album_outlined,
             label: l10n.album,
-            value: song.album ?? 'Unknown',
+            value: song.album ?? l10n.unknownAlbum,
           ),
           InfoRow(
             icon: Icons.folder_outlined,

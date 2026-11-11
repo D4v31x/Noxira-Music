@@ -346,7 +346,7 @@ class _AlbumDetailScreenState extends State<AlbumDetailScreen>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
                       child: Text(
-                        'More from $_artistName',
+                        localizations.moreFromArtist(_artistName ?? ''),
                         style: const TextStyle(
                           fontFamily: FontConstants.fontFamily,
                           color: Colors.white,

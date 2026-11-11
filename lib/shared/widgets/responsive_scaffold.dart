@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../utils/responsive_utils.dart';
 
 /// A responsive scaffold that adapts to tablet layouts by showing
@@ -147,7 +148,7 @@ class ResponsiveScaffold extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            'Select an item to view details',
+            AppLocalizations.of(context).selectItemToViewDetails,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   color: Theme.of(context)
                       .colorScheme

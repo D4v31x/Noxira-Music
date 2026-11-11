@@ -9,6 +9,7 @@ import '../../../shared/models/models.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/smart_playlist_service.dart';
 import '../../../shared/widgets/app_background.dart';
+import '../../../shared/widgets/expanding_player.dart';
 
 /// Opens in "create" mode when [existing] is null, or "edit" mode to modify
 /// an already-saved [SmartPlaylist].
@@ -73,63 +74,66 @@ class _SmartPlaylistEditorScreenState extends State<SmartPlaylistEditorScreen> {
   }
 
   String _fieldLabel(SmartPlaylistField f) {
+    final l10n = AppLocalizations.of(context);
     switch (f) {
       case SmartPlaylistField.title:
-        return 'Title';
+        return l10n.title;
       case SmartPlaylistField.artist:
-        return 'Artist';
+        return l10n.artist;
       case SmartPlaylistField.album:
-        return 'Album';
+        return l10n.album;
       case SmartPlaylistField.genre:
-        return 'Genre';
+        return l10n.genre;
       case SmartPlaylistField.folder:
-        return 'Folder path';
+        return l10n.smartFieldFolderPath;
       case SmartPlaylistField.liked:
-        return 'Liked';
+        return l10n.smartFieldLiked;
       case SmartPlaylistField.playCount:
-        return 'Play count';
+        return l10n.smartFieldPlayCount;
       case SmartPlaylistField.durationSeconds:
-        return 'Duration (seconds)';
+        return l10n.smartFieldDurationSeconds;
       case SmartPlaylistField.dateAddedDaysAgo:
-        return 'Days since added';
+        return l10n.smartFieldDaysSinceAdded;
     }
   }
 
   String _operatorLabel(SmartPlaylistOperator o) {
+    final l10n = AppLocalizations.of(context);
     switch (o) {
       case SmartPlaylistOperator.contains:
-        return 'contains';
+        return l10n.smartOpContains;
       case SmartPlaylistOperator.notContains:
-        return 'does not contain';
+        return l10n.smartOpNotContains;
       case SmartPlaylistOperator.equals:
-        return 'equals';
+        return l10n.smartOpEquals;
       case SmartPlaylistOperator.notEquals:
-        return 'does not equal';
+        return l10n.smartOpNotEquals;
       case SmartPlaylistOperator.greaterThan:
-        return 'is greater than';
+        return l10n.smartOpGreaterThan;
       case SmartPlaylistOperator.lessThan:
-        return 'is less than';
+        return l10n.smartOpLessThan;
       case SmartPlaylistOperator.isTrue:
-        return 'is true';
+        return l10n.smartOpIsTrue;
       case SmartPlaylistOperator.isFalse:
-        return 'is false';
+        return l10n.smartOpIsFalse;
     }
   }
 
   String _sortLabel(SmartPlaylistSortBy s) {
+    final l10n = AppLocalizations.of(context);
     switch (s) {
       case SmartPlaylistSortBy.titleAZ:
-        return 'Title (A-Z)';
+        return l10n.smartSortTitleAZ;
       case SmartPlaylistSortBy.artistAZ:
-        return 'Artist (A-Z)';
+        return l10n.smartSortArtistAZ;
       case SmartPlaylistSortBy.dateAddedNewest:
-        return 'Date added (newest)';
+        return l10n.smartSortDateAddedNewest;
       case SmartPlaylistSortBy.playCountHighest:
-        return 'Play count (highest)';
+        return l10n.smartSortPlayCountHighest;
       case SmartPlaylistSortBy.durationLongest:
-        return 'Duration (longest)';
+        return l10n.smartSortDurationLongest;
       case SmartPlaylistSortBy.random:
-        return 'Random';
+        return l10n.smartSortRandom;
     }
   }
 
@@ -245,7 +249,8 @@ class _SmartPlaylistEditorScreenState extends State<SmartPlaylistEditorScreen> {
           ],
         ),
         body: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          padding: EdgeInsets.fromLTRB(
+              16, 8, 16, ExpandingPlayer.bottomInsetFor(context, idle: 32)),
           children: [
             TextField(
               controller: _nameController,

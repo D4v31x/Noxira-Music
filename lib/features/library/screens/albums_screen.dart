@@ -245,11 +245,9 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
           physics: const ClampingScrollPhysics(),
           slivers: [
             LibraryScreenHeader(
-              badge: 'Library',
+              badge: AppLocalizations.of(context).library,
               title: loc.albums,
-              subtitle: _isLoading
-                  ? null
-                  : '$count ${count == 1 ? 'album' : 'albums'}',
+              subtitle: _isLoading ? null : loc.albumsCountPlural(count),
               accentColor: Colors.indigo,
               showBackButton: true,
               searchField: LibrarySearchField(
@@ -294,10 +292,14 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                         ),
                       ),
                       itemBuilder: (context) => [
-                        _buildSortMenuItem(AlbumSortOption.name, 'Name'),
-                        _buildSortMenuItem(AlbumSortOption.artist, 'Artist'),
-                        _buildSortMenuItem(AlbumSortOption.numSongs, 'Tracks'),
-                        _buildSortMenuItem(AlbumSortOption.year, 'Year'),
+                        _buildSortMenuItem(AlbumSortOption.name,
+                            AppLocalizations.of(context).sortName),
+                        _buildSortMenuItem(AlbumSortOption.artist,
+                            AppLocalizations.of(context).artist),
+                        _buildSortMenuItem(AlbumSortOption.numSongs,
+                            AppLocalizations.of(context).tracks),
+                        _buildSortMenuItem(AlbumSortOption.year,
+                            AppLocalizations.of(context).year),
                       ],
                     ),
                   ),
@@ -421,15 +423,16 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
   }
 
   String _getSortOptionLabel(AlbumSortOption option) {
+    final l10n = AppLocalizations.of(context);
     switch (option) {
       case AlbumSortOption.name:
-        return 'Name';
+        return l10n.sortName;
       case AlbumSortOption.artist:
-        return 'Artist';
+        return l10n.artist;
       case AlbumSortOption.numSongs:
-        return 'Tracks';
+        return l10n.tracks;
       case AlbumSortOption.year:
-        return 'Year';
+        return l10n.year;
     }
   }
 
@@ -517,7 +520,7 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${splitArtists(album.artist ?? 'Unknown').join(', ')} • ${album.numOfSongs} tracks',
+                      '${splitArtists(album.artist ?? AppLocalizations.of(context).unknown).join(', ')} • ${AppLocalizations.of(context).tracksCountPlural(album.numOfSongs)}',
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 11,
@@ -607,7 +610,9 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      splitArtists(album.artist ?? 'Unknown Artist').join(', '),
+                      splitArtists(album.artist ??
+                              AppLocalizations.of(context).unknownArtist)
+                          .join(', '),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.7),
                         fontSize: 13,
@@ -618,7 +623,8 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${album.numOfSongs} tracks',
+                      AppLocalizations.of(context)
+                          .tracksCountPlural(album.numOfSongs),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,
@@ -697,7 +703,9 @@ class _AlbumsScreenState extends State<AlbumsScreen> {
                             overflow: TextOverflow.ellipsis,
                           ),
                           Text(
-                            splitArtists(album.artist ?? 'Unknown').join(', '),
+                            splitArtists(album.artist ??
+                                    AppLocalizations.of(context).unknownArtist)
+                                .join(', '),
                             style: const TextStyle(
                                 color: Colors.white70, fontSize: 13),
                           ),

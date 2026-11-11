@@ -11,6 +11,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
+import 'package:just_audio/just_audio.dart' show LoopMode;
 import 'package:on_audio_query/on_audio_query.dart';
 
 import '../../../core/constants/font_constants.dart';
@@ -46,6 +47,9 @@ class QueuePage extends StatefulWidget {
 
 class _QueuePageState extends State<QueuePage> {
   late final ScrollController _scroll;
+
+  /// Upcoming order shown right after a drop, until the service catches up.
+  List<SongModel>? _optimistic;
 
   AudioPlayerService get _audio => widget.audioPlayerService;
 
@@ -94,17 +98,39 @@ class _QueuePageState extends State<QueuePage> {
                     song: song,
                     targets: widget.targets,
                     route: route,
-                    subtitle: '${l10n.queue} · $count '
-                        '${count == 1 ? 'song' : 'songs'}',
+                    subtitle: '${l10n.queue} · ${l10n.songsCountPlural(count)}',
                     onCoverTap: () => Navigator.pop(context),
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded,
-                          color: Colors.white70, size: 24),
+                      icon: const iconoir.NavArrowLeft(
+                          color: Colors.white70, width: 24, height: 24),
                       tooltip:
                           MaterialLocalizations.of(context).backButtonTooltip,
                       onPressed: () => Navigator.pop(context),
                     ),
                     trailing: [
+                      IconButton(
+                        icon: iconoir.Shuffle(
+                            color: _audio.isShuffle
+                                ? Colors.white
+                                : Colors.white38,
+                            width: 24,
+                            height: 24),
+                        tooltip: l10n.shuffle,
+                        onPressed: _audio.toggleShuffle,
+                      ),
+                      IconButton(
+                        icon: _audio.loopMode == LoopMode.one
+                            ? const iconoir.RepeatOnce(
+                                color: Colors.white, width: 24, height: 24)
+                            : iconoir.Repeat(
+                                color: _audio.loopMode == LoopMode.off
+                                    ? Colors.white38
+                                    : Colors.white,
+                                width: 24,
+                                height: 24),
+                        tooltip: l10n.repeat,
+                        onPressed: _audio.toggleRepeat,
+                      ),
                       if (_audio.hasUpcoming)
                         IconButton(
                           icon: const iconoir.Trash(
@@ -167,6 +193,7 @@ class _QueuePageState extends State<QueuePage> {
     final source = _audio.sourceUpcoming;
     final sourceName = _audio.playbackSource.name;
     final nothingNext = queued.isEmpty && source.isEmpty;
+    final upcoming = _optimistic ?? [...queued, ...source];
 
     return LayoutBuilder(builder: (context, constraints) {
       final fade = (18 / constraints.maxHeight).clamp(0.0, 0.25);
@@ -188,7 +215,7 @@ class _QueuePageState extends State<QueuePage> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             if (history.isNotEmpty) ...[
-              _header('History'),
+              _header(AppLocalizations.of(context).queueHistory),
               SliverList.builder(
                 itemCount: history.length,
                 itemBuilder: (context, i) => _swipeable(
@@ -216,57 +243,82 @@ class _QueuePageState extends State<QueuePage> {
                 ),
               ),
             ),
-            if (queued.isNotEmpty) ...[
-              _header(l10n.queue),
+            if (!nothingNext) ...[
+              _header(sourceName != null && sourceName.isNotEmpty
+                  ? AppLocalizations.of(context).queueNextFrom(sourceName)
+                  : AppLocalizations.of(context).queueNextUp),
               SliverReorderableList(
-                itemCount: queued.length,
-                onReorderItem: (oldIdx, newIdx) => _audio.moveInQueue(
-                    current + 1 + oldIdx, current + 1 + newIdx),
-                proxyDecorator: (child, index, animation) => Material(
-                  color: Colors.transparent,
-                  child: ScaleTransition(
-                    scale:
-                        Tween<double>(begin: 1, end: 1.02).animate(animation),
-                    child: child,
-                  ),
+                itemCount: upcoming.length,
+                onReorderItem: (oldIdx, newIdx) {
+                  final reordered = List<SongModel>.of(upcoming);
+                  reordered.insert(newIdx, reordered.removeAt(oldIdx));
+                  setState(() => _optimistic = reordered);
+                  _audio
+                      .moveInQueue(current + 1 + oldIdx, current + 1 + newIdx)
+                      .whenComplete(() async {
+                    // Let the service's own notification land before dropping
+                    // the local order, so the row doesn't flick back.
+                    await Future<void>.delayed(
+                        const Duration(milliseconds: 80));
+                    if (mounted) setState(() => _optimistic = null);
+                  });
+                },
+                proxyDecorator: (child, index, animation) => AnimatedBuilder(
+                  animation: animation,
+                  child: child,
+                  builder: (context, child) {
+                    final t = Curves.easeOutCubic.transform(animation.value);
+                    return Transform.scale(
+                      scale: 1 + 0.03 * t,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Color.lerp(
+                              Colors.transparent, const Color(0xFF2A2A32), t),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.45 * t),
+                              blurRadius: 18 * t,
+                              offset: Offset(0, 6 * t),
+                            ),
+                          ],
+                        ),
+                        child:
+                            Material(color: Colors.transparent, child: child),
+                      ),
+                    );
+                  },
                 ),
                 itemBuilder: (context, i) {
+                  final s = upcoming[i];
                   final index = current + 1 + i;
+                  final last = upcoming.length - 1;
+                  // Duplicate songs get distinct, move-stable keys.
+                  final occurrence =
+                      upcoming.sublist(0, i).where((o) => o.id == s.id).length;
+                  final key = '${s.id}#$occurrence';
                   return KeyedSubtree(
-                    key: ValueKey('queued_${queued[i].id}_$index'),
-                    child: _swipeable(
-                      key: 'queued_swipe_${queued[i].id}_$index',
-                      index: index,
-                      child: _SongRow(
-                        song: queued[i],
-                        onTap: () => _play(index),
-                        rowKeys: _keysFor(i),
-                        handleIndex: i,
+                    key: ValueKey('upcoming_$key'),
+                    child: ReorderableDelayedDragStartListener(
+                      index: i,
+                      child: _swipeable(
+                        key: 'upcoming_swipe_$key',
+                        index: index,
+                        child: _SongRow(
+                          song: s,
+                          onTap: () => _play(index),
+                          rowKeys: _keysFor(i),
+                          handleIndex: i,
+                          onPlayNext: i == 0
+                              ? null
+                              : () => _audio.moveInQueue(index, current + 1),
+                          onMoveToEnd: i == last
+                              ? null
+                              : () => _audio.moveInQueue(
+                                  index, _audio.playlist.length - 1),
+                          onRemove: () => _remove(index),
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ],
-            if (source.isNotEmpty) ...[
-              _header(
-                sourceName != null && sourceName.isNotEmpty
-                    ? 'Next from $sourceName'
-                    : 'Next Up',
-              ),
-              SliverList.builder(
-                itemCount: source.length,
-                itemBuilder: (context, i) {
-                  final index = _audio.queueBoundary + i;
-                  return _swipeable(
-                    key: 'source_${source[i].id}_$index',
-                    index: index,
-                    child: _SongRow(
-                      song: source[i],
-                      onTap: () => _play(index),
-                      rowKeys: _keysFor(queued.length + i),
-                      onPlayNext: () => _audio.moveInQueue(index, current + 1),
-                      onRemove: () => _remove(index),
                     ),
                   );
                 },
@@ -278,7 +330,7 @@ class _QueuePageState extends State<QueuePage> {
                   padding: const EdgeInsets.fromLTRB(
                       kLyricsHorizontalPadding, 16, 16, 12),
                   child: Text(
-                    'Nothing else queued',
+                    AppLocalizations.of(context).queueNothingElse,
                     style: TextStyle(
                       fontFamily: FontConstants.fontFamily,
                       color: Colors.white.withValues(alpha: 0.45),
@@ -298,24 +350,23 @@ class _QueuePageState extends State<QueuePage> {
   RowKeys? _keysFor(int position) =>
       position < kPlayerPageRows ? widget.targets.rows[position] : null;
 
-  Widget _header(String title) {
-    return SliverToBoxAdapter(
-      child: SizedBox(
-        height: _kHeaderHeight,
-        child: Padding(
-          padding:
-              const EdgeInsets.fromLTRB(kLyricsHorizontalPadding, 0, 16, 8),
-          child: Align(
-            alignment: Alignment.bottomLeft,
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                color: Colors.white,
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-                height: 1.3,
-              ),
+  Widget _header(String title) => SliverToBoxAdapter(child: _headerBox(title));
+
+  Widget _headerBox(String title) {
+    return SizedBox(
+      height: _kHeaderHeight,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(kLyricsHorizontalPadding, 0, 16, 8),
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+              height: 1.3,
             ),
           ),
         ),
@@ -357,12 +408,14 @@ class _SongRow extends StatelessWidget {
     this.playing = false,
     this.handleIndex,
     this.onPlayNext,
+    this.onMoveToEnd,
     this.onRemove,
     this.rowKeys,
   });
 
   final RowKeys? rowKeys;
   final VoidCallback? onPlayNext;
+  final VoidCallback? onMoveToEnd;
   final VoidCallback? onRemove;
   final SongModel song;
   final VoidCallback onTap;
@@ -380,7 +433,7 @@ class _SongRow extends StatelessWidget {
     Widget landing(GlobalKey? key, Widget child) =>
         key == null ? child : playerPageSharedTarget(route, key, child);
     final artist = ArtistSeparatorService()
-        .splitArtists(song.artist ?? 'Unknown Artist')
+        .splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist)
         .join(', ');
 
     return SizedBox(
@@ -475,6 +528,13 @@ class _SongRow extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (onPlayNext != null ||
+                      onMoveToEnd != null ||
+                      onRemove != null)
+                    _RowMenu(
+                        onPlayNext: onPlayNext,
+                        onMoveToEnd: onMoveToEnd,
+                        onRemove: onRemove),
                   if (handleIndex != null)
                     ReorderableDragStartListener(
                       index: handleIndex!,
@@ -490,9 +550,9 @@ class _SongRow extends StatelessWidget {
                         ),
                       ),
                     )
-                  else if (onPlayNext != null || onRemove != null)
-                    _RowMenu(onPlayNext: onPlayNext, onRemove: onRemove)
-                  else
+                  else if (onPlayNext == null &&
+                      onMoveToEnd == null &&
+                      onRemove == null)
                     const SizedBox(width: _kHandleSize),
                 ],
               ),
@@ -505,9 +565,10 @@ class _SongRow extends StatelessWidget {
 }
 
 class _RowMenu extends StatelessWidget {
-  const _RowMenu({this.onPlayNext, this.onRemove});
+  const _RowMenu({this.onPlayNext, this.onMoveToEnd, this.onRemove});
 
   final VoidCallback? onPlayNext;
+  final VoidCallback? onMoveToEnd;
   final VoidCallback? onRemove;
 
   @override
@@ -518,18 +579,41 @@ class _RowMenu extends StatelessWidget {
       color: Colors.white,
       fontSize: 14,
     );
+    Widget item(Widget icon, String label) => Row(children: [
+          icon,
+          const SizedBox(width: 12),
+          Text(label, style: style),
+        ]);
+    const c = Colors.white70;
     return PopupMenuButton<int>(
       color: const Color(0xFF24242B),
-      icon: Icon(Icons.more_vert_rounded,
-          color: Colors.white.withValues(alpha: 0.5), size: 22),
-      constraints: const BoxConstraints(minWidth: 160),
+      icon: iconoir.MoreVert(
+          color: Colors.white.withValues(alpha: 0.5), width: 22, height: 22),
+      constraints: const BoxConstraints(minWidth: 180),
       padding: EdgeInsets.zero,
-      onSelected: (v) => v == 0 ? onPlayNext?.call() : onRemove?.call(),
+      onSelected: (v) => switch (v) {
+        0 => onPlayNext?.call(),
+        1 => onMoveToEnd?.call(),
+        _ => onRemove?.call(),
+      },
       itemBuilder: (_) => [
         if (onPlayNext != null)
-          PopupMenuItem(value: 0, child: Text(l10n.playNext, style: style)),
+          PopupMenuItem(
+              value: 0,
+              child: item(
+                  const iconoir.FastArrowUp(color: c, width: 20, height: 20),
+                  l10n.playNext)),
+        if (onMoveToEnd != null)
+          PopupMenuItem(
+              value: 1,
+              child: item(
+                  const iconoir.FastArrowDown(color: c, width: 20, height: 20),
+                  l10n.queueMoveToEnd)),
         if (onRemove != null)
-          PopupMenuItem(value: 1, child: Text(l10n.remove, style: style)),
+          PopupMenuItem(
+              value: 2,
+              child: item(const iconoir.Trash(color: c, width: 20, height: 20),
+                  l10n.remove)),
       ],
     );
   }

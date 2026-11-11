@@ -3,6 +3,7 @@ import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/performance_mode_provider.dart';
+import '../services/logging_service.dart';
 
 /// A global toast notification manager that shows pill-shaped notifications
 /// at the bottom of the screen, above the mini player.
@@ -13,7 +14,7 @@ class ToastNotification {
 
   static OverlayEntry? _currentOverlay;
   static Timer? _hideTimer;
-  static final GlobalKey<_ToastWidgetState> _toastKey = GlobalKey();
+  static GlobalKey<_ToastWidgetState>? _toastKey;
 
   /// Show a toast notification
   static void show(
@@ -22,11 +23,24 @@ class ToastNotification {
     Duration duration = const Duration(seconds: 3),
     IconData? icon,
     bool isProgress = false,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
+    if (!context.mounted) {
+      LoggingService.warning(
+          'Cannot show toast from an unmounted context', 'Toast');
+      return;
+    }
     // If there's an existing toast, update it instead of creating a new one
-    if (_currentOverlay != null && _toastKey.currentState != null) {
-      _toastKey.currentState!
-          .updateMessage(message, icon: icon, isProgress: isProgress);
+    final state = _toastKey?.currentState;
+    if (_currentOverlay != null && state != null) {
+      state.updateMessage(
+        message,
+        icon: icon,
+        isProgress: isProgress,
+        actionLabel: actionLabel,
+        onAction: onAction,
+      );
       _resetTimer(duration, isProgress);
       return;
     }
@@ -38,25 +52,36 @@ class ToastNotification {
     // Navigator's overlay (callers pass a long-lived root context).
     final overlay =
         Overlay.maybeOf(context) ?? Navigator.maybeOf(context)?.overlay;
-    if (overlay == null) return;
+    if (overlay == null) {
+      LoggingService.warning('Cannot show toast without an overlay', 'Toast');
+      return;
+    }
 
     // Check if blur should be enabled based on performance mode
     final performanceProvider =
         Provider.of<PerformanceModeProvider>(context, listen: false);
     final shouldBlur = performanceProvider.shouldEnableBlur;
 
-    _currentOverlay = OverlayEntry(
+    final key = GlobalKey<_ToastWidgetState>();
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
       builder: (context) => _ToastWidget(
-        key: _toastKey,
+        key: key,
         message: message,
         icon: icon,
         isProgress: isProgress,
-        onDismiss: hide,
+        actionLabel: actionLabel,
+        onAction: onAction,
+        onDismiss: () {
+          if (identical(_currentOverlay, entry)) hide();
+        },
         shouldBlur: shouldBlur,
       ),
     );
 
-    overlay.insert(_currentOverlay!);
+    _toastKey = key;
+    _currentOverlay = entry;
+    overlay.insert(entry);
     _resetTimer(duration, isProgress);
   }
 
@@ -73,11 +98,20 @@ class ToastNotification {
   static void hide() {
     _hideTimer?.cancel();
     _hideTimer = null;
-    if (_currentOverlay != null) {
-      _toastKey.currentState?.dismiss();
+    final entry = _currentOverlay;
+    final state = _toastKey?.currentState;
+    _currentOverlay = null;
+    _toastKey = null;
+    if (entry != null) {
+      if (state == null) {
+        entry.remove();
+        entry.dispose();
+        return;
+      }
+      state.dismiss();
       Future.delayed(const Duration(milliseconds: 300), () {
-        _currentOverlay?.remove();
-        _currentOverlay = null;
+        entry.remove();
+        entry.dispose();
       });
     }
   }
@@ -90,6 +124,8 @@ class _ToastWidget extends StatefulWidget {
   final String message;
   final IconData? icon;
   final bool isProgress;
+  final String? actionLabel;
+  final VoidCallback? onAction;
   final VoidCallback onDismiss;
   final bool shouldBlur;
 
@@ -98,6 +134,8 @@ class _ToastWidget extends StatefulWidget {
     required this.message,
     this.icon,
     this.isProgress = false,
+    this.actionLabel,
+    this.onAction,
     required this.onDismiss,
     this.shouldBlur = true,
   });
@@ -115,6 +153,8 @@ class _ToastWidgetState extends State<_ToastWidget>
   String _message = '';
   IconData? _icon;
   bool _isProgress = false;
+  String? _actionLabel;
+  VoidCallback? _onAction;
 
   @override
   void initState() {
@@ -122,6 +162,8 @@ class _ToastWidgetState extends State<_ToastWidget>
     _message = widget.message;
     _icon = widget.icon;
     _isProgress = widget.isProgress;
+    _actionLabel = widget.actionLabel;
+    _onAction = widget.onAction;
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -150,12 +192,19 @@ class _ToastWidgetState extends State<_ToastWidget>
     super.dispose();
   }
 
-  void updateMessage(String message,
-      {IconData? icon, bool isProgress = false}) {
+  void updateMessage(
+    String message, {
+    IconData? icon,
+    bool isProgress = false,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
     setState(() {
       _message = message;
       _icon = icon;
       _isProgress = isProgress;
+      _actionLabel = actionLabel;
+      _onAction = onAction;
     });
   }
 
@@ -245,6 +294,26 @@ class _ToastWidgetState extends State<_ToastWidget>
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (_actionLabel != null && _onAction != null) ...[
+            const SizedBox(width: 14),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                _onAction!();
+                widget.onDismiss();
+              },
+              child: Text(
+                _actionLabel!,
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: colorScheme.primary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

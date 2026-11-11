@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
+import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/models/models.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/widgets/common/scrolling_text.dart';
@@ -65,18 +66,18 @@ class TrackInfoDisplay extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildSongTitle(currentSong?.title, titleFontSize),
+          _buildSongTitle(context, currentSong?.title, titleFontSize),
           const SizedBox(height: 4),
-          _buildArtistName(currentSong?.artist, artistFontSize),
+          _buildArtistName(context, currentSong?.artist, artistFontSize),
         ],
       ),
     );
   }
 
   /// Builds the song title with scrolling text.
-  Widget _buildSongTitle(String? title, double fontSize) {
+  Widget _buildSongTitle(BuildContext context, String? title, double fontSize) {
     return ScrollingText(
-      text: title ?? 'No song playing',
+      text: title ?? AppLocalizations.of(context).noSongPlaying,
       style: TextStyle(
         fontSize: fontSize,
         fontWeight: FontWeight.w600,
@@ -87,9 +88,11 @@ class TrackInfoDisplay extends StatelessWidget {
   }
 
   /// Builds the artist name.
-  Widget _buildArtistName(String? artist, double fontSize) {
-    final displayArtist =
-        artist != null ? splitArtists(artist).join(', ') : 'Unknown artist';
+  Widget _buildArtistName(
+      BuildContext context, String? artist, double fontSize) {
+    final displayArtist = artist != null
+        ? splitArtists(artist).join(', ')
+        : AppLocalizations.of(context).unknownArtist;
 
     return Text(
       displayArtist,

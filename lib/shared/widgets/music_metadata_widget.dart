@@ -92,8 +92,7 @@ class MusicMetadataWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(

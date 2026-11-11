@@ -551,7 +551,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
           }
 
           final song = _displayedSongs[index];
-          final isPlaying = audioService.currentSong?.id == song.id;
           final duration = Duration(milliseconds: song.duration ?? 0);
           final durationString =
               '${duration.inMinutes}:${(duration.inSeconds % 60).toString().padLeft(2, '0')}';
@@ -564,7 +563,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                     context,
                     song,
                     index,
-                    isPlaying,
                     isDark,
                     audioService,
                     playlist,
@@ -622,7 +620,9 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      splitArtists(song.artist ?? 'Unknown').join(', '),
+                      splitArtists(song.artist ??
+                              AppLocalizations.of(context).unknownArtist)
+                          .join(', '),
                       style: TextStyle(
                         fontFamily: FontConstants.fontFamily,
                         color: Colors.white.withValues(alpha: 0.5),
@@ -653,7 +653,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
     BuildContext context,
     SongModel song,
     int index,
-    bool isPlaying,
     bool isDark,
     AudioPlayerService audioService,
     Playlist playlist,
@@ -696,81 +695,95 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: GlassmorphicContainer(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              child: Row(
-                children: [
-                  // Index
-                  SizedBox(
-                    width: 32,
-                    child: isPlaying
-                        ? iconoir.SoundHigh(
-                            color: theme.colorScheme.primary,
-                            width: 18,
-                            height: 18,
-                          )
-                        : Text(
-                            '${index + 1}',
-                            style: TextStyle(
-                              fontFamily: FontConstants.fontFamily,
-                              color: Colors.white.withValues(alpha: 0.5),
-                              fontSize: 14,
+            // Listens to the current song itself: this list is built once per
+            // playlist change, so a flag passed in would go stale as tracks
+            // switch.
+            child: ValueListenableBuilder<SongModel?>(
+              valueListenable: audioService.currentSongNotifier,
+              builder: (context, currentSong, _) {
+                final isPlaying = currentSong?.id == song.id;
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  child: Row(
+                    children: [
+                      // Index
+                      SizedBox(
+                        width: 32,
+                        child: isPlaying
+                            ? iconoir.SoundHigh(
+                                color: theme.colorScheme.primary,
+                                width: 18,
+                                height: 18,
+                              )
+                            : Text(
+                                '${index + 1}',
+                                style: TextStyle(
+                                  fontFamily: FontConstants.fontFamily,
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 14,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Song info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              song.title,
+                              style: TextStyle(
+                                fontFamily: FontConstants.fontFamily,
+                                color: isPlaying
+                                    ? theme.colorScheme.primary
+                                    : Colors.white,
+                                fontSize: 15,
+                                fontWeight: isPlaying
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Song info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          song.title,
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            color: isPlaying
-                                ? theme.colorScheme.primary
-                                : Colors.white,
-                            fontSize: 15,
-                            fontWeight:
-                                isPlaying ? FontWeight.w600 : FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                            const SizedBox(height: 2),
+                            Text(
+                              splitArtists(song.artist ??
+                                      AppLocalizations.of(context)
+                                          .unknownArtist)
+                                  .join(', '),
+                              style: TextStyle(
+                                fontFamily: FontConstants.fontFamily,
+                                color: Colors.white.withValues(alpha: 0.5),
+                                fontSize: 12,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          splitArtists(song.artist ?? 'Unknown').join(', '),
-                          style: TextStyle(
-                            fontFamily: FontConstants.fontFamily,
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      ),
+                      // Duration
+                      Text(
+                        durationString,
+                        style: TextStyle(
+                          fontFamily: FontConstants.fontFamily,
+                          color: Colors.white.withValues(alpha: 0.5),
+                          fontSize: 13,
                         ),
-                      ],
-                    ),
+                      ),
+                      // More button
+                      const SizedBox(width: 4),
+                      iconoir.MoreVert(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        width: 20,
+                        height: 20,
+                      ),
+                    ],
                   ),
-                  // Duration
-                  Text(
-                    durationString,
-                    style: TextStyle(
-                      fontFamily: FontConstants.fontFamily,
-                      color: Colors.white.withValues(alpha: 0.5),
-                      fontSize: 13,
-                    ),
-                  ),
-                  // More button
-                  const SizedBox(width: 4),
-                  iconoir.MoreVert(
-                    color: Colors.white.withValues(alpha: 0.5),
-                    width: 20,
-                    height: 20,
-                  ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ),
@@ -1046,7 +1059,6 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
 
   Future<void> _exportPlaylist(BuildContext context, Playlist playlist,
       {String extension = 'm3u8'}) async {
-    final messenger = ScaffoldMessenger.of(context);
     final localizations = AppLocalizations.of(context);
     final audioService = context.read<AudioPlayerService>();
     try {
@@ -1063,12 +1075,10 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
         if (tempFile.existsSync()) unawaited(tempFile.delete());
       } catch (_) {}
       if (savedPath != null && context.mounted) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(localizations.playlistSavedToDevice)));
+        NotificationManager.show(localizations.playlistSavedToDevice);
       }
     } catch (e) {
-      messenger.showSnackBar(
-          SnackBar(content: Text(localizations.exportFailed('$e'))));
+      NotificationManager.show(localizations.exportFailed('$e'));
     }
   }
 
@@ -1193,7 +1203,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   width: 22,
                   height: 22,
                 ),
-                'Export (.m3u8)',
+                AppLocalizations.of(context).exportPlaylistAs('.m3u8'),
                 isDark,
                 () {
                   Navigator.pop(context);
@@ -1208,7 +1218,7 @@ class _PlaylistDetailScreenState extends State<PlaylistDetailScreen> {
                   width: 22,
                   height: 22,
                 ),
-                'Export (.m3u)',
+                AppLocalizations.of(context).exportPlaylistAs('.m3u'),
                 isDark,
                 () {
                   Navigator.pop(context);

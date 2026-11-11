@@ -9,5 +9,6 @@
     <string name="widget_recommended">Рекомендовано для вас</string>
     <string name="widget_queue">Очередь</string>
     <string name="widget_next_up">Далее</string>
+    <string name="widget_queue_empty">Очередь пуста</string>
     <string name="widget_after">Затем</string>
 </resources>

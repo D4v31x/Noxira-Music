@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../main.dart' show navigatorKey;
 import '../widgets/toast_notification.dart';
 
 /// Data class to hold notification state
@@ -54,8 +55,41 @@ class NotificationManager {
     String message, {
     Duration duration = const Duration(seconds: 3),
     IconData? icon,
+    String? actionLabel,
+    VoidCallback? onAction,
   }) {
-    ToastNotification.show(context, message, duration: duration, icon: icon);
+    ToastNotification.show(
+      context,
+      message,
+      duration: duration,
+      icon: icon,
+      actionLabel: actionLabel,
+      onAction: onAction,
+    );
+  }
+
+  /// Same toast, for callers without a usable [BuildContext] (e.g. after an
+  /// await). Uses the app's root navigator, so it works from any screen.
+  static void show(
+    String message, {
+    Duration duration = const Duration(seconds: 3),
+    IconData? icon,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    // The overlay's context sits below the Navigator, so Navigator and
+    // provider lookups from it succeed.
+    final context =
+        navigatorKey.currentState?.overlay?.context ?? _toastContext;
+    if (context == null) return;
+    showMessage(
+      context,
+      message,
+      duration: duration,
+      icon: icon,
+      actionLabel: actionLabel,
+      onAction: onAction,
+    );
   }
 
   Stream<NotificationState> get notificationStream =>

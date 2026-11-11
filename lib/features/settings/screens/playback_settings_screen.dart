@@ -1,6 +1,8 @@
 /// Playback settings sub-screen — speed, gapless, normalization, pitch & more.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:provider/provider.dart';
@@ -17,6 +19,14 @@ import '../widgets/settings_tile_builders.dart';
 
 class PlaybackSettingsScreen extends StatelessWidget {
   const PlaybackSettingsScreen({super.key});
+
+  /// "1.12x · +2.0 st": the ratio and the matching shift in semitones.
+  static String _formatPitch(double ratio) {
+    final semitones = 12 * (math.log(ratio) / math.ln2);
+    final sign = semitones > 0.05 ? '+' : '';
+    final st = semitones.abs() < 0.05 ? '0' : semitones.toStringAsFixed(1);
+    return '${ratio.toStringAsFixed(2)}x · $sign$st st';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +174,7 @@ class PlaybackSettingsScreen extends StatelessWidget {
                   ),
                   SettingsTiles.buildSwitchTile(
                     context,
-                    icon: iconoir.MusicNote(
+                    icon: iconoir.Link(
                         color: Theme.of(context).colorScheme.primary,
                         width: 20,
                         height: 20),
@@ -172,6 +182,29 @@ class PlaybackSettingsScreen extends StatelessWidget {
                     subtitle: l10n.adjustPitchWithSpeedDesc,
                     value: audioService.pitchWithSpeed,
                     onChanged: audioService.setPitchWithSpeed,
+                  ),
+                  SettingsTiles.buildSliderTile(
+                    context,
+                    icon: iconoir.MusicNote(
+                        color: Theme.of(context).colorScheme.primary,
+                        width: 20,
+                        height: 20),
+                    title: l10n.playbackPitch,
+                    subtitle: audioService.pitchWithSpeed
+                        ? l10n.playbackPitchLinkedDesc
+                        : l10n.playbackPitchDesc,
+                    // While linked the slider shows (and cannot change) the
+                    // pitch that follows speed.
+                    value: audioService.effectivePitch.clamp(0.5, 2.0),
+                    min: 0.5,
+                    max: 2.0,
+                    defaultValue: 1.0,
+                    enabled: !audioService.pitchWithSpeed,
+                    valueFormatter: _formatPitch,
+                    showArrows: true,
+                    onChanged: audioService.setPitch,
+                    onChangeEnd: (v) =>
+                        audioService.setPitch((v * 20).round() / 20),
                   ),
                 ]),
               ),

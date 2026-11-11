@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'remote_config_helper.dart';
+
 /// Service to manage feedback reminder timing
 class FeedbackReminderService {
   static const String _lastPromptKey = 'feedback_last_prompt';
@@ -8,15 +10,22 @@ class FeedbackReminderService {
       'feedback_dismissed_permanently';
   static const String _appOpenCountKey = 'app_open_count';
 
-  /// Minimum days between feedback prompts
-  static const int _minDaysBetweenPrompts = 7;
+  /// Minimum days between feedback prompts (`prompt_feedback_min_days`).
+  static int get _minDaysBetweenPrompts =>
+      RemoteConfigHelper.integer('prompt_feedback_min_days');
 
-  /// Minimum app opens before first prompt
-  static const int _minOpensBeforeFirstPrompt = 5;
+  /// Minimum app opens before first prompt (`prompt_feedback_min_opens`).
+  static int get _minOpensBeforeFirstPrompt =>
+      RemoteConfigHelper.integer('prompt_feedback_min_opens');
 
   /// Record an app open and check if we should show feedback prompt
   static Future<bool> shouldShowFeedbackPrompt() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Switched off remotely (`prompt_feedback_enabled`)
+    if (!RemoteConfigHelper.boolean('prompt_feedback_enabled')) {
+      return false;
+    }
 
     // Check if permanently dismissed
     if (prefs.getBool(_dismissedPermanentlyKey) ?? false) {

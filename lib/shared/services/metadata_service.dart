@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'online_sources.dart';
 
 class MetadataService {
   static const String _deezerBaseUrl = 'https://api.deezer.com';
@@ -65,6 +66,7 @@ class MetadataService {
   }
 
   Future<List<Map<String, dynamic>>> _searchDeezer(String query) async {
+    if (!OnlineSources.isEnabled('deezer')) return [];
     try {
       final uri = Uri.parse('$_deezerBaseUrl/search').replace(
         queryParameters: {
@@ -94,7 +96,8 @@ class MetadataService {
       Map<String, dynamic> basicTrack) async {
     final trackId = basicTrack['id'];
     final albumId = (basicTrack['album'] as Map?)?['id'];
-    if (trackId == null) return basicTrack;
+    if (trackId == null || !OnlineSources.isEnabled('deezer'))
+      return basicTrack;
 
     final enriched = Map<String, dynamic>.from(basicTrack);
 
@@ -144,7 +147,7 @@ class MetadataService {
   }
 
   Future<String?> fetchCoverArt(String query) async {
-    if (query.trim().isEmpty) return null;
+    if (query.trim().isEmpty || !OnlineSources.isEnabled('itunes')) return null;
 
     try {
       // Properly encode the query parameters using Uri class.

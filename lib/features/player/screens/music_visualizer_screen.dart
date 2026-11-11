@@ -1,8 +1,10 @@
 /// Full-screen music visualiser with switchable modes and real-time FFT.
 ///
-/// Modes: Bar Spectrum, Circular Bars, Mirror Bars, Frequency Line. The active mode is persisted via SharedPreferences.
-/// On Android the native Visualizer EventChannel ("aurora/visualizer") drives
-/// FFT. Falls back to procedural sine animation when unavailable.
+/// Modes: Bar Spectrum, Circular Bars, Mirror Bars, Frequency Line, Dot Matrix,
+/// Peak Bars, Circular Wave, Aurora Waves, Pulse Rings. The active mode is
+/// persisted via SharedPreferences.
+/// The PCM engine supplies a full-resolution floating-point spectrum. The
+/// level calibration is retained while fractional mapping preserves pitch motion.
 library;
 
 import 'dart:async';
@@ -10,10 +12,8 @@ import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
-import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/font_constants.dart';
 import '../../../l10n/generated/app_localizations.dart';
@@ -21,7 +21,10 @@ import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/background_manager_service.dart';
 import '../../../shared/services/artist_separator_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
+import '../../../shared/services/audio_analysis/audio_analysis.dart';
 import '../utils/spectrum_analyzer.dart';
+import '../utils/visualizer_colors.dart';
+import '../widgets/visualizer_styles.dart';
 import '../../../shared/providers/performance_mode_provider.dart';
 import '../../../shared/widgets/adaptive_blur.dart';
 
@@ -31,13 +34,23 @@ enum VisualizerMode {
   barSpectrum,
   circularBars,
   mirrorBars,
-  frequencyLine;
+  frequencyLine,
+  dotMatrix,
+  peakBars,
+  circularWave,
+  auroraWaves,
+  pulseRings;
 
-  String get label => switch (this) {
-        VisualizerMode.barSpectrum => 'Bar Spectrum',
-        VisualizerMode.circularBars => 'Circular Bars',
-        VisualizerMode.mirrorBars => 'Mirror Bars',
-        VisualizerMode.frequencyLine => 'Frequency Line',
+  String label(AppLocalizations l10n) => switch (this) {
+        VisualizerMode.barSpectrum => l10n.visualizerBarSpectrum,
+        VisualizerMode.circularBars => l10n.visualizerCircularBars,
+        VisualizerMode.mirrorBars => l10n.visualizerMirrorBars,
+        VisualizerMode.frequencyLine => l10n.visualizerFrequencyLine,
+        VisualizerMode.dotMatrix => l10n.visualizerDotMatrix,
+        VisualizerMode.peakBars => l10n.visualizerPeakBars,
+        VisualizerMode.circularWave => l10n.visualizerCircularWave,
+        VisualizerMode.auroraWaves => l10n.visualizerAuroraWaves,
+        VisualizerMode.pulseRings => l10n.visualizerPulseRings,
       };
 }
 
@@ -58,7 +71,6 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
   // ── Constants ──────────────────────────────────────────────────────────────
   static const String _kPrefKey = 'visualizer_mode';
 
-  static const _kFftChannel = EventChannel('aurora/visualizer');
   static final _artworkService = ArtworkCacheService();
 
   // ── Animation ──────────────────────────────────────────────────────────────
@@ -69,17 +81,21 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
   final ValueNotifier<int> _frame = ValueNotifier<int>(0);
 
   // ── FFT / energy state ─────────────────────────────────────────────────────
-  StreamSubscription<dynamic>? _sessionIdSub;
-  StreamSubscription<dynamic>? _fftSub;
-  final SpectrumAnalyzer _analyzer = SpectrumAnalyzer();
+  final SpectrumAnalyzer _analyzer = SpectrumAnalyzer()
+    ..allowSimulation = false;
+  final AudioAnalysisService _analysis = AudioAnalysisService.instance;
+  AudioAnalysisLease? _nativeLease;
+  int _lastNativeSequence = -1;
+  final ValueNotifier<AudioAnalysisState?> _captureStatus = ValueNotifier(null);
+  double _waitingSeconds = 0;
+  // Falling peak markers for the Peak Bars style.
+  late final List<double> _peaks = List.filled(_analyzer.barCount, 0.0);
   // Incremented whenever bar heights or energy change so painters can skip
   // redundant GPU draws via shouldRepaint when nothing changed.
   int _paintGeneration = 0;
 
   // ── Mode / UI ──────────────────────────────────────────────────────────────
   VisualizerMode _mode = VisualizerMode.barSpectrum;
-  bool _micGranted = false;
-  bool _isRequestingPermission = false;
   ImageProvider? _artworkProvider;
   int? _loadedSongId;
 
@@ -95,9 +111,12 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
     _ticker = createTicker(_onTick)..start();
 
     _loadMode();
-    _checkAndRequestPermission();
     _loadArtwork();
     _audio.currentSongNotifier.addListener(_onSongChanged);
+    _nativeLease = _analysis.requestAnalysis(
+      config:
+          const AudioAnalysisConfig(fftSize: 4096, visualizerSpectrum: true),
+    );
   }
 
   Future<void> _loadMode() async {
@@ -155,47 +174,56 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
     }
   }
 
-  Future<void> _checkAndRequestPermission() async {
-    if (_isRequestingPermission) return;
-    _isRequestingPermission = true;
-    try {
-      final status = await Permission.microphone.request();
-      if (!mounted) return;
-      final granted = status.isGranted;
-      setState(() => _micGranted = granted);
-      if (granted) unawaited(_subscribeToSessionId());
-    } finally {
-      _isRequestingPermission = false;
-    }
-  }
-
-  Future<void> _subscribeToSessionId() async {
-    _sessionIdSub = _audio.audioPlayer.androidAudioSessionIdStream.listen(
-      (sessionId) {
-        if (sessionId != null && sessionId > 0) _attachVisualizer(sessionId);
-      },
-      onError: (_) {},
-    );
-  }
-
-  void _attachVisualizer(int sessionId) {
-    _fftSub?.cancel();
-    _fftSub = _kFftChannel.receiveBroadcastStream(sessionId).listen(
-      (data) {
-        if (data is Uint8List) _analyzer.submit(data);
-      },
-      onError: (_) {},
-    );
-  }
-
   void _onTick(Duration elapsed) {
     if (!mounted) return;
     final dt = (elapsed - _lastTick).inMicroseconds / 1e6;
     _lastTick = elapsed;
-    if (_analyzer.update(dt, playing: _audio.isPlaying)) {
+    var changed = _readCapture(dt);
+    if (_mode == VisualizerMode.peakBars && _updatePeaks(dt)) changed = true;
+    if (changed) {
       _paintGeneration++;
       _frame.value = _paintGeneration;
     }
+  }
+
+  bool _readCapture(double dt) {
+    final frame = _analysis.latestFrame;
+    final available = _analysis.isSupported && _analysis.isRunning;
+    final waiting = available &&
+        (frame.sequence == 0 || frame.state == AudioAnalysisState.waiting);
+    _waitingSeconds = waiting ? _waitingSeconds + dt : 0;
+    _captureStatus.value = !available || _waitingSeconds > 2
+        ? AudioAnalysisState.unsupported
+        : waiting
+            ? AudioAnalysisState.waiting
+            : null;
+    if (available &&
+        frame.sequence != _lastNativeSequence &&
+        frame.sampleRate > 0) {
+      _lastNativeSequence = frame.sequence;
+      _analyzer.submitMagnitudes(frame.visualizerSpectrum, frame.sampleRate);
+    }
+    final levelsChanged = _analyzer.update(dt,
+        playing: available && frame.state == AudioAnalysisState.playing);
+    return levelsChanged;
+  }
+
+  /// Peaks jump up with the bars and fall back at a steady pace. Returns true
+  /// while any of them is still moving.
+  bool _updatePeaks(double dt) {
+    var moving = false;
+    final fall = dt * 0.45;
+    for (var i = 0; i < _peaks.length; i++) {
+      final level = _analyzer.bars[i];
+      if (level >= _peaks[i]) {
+        if (level != _peaks[i]) moving = true;
+        _peaks[i] = level;
+      } else if (_peaks[i] > 0) {
+        _peaks[i] = max(level, _peaks[i] - fall);
+        moving = true;
+      }
+    }
+    return moving;
   }
 
   @override
@@ -203,8 +231,8 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
     _audio.currentSongNotifier.removeListener(_onSongChanged);
     _ticker.dispose();
     _frame.dispose();
-    _fftSub?.cancel();
-    _sessionIdSub?.cancel();
+    _captureStatus.dispose();
+    _nativeLease?.release();
     super.dispose();
   }
 
@@ -220,11 +248,10 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
     final vibrant =
         hasArtwork ? (colors.length > 1 ? colors[1] : dominant) : Colors.white;
     final barColor = hasArtwork
-        ? (colors.length > 2
-            ? colors[2]
-            : colors.length > 1
-                ? colors[1]
-                : dominant)
+        ? VisualizerColors.fromArtwork(
+            bg.artworkColors,
+            dominantColor: dominant,
+          )
         : Colors.white;
     final song = _audio.currentSong;
     final bottomPad = MediaQuery.paddingOf(context).bottom;
@@ -248,25 +275,52 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
               ),
               AdaptiveBackdropFilter(
                 filter: ui.ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-                child: ColoredBox(color: Colors.black.withValues(alpha: 0.60)),
+                child: ColoredBox(
+                  color: Colors.black.withValues(
+                    alpha: VisualizerColors.backgroundOpacity,
+                  ),
+                ),
               ),
             ]))
           else
             const ColoredBox(color: Colors.black),
 
-          // ── Visualiser canvas or permission prompt ──────────────────────
-          if (!_micGranted)
-            _buildPermissionPrompt(context, barColor)
-          else
-            RepaintBoundary(
-              child: ValueListenableBuilder<int>(
-                valueListenable: _frame,
-                builder: (_, __, ___) => CustomPaint(
-                  painter: _buildPainter(barColor, bottomPad),
-                  size: Size.infinite,
-                ),
+          // ── Visualiser canvas ───────────────────────────────────────────
+          RepaintBoundary(
+            child: ValueListenableBuilder<int>(
+              valueListenable: _frame,
+              builder: (_, __, ___) => CustomPaint(
+                painter: _buildPainter(barColor, bottomPad),
+                size: Size.infinite,
               ),
             ),
+          ),
+          Positioned(
+            top: topPad + 64,
+            left: 24,
+            right: 24,
+            child: ValueListenableBuilder<AudioAnalysisState?>(
+              valueListenable: _captureStatus,
+              builder: (context, status, _) => status == null
+                  ? const SizedBox.shrink()
+                  : Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        status == AudioAnalysisState.waiting
+                            ? AppLocalizations.of(context)
+                                .visualizerWaitingForAudio
+                            : AppLocalizations.of(context)
+                                .visualizerUnavailable,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontFamily: FontConstants.fontFamily,
+                        ),
+                      ),
+                    ),
+            ),
+          ),
 
           // ── Song info ──────────────────────────────────────────────────
           if (song != null)
@@ -337,7 +391,7 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        _mode.label,
+                        _mode.label(AppLocalizations.of(context)),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
@@ -368,8 +422,7 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
   CustomPainter _buildPainter(Color barColor, double bottomInset) {
     // Soft glow is a per-bar blur every frame: solid bars only on low-end.
     _glowBlurEnabled =
-        !Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        !Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     return switch (_mode) {
       VisualizerMode.barSpectrum => _BarSpectrumPainter(
           barHeights: _analyzer.bars,
@@ -391,67 +444,36 @@ class _MusicVisualizerScreenState extends State<MusicVisualizerScreen>
           color: barColor,
           bottomInset: bottomInset,
           paintGeneration: _paintGeneration),
+      VisualizerMode.dotMatrix => DotMatrixPainter(
+          levels: _analyzer.bars,
+          color: barColor,
+          bottomInset: bottomInset,
+          paintGeneration: _paintGeneration),
+      VisualizerMode.peakBars => PeakBarsPainter(
+          levels: _analyzer.bars,
+          peaks: _peaks,
+          color: barColor,
+          bottomInset: bottomInset,
+          paintGeneration: _paintGeneration),
+      VisualizerMode.circularWave => CircularWavePainter(
+          levels: _analyzer.bars,
+          bass: _analyzer.bass,
+          color: barColor,
+          glow: _glowBlurEnabled,
+          paintGeneration: _paintGeneration),
+      VisualizerMode.auroraWaves => AuroraWavesPainter(
+          levels: _analyzer.bars,
+          color: barColor,
+          bottomInset: bottomInset,
+          paintGeneration: _paintGeneration),
+      VisualizerMode.pulseRings => PulseRingsPainter(
+          levels: _analyzer.bars,
+          bass: _analyzer.bass,
+          overall: _analyzer.overall,
+          color: barColor,
+          glow: _glowBlurEnabled,
+          paintGeneration: _paintGeneration),
     };
-  }
-
-  Widget _buildPermissionPrompt(BuildContext context, Color accent) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.graphic_eq_rounded, color: Colors.white, size: 64),
-            const SizedBox(height: 20),
-            Text(
-              AppLocalizations.of(context).microphoneAccessNeeded,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                fontFamily: FontConstants.fontFamily,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 10),
-            Text(
-              AppLocalizations.of(context).microphoneAccessDesc,
-              style: const TextStyle(
-                fontSize: 14,
-                fontFamily: FontConstants.fontFamily,
-                color: Color(0xA6FFFFFF),
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 28),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: accent),
-              onPressed: _isRequestingPermission
-                  ? null
-                  : () async {
-                      setState(() => _isRequestingPermission = true);
-                      try {
-                        final status = await Permission.microphone.request();
-                        if (!mounted) return;
-                        final granted = status.isGranted;
-                        setState(() => _micGranted = granted);
-                        if (granted) {
-                          unawaited(_subscribeToSessionId());
-                        } else if (status.isPermanentlyDenied) {
-                          await openAppSettings();
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() => _isRequestingPermission = false);
-                        }
-                      }
-                    },
-              child: Text(AppLocalizations.of(context).grantPermission),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 
@@ -473,7 +495,7 @@ class _BarSpectrumPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const int kBars = 48;
+    final kBars = barHeights.length;
     const double hPad = 20.0;
     const double gapFactor = 0.4;
     const double topReserve = 110.0;
@@ -487,6 +509,7 @@ class _BarSpectrumPainter extends CustomPainter {
     final solidPaint = Paint()
       ..color = barColor.withValues(alpha: 0.92)
       ..style = PaintingStyle.fill;
+    final backingPaint = Paint()..color = VisualizerColors.markBackground;
     final glowPaint = Paint()
       ..color = barColor.withValues(alpha: 0.28)
       ..maskFilter =
@@ -501,6 +524,7 @@ class _BarSpectrumPainter extends CustomPainter {
       final rr = RRect.fromLTRBAndCorners(x, topY, x + barWidth, bottomY,
           topLeft: r, topRight: r);
       canvas.drawRRect(rr, glowPaint);
+      canvas.drawRRect(rr, backingPaint);
       canvas.drawRRect(rr, solidPaint);
     }
   }
@@ -526,15 +550,20 @@ class _CircularBarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const int kBars = 48;
+    final kBars = barHeights.length;
     final center = size.center(Offset.zero);
     final baseR = min(size.width, size.height) * 0.18 + bassEnergy * 20;
     final maxLen = min(size.width, size.height) * 0.28;
-    const angleStep = 2 * pi / kBars;
+    final angleStep = 2 * pi / kBars;
 
     final solidPaint = Paint()
       ..color = barColor.withValues(alpha: 0.90)
-      ..strokeWidth = 4.0
+      ..strokeWidth = 3.4
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+    final backingPaint = Paint()
+      ..color = VisualizerColors.markBackground
+      ..strokeWidth = solidPaint.strokeWidth
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
 
@@ -553,6 +582,7 @@ class _CircularBarsPainter extends CustomPainter {
       final x1 = center.dx + cos(angle) * (baseR + barLen);
       final y1 = center.dy + sin(angle) * (baseR + barLen);
       canvas.drawLine(Offset(x0, y0), Offset(x1, y1), glowPaint);
+      canvas.drawLine(Offset(x0, y0), Offset(x1, y1), backingPaint);
       canvas.drawLine(Offset(x0, y0), Offset(x1, y1), solidPaint);
     }
   }
@@ -578,7 +608,7 @@ class _MirrorBarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    const int kBars = 48;
+    final kBars = barHeights.length;
     const double hPad = 20.0;
     const double gapFactor = 0.4;
 
@@ -591,6 +621,7 @@ class _MirrorBarsPainter extends CustomPainter {
     final solidPaint = Paint()
       ..color = barColor.withValues(alpha: 0.88)
       ..style = PaintingStyle.fill;
+    final backingPaint = Paint()..color = VisualizerColors.markBackground;
     final glowPaint = Paint()
       ..color = barColor.withValues(alpha: 0.25)
       ..maskFilter =
@@ -610,8 +641,10 @@ class _MirrorBarsPainter extends CustomPainter {
           bottomLeft: r, bottomRight: r);
 
       canvas.drawRRect(upRR, glowPaint);
-      canvas.drawRRect(upRR, solidPaint);
       canvas.drawRRect(downRR, glowPaint);
+      canvas.drawRRect(upRR, backingPaint);
+      canvas.drawRRect(downRR, backingPaint);
+      canvas.drawRRect(upRR, solidPaint);
       canvas.drawRRect(downRR, solidPaint);
     }
   }
@@ -694,6 +727,13 @@ class _FrequencyLinePainter extends CustomPainter {
       ..color = color.withValues(alpha: 0.92)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
+    canvas.drawPath(
+      strokePath,
+      Paint()
+        ..color = VisualizerColors.markBackground
+        ..strokeWidth = linePaint.strokeWidth
+        ..style = PaintingStyle.stroke,
+    );
     canvas.drawPath(strokePath, linePaint);
   }
 

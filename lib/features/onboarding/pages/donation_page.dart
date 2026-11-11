@@ -35,22 +35,24 @@ class DonationPage extends StatelessWidget {
         Column(
           spacing: 12,
           children: [
-            GlassRow(
-              order: 2,
-              leading: const iconoir.CoffeeCup(
-                  color: Colors.white, width: 24, height: 24),
-              title: l10n.buyMeACoffee,
-              trailing: arrow,
-              onTap: () => DonationService.openBuyMeACoffee(),
-            ),
-            GlassRow(
-              order: 3,
-              leading: const iconoir.Heart(
-                  color: Colors.white, width: 24, height: 24),
-              title: l10n.kofi,
-              trailing: arrow,
-              onTap: () => DonationService.openKofi(),
-            ),
+            if (DonationService.enabled)
+              GlassRow(
+                order: 2,
+                leading: const iconoir.CoffeeCup(
+                    color: Colors.white, width: 24, height: 24),
+                title: l10n.buyMeACoffee,
+                trailing: arrow,
+                onTap: () => DonationService.openBuyMeACoffee(),
+              ),
+            if (DonationService.enabled)
+              GlassRow(
+                order: 3,
+                leading: const iconoir.Heart(
+                    color: Colors.white, width: 24, height: 24),
+                title: l10n.kofi,
+                trailing: arrow,
+                onTap: () => DonationService.openKofi(),
+              ),
           ],
         ),
       ],

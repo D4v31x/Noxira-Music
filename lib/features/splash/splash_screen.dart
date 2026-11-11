@@ -8,6 +8,7 @@ import '../../shared/services/user_preferences.dart';
 import '../../shared/services/rebrand_notice_service.dart';
 import '../../shared/services/logging_service.dart';
 import '../../core/constants/font_constants.dart';
+import '../../l10n/generated/app_localizations.dart';
 import 'animated_logo.dart';
 import '../onboarding/widgets/onboarding_background.dart';
 import '../onboarding/screens/onboarding_screen.dart';
@@ -39,7 +40,7 @@ class _SplashScreenState extends State<SplashScreen>
   bool _isAnimationComplete = false;
   bool _isTransitioning = false;
   bool _didInitialize = false;
-  String _currentTask = '';
+  String Function(AppLocalizations)? _currentTask;
   final List<String> _completedTasks = [];
   double _progress = 0.0;
   final List<String> _warnings = [];
@@ -60,19 +61,44 @@ class _SplashScreenState extends State<SplashScreen>
     if (!_didInitialize) {
       _didInitialize = true;
 
-      _initializeApp();
+      // Let the logo animation get its first frames before heavy loading
+      // competes for the UI thread.
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+        if (mounted) _initializeApp();
+      });
     }
   }
 
   Future<void> _initializeApp() async {
     try {
       final startedAt = DateTime.now();
-      final tasks = <(String, Future<void> Function())>[
-        ('Initializing Services', _initializeServices),
-        ('Loading Library', _loadAppData),
-        ('Preparing Home', _prepareHomeData),
-        ('Caching Artwork', _preloadImages),
-        ('Final Preparations', _finalizeInitialization),
+      final tasks = <(
+        String,
+        String Function(AppLocalizations),
+        Future<void> Function()
+      )>[
+        (
+          'Initializing Services',
+          (l10n) => l10n.splashInitializingServices,
+          _initializeServices
+        ),
+        ('Loading Library', (l10n) => l10n.splashLoadingLibrary, _loadAppData),
+        (
+          'Preparing Home',
+          (l10n) => l10n.splashPreparingHome,
+          _prepareHomeData
+        ),
+        (
+          'Caching Artwork',
+          (l10n) => l10n.splashCachingArtwork,
+          _preloadImages
+        ),
+        (
+          'Final Preparations',
+          (l10n) => l10n.splashFinalPreparations,
+          _finalizeInitialization
+        ),
       ];
 
       for (int i = 0; i < tasks.length; i++) {
@@ -81,12 +107,12 @@ class _SplashScreenState extends State<SplashScreen>
         final task = tasks[i];
         // Batch update: progress, current task, and completed tasks together
         setState(() {
-          _currentTask = task.$1;
+          _currentTask = task.$2;
           _progress = i / tasks.length;
         });
 
         try {
-          await task.$2();
+          await task.$3();
           if (mounted) {
             // Batch completed task update
             setState(() {
@@ -113,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (mounted) {
         // Batch final state update
         setState(() {
-          _currentTask = 'Complete';
+          _currentTask = null;
           _progress = 1.0;
           _isDataLoaded = true;
         });
@@ -492,11 +518,11 @@ class _SplashScreenState extends State<SplashScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Task label
-                        if (_currentTask.isNotEmpty && _progress < 1.0)
+                        if (_currentTask != null && _progress < 1.0)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 12),
                             child: Text(
-                              _currentTask,
+                              _currentTask!(AppLocalizations.of(context)),
                               style: const TextStyle(
                                 fontFamily: FontConstants.fontFamily,
                                 color: Color(0xFF6B7080),

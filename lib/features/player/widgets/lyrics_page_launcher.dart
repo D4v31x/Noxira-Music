@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../l10n/generated/app_localizations.dart';
 
 import '../../../shared/models/models.dart';
 import '../../../shared/services/artist_separator_service.dart';
@@ -55,7 +56,8 @@ void openPlayerPage(
             image: image,
             title: song.title,
             artist: ArtistSeparatorService()
-                .splitArtists(song.artist ?? 'Unknown artist')
+                .splitArtists(
+                    song.artist ?? AppLocalizations.of(context).unknownArtist)
                 .join(', '),
             titleTo: kLyricsHeaderTitleStyle,
             artistTo: kLyricsHeaderArtistStyle,

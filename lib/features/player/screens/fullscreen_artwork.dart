@@ -291,23 +291,23 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
   Widget _buildTopBar(BuildContext context, AudioPlayerService audioService) {
     final loc = AppLocalizations.of(context);
     final sourceInfo = audioService.playbackSource;
-    String sourceName = 'Library';
+    String sourceName = loc.library;
 
     switch (sourceInfo.source) {
       case PlaybackSource.album:
-        sourceName = sourceInfo.name ?? 'Album';
+        sourceName = sourceInfo.name ?? loc.album;
         break;
       case PlaybackSource.artist:
-        sourceName = sourceInfo.name ?? 'Artist';
+        sourceName = sourceInfo.name ?? loc.artist;
         break;
       case PlaybackSource.playlist:
-        sourceName = sourceInfo.name ?? 'Playlist';
+        sourceName = sourceInfo.name ?? loc.playlist;
         break;
       case PlaybackSource.forYou:
-        sourceName = 'For You';
+        sourceName = loc.forYou;
         break;
       case PlaybackSource.recentlyPlayed:
-        sourceName = 'Recently Played';
+        sourceName = loc.recentlyPlayed;
         break;
       case PlaybackSource.recentlyAdded:
         sourceName = loc.recentlyAdded;
@@ -316,13 +316,13 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
         sourceName = loc.mostPlayed;
         break;
       case PlaybackSource.folder:
-        sourceName = sourceInfo.name ?? 'Folder';
+        sourceName = sourceInfo.name ?? loc.folder;
         break;
       case PlaybackSource.search:
-        sourceName = 'Search';
+        sourceName = loc.search;
         break;
       default:
-        sourceName = 'Library';
+        sourceName = loc.library;
     }
 
     return Row(
@@ -346,7 +346,7 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Playing from',
+                loc.playingFrom,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.white.withValues(alpha: 0.7),
@@ -402,7 +402,9 @@ class _FullscreenArtworkScreenState extends State<FullscreenArtworkScreen>
         const SizedBox(height: 4),
         // Artist - regular gray, left aligned
         Text(
-          splitArtists(song.artist ?? 'Unknown Artist').join(', '),
+          splitArtists(
+                  song.artist ?? AppLocalizations.of(context).unknownArtist)
+              .join(', '),
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.normal,

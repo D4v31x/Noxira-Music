@@ -28,6 +28,25 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
   static const String _aaArtists = '__aa_artists__';
   static const String _aaPlaylists = '__aa_playlists__';
 
+  // Android Auto category titles; the app replaces these with the user's
+  // language once localizations are available (see [setBrowseTitles]).
+  String _aaSongsTitle = 'Songs';
+  String _aaAlbumsTitle = 'Albums';
+  String _aaArtistsTitle = 'Artists';
+  String _aaPlaylistsTitle = 'Playlists';
+
+  void setBrowseTitles({
+    required String songs,
+    required String albums,
+    required String artists,
+    required String playlists,
+  }) {
+    _aaSongsTitle = songs;
+    _aaAlbumsTitle = albums;
+    _aaArtistsTitle = artists;
+    _aaPlaylistsTitle = playlists;
+  }
+
   // Callbacks wired from AudioPlayerService._init() to avoid a circular import.
   List<SongModel> Function()? _aaGetSongs;
   List<Playlist> Function()? _aaGetPlaylists;
@@ -251,29 +270,37 @@ class AuroraAudioHandler extends BaseAudioHandler with SeekHandler {
       // Root: four top-level categories shown in Android Auto
       case AudioService.browsableRootId:
         return [
-          const MediaItem(
+          MediaItem(
             id: _aaSongs,
-            title: 'Songs',
+            title: _aaSongsTitle,
             playable: false,
-            extras: {'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 2},
+            extras: const {
+              'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 2
+            },
           ),
-          const MediaItem(
+          MediaItem(
             id: _aaAlbums,
-            title: 'Albums',
+            title: _aaAlbumsTitle,
             playable: false,
-            extras: {'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 1},
+            extras: const {
+              'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 1
+            },
           ),
-          const MediaItem(
+          MediaItem(
             id: _aaArtists,
-            title: 'Artists',
+            title: _aaArtistsTitle,
             playable: false,
-            extras: {'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 2},
+            extras: const {
+              'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 2
+            },
           ),
-          const MediaItem(
+          MediaItem(
             id: _aaPlaylists,
-            title: 'Playlists',
+            title: _aaPlaylistsTitle,
             playable: false,
-            extras: {'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 2},
+            extras: const {
+              'android.media.browse.CONTENT_STYLE_BROWSABLE_HINT': 2
+            },
           ),
         ];
 

@@ -30,6 +30,19 @@ class ShareClipException implements Exception {
   String toString() => 'ShareClipException: $message';
 }
 
+/// Texts painted into the clip, supplied by the caller in the user's language.
+class ShareClipLabels {
+  const ShareClipLabels({
+    required this.listeningTo,
+    required this.nowOn,
+    required this.unknownArtist,
+  });
+
+  final String listeningTo;
+  final String nowOn;
+  final String unknownArtist;
+}
+
 class ShareClipService {
   static const int videoWidth = 1080;
   static const int videoHeight = 1920;
@@ -44,6 +57,11 @@ class ShareClipService {
   static const String _logoAssetPath = 'assets/images/logo/Music_full_logo.png';
 
   final OnAudioQuery _audioQuery = OnAudioQuery();
+  ShareClipLabels _labels = const ShareClipLabels(
+    listeningTo: 'LISTENING TO',
+    nowOn: 'NOW ON',
+    unknownArtist: 'Unknown Artist',
+  );
 
   /// Renders and muxes a shareable vertical MP4 clip for [song].
   ///
@@ -54,8 +72,10 @@ class ShareClipService {
     required SongModel song,
     required Duration start,
     required Duration clipDuration,
+    required ShareClipLabels labels,
     void Function(double progress)? onProgress,
   }) async {
+    _labels = labels;
     final tempDir = await getTemporaryDirectory();
     final workDir = Directory(
         '${tempDir.path}/share_clip_${DateTime.now().microsecondsSinceEpoch}');
@@ -290,9 +310,9 @@ class ShareClipService {
         labelOpacity,
         (c) {
           final labelPainter = TextPainter(
-            text: const TextSpan(
-              text: 'LISTENING TO',
-              style: TextStyle(
+            text: TextSpan(
+              text: _labels.listeningTo,
+              style: const TextStyle(
                 color: Colors.white70,
                 fontFamily: FontConstants.fontFamily,
                 fontSize: 30,
@@ -369,7 +389,7 @@ class ShareClipService {
 
       final artistPainter = TextPainter(
         text: TextSpan(
-          text: song.artist ?? 'Unknown Artist',
+          text: song.artist ?? _labels.unknownArtist,
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.65),
             fontFamily: FontConstants.fontFamily,
@@ -413,9 +433,9 @@ class ShareClipService {
         footerOpacity,
         (c) {
           final nowOnPainter = TextPainter(
-            text: const TextSpan(
-              text: 'NOW ON',
-              style: TextStyle(
+            text: TextSpan(
+              text: _labels.nowOn,
+              style: const TextStyle(
                 color: Colors.white54,
                 fontFamily: FontConstants.fontFamily,
                 fontSize: 26,

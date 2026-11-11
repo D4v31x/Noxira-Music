@@ -274,7 +274,7 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                         ),
                       ),
                       Text(
-                        'min',
+                        AppLocalizations.of(context).sleepTimerMinShort,
                         style: TextStyle(
                           fontFamily: FontConstants.fontFamily,
                           color: Colors.white.withValues(alpha: 0.5),
@@ -325,8 +325,7 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
         Provider.of<SleepTimerController>(context, listen: false);
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final cs = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
     final sheetBody = DecoratedBox(
@@ -396,7 +395,7 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Music stops after…',
+                        AppLocalizations.of(context).sleepTimerMusicStopsAfter,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.45),
                           fontSize: 13,
@@ -477,7 +476,7 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                       Padding(
                         padding: const EdgeInsets.only(left: 8, bottom: 10),
                         child: Text(
-                          'min',
+                          AppLocalizations.of(context).sleepTimerMinShort,
                           style: TextStyle(
                             fontFamily: FontConstants.fontFamily,
                             color: cs.primary.withValues(alpha: 0.45),
@@ -498,7 +497,7 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Pick a duration below',
+                        AppLocalizations.of(context).sleepTimerPickDuration,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.3),
                           fontSize: 14,
@@ -545,7 +544,8 @@ class _SleepTimerOptionsSheetState extends State<_SleepTimerOptionsSheet> {
                         padding: const EdgeInsets.symmetric(horizontal: 18),
                         child: Center(
                           child: Text(
-                            '$m min',
+                            AppLocalizations.of(context)
+                                .sleepTimerMinutesValue(m),
                             style: TextStyle(
                               fontFamily: FontConstants.fontFamily,
                               color: selected

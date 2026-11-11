@@ -483,6 +483,9 @@ class SmartSuggestionsService {
   DateTime? get firstListenTime =>
       _listeningHistory.isEmpty ? null : _listeningHistory.first.timestamp;
 
+  /// Track ids in the order they were played, most recent first (at most 50).
+  List<String> get recentTrackIds => List.unmodifiable(_recentlyPlayedTrackIds);
+
   // ── Period-based analytics ─────────────────────────────────────────────────
 
   /// All non-skipped events within the last [days] days.

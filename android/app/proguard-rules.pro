@@ -15,6 +15,10 @@
 ## Just Audio
 -keep class com.ryanheise.just_audio.** { *; }
 
+## Noxira audio analysis (JNI methods are bound by name from C++)
+-keep class com.aurorasoftware.music.analysis.** { *; }
+-keep class com.aurorasoftware.music.NoxiraApplication { *; }
+
 ## On Audio Query
 -keep class com.lucasjosino.on_audio_query.** { *; }
 
@@ -51,3 +55,7 @@
 
 ## Crashlytics (if you add it in future)
 -keepattributes SourceFile,LineNumberTable
+## Audio output switching (AudioOutputChannel reaches ExoPlayer by reflection)
+-keep interface androidx.media3.exoplayer.ExoPlayer {
+    void setPreferredAudioDevice(android.media.AudioDeviceInfo);
+}

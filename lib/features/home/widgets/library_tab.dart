@@ -9,11 +9,13 @@ import '../../playlists/playlists_feature.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/widgets/glassmorphic_card.dart';
+import '../../../shared/widgets/glass_fill.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/utils/responsive_utils.dart';
 
 import '../../../shared/widgets/expanding_player.dart';
+import 'duplicate_tracks_banner.dart';
 
 class LibraryTab extends StatefulWidget {
   const LibraryTab({super.key});
@@ -34,10 +36,23 @@ class _LibraryTabState extends State<LibraryTab>
   Future<List<AlbumModel>>? _albumsFuture;
   Future<List<ArtistModel>>? _artistsFuture;
 
+  /// Plays the tapped track and then the rest of the library's tracks list.
+  Future<void> _playTrack(AudioPlayerService service, dynamic song) async {
+    if (song is! SongModel) return;
+    final all = await service.getLibraryTracks(count: -1);
+    final index = all.indexWhere((s) => s.id == song.id);
+    if (!mounted) return;
+    await service.setPlaylist(
+      index >= 0 ? all : [song],
+      index >= 0 ? index : 0,
+      source: const PlaybackSourceInfo(source: PlaybackSource.library),
+    );
+  }
+
   void _refreshFutures() {
     final svc = _serviceRef;
     if (svc == null) return;
-    _tracksFuture = svc.getMostPlayedTracks();
+    _tracksFuture = svc.getLibraryTracks();
     _albumsFuture = svc.getMostPlayedAlbums();
     _artistsFuture = svc.getMostPlayedArtists();
   }
@@ -98,7 +113,13 @@ class _LibraryTabState extends State<LibraryTab>
               constraints: BoxConstraints(
                 maxWidth: ResponsiveUtils.getContentMaxWidth(context),
               ),
-              child: _buildContent(audioPlayerService, isTablet, layoutMode),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const DuplicateTracksBanner(),
+                  _buildContent(audioPlayerService, isTablet, layoutMode),
+                ],
+              ),
             ),
           ),
         );
@@ -127,23 +148,14 @@ class _LibraryTabState extends State<LibraryTab>
           children: [
             buildCategorySection(
               title: AppLocalizations.of(context).tracks,
-              items: _tracksFuture ?? audioPlayerService.getMostPlayedTracks(),
+              items: _tracksFuture ?? audioPlayerService.getLibraryTracks(),
               onDetailsTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => const TracksScreen(),
                 ),
               ),
-              onItemTap: (song) {
-                if (song is SongModel) {
-                  audioPlayerService.setPlaylist(
-                    [song],
-                    0,
-                    source: const PlaybackSourceInfo(
-                        source: PlaybackSource.library),
-                  );
-                }
-              },
+              onItemTap: (song) => _playTrack(audioPlayerService, song),
             ),
             const SizedBox(height: 24.0),
             buildCategorySection(
@@ -262,24 +274,15 @@ class _LibraryTabState extends State<LibraryTab>
                 Expanded(
                   child: _buildTabletCategorySection(
                     title: AppLocalizations.of(context).tracks,
-                    items: _tracksFuture ??
-                        audioPlayerService.getMostPlayedTracks(),
+                    items:
+                        _tracksFuture ?? audioPlayerService.getLibraryTracks(),
                     onDetailsTap: () => Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const TracksScreen(),
                       ),
                     ),
-                    onItemTap: (song) {
-                      if (song is SongModel) {
-                        audioPlayerService.setPlaylist(
-                          [song],
-                          0,
-                          source: const PlaybackSourceInfo(
-                              source: PlaybackSource.library),
-                        );
-                      }
-                    },
+                    onItemTap: (song) => _playTrack(audioPlayerService, song),
                     isWideLayout: isWideLayout,
                   ),
                 ),
@@ -410,22 +413,12 @@ class _LibraryTabState extends State<LibraryTab>
     bool isFullWidth = false,
   }) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final cardSize = isWideLayout ? 120.0 : 110.0;
     final sectionHeight = cardSize + 60; // Card size + text space
 
-    // Material You solid button styling — no blur
-    final detailsButtonDecoration = BoxDecoration(
-      color: colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: colorScheme.outlineVariant,
-      ),
-    );
-
-    final detailsButtonContent = Container(
+    final detailsButtonContent = GlassFill(
+      radius: 12,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: detailsButtonDecoration,
       child: Text(
         AppLocalizations.of(context).details,
         style: theme.textTheme.bodySmall?.copyWith(
@@ -541,7 +534,9 @@ class _LibraryTabState extends State<LibraryTab>
         key: ValueKey('tablet_song_${item.id}'),
         songId: item.id,
         title: item.title,
-        artist: splitArtists(item.artist ?? 'Unknown').join(', '),
+        artist: splitArtists(
+                item.artist ?? AppLocalizations.of(context).unknownArtist)
+            .join(', '),
         artworkService: _artworkService,
         onTap: () => onItemTap?.call(item),
         size: cardSize,
@@ -605,20 +600,10 @@ class _LibraryTabState extends State<LibraryTab>
     Function(dynamic)? onItemTap,
   }) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    // Material You solid button styling — no blur
-    final detailsButtonDecoration = BoxDecoration(
-      color: colorScheme.surfaceContainerHigh,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(
-        color: colorScheme.outlineVariant,
-      ),
-    );
-
-    final detailsButtonContent = Container(
+    final detailsButtonContent = GlassFill(
+      radius: 12,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: detailsButtonDecoration,
       child: Text(
         AppLocalizations.of(context).details,
         style: theme.textTheme.bodySmall?.copyWith(
@@ -712,7 +697,9 @@ class _LibraryTabState extends State<LibraryTab>
         key: ValueKey('song_${item.id}'),
         songId: item.id,
         title: item.title,
-        artist: splitArtists(item.artist ?? 'Unknown').join(', '),
+        artist: splitArtists(
+                item.artist ?? AppLocalizations.of(context).unknownArtist)
+            .join(', '),
         artworkService: _artworkService,
         onTap: () => onItemTap?.call(item),
       );

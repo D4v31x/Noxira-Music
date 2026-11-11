@@ -181,7 +181,9 @@ class _ForYouSectionState extends State<ForYouSection> {
           type: _ForYouItemType.song,
           song: song,
           title: song.title,
-          subtitle: splitArtists(song.artist ?? 'Unknown').join(', '),
+          subtitle: splitArtists(
+                  song.artist ?? AppLocalizations.of(context).unknownArtist)
+              .join(', '),
         ));
         addedIds.add(songKey);
       }

@@ -5,6 +5,7 @@ import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:provider/provider.dart';
 import 'package:palette_generator/palette_generator.dart';
@@ -14,6 +15,7 @@ import '../../../shared/services/music_search_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/models/models.dart';
 import '../../library/library_feature.dart';
+import '../../../shared/widgets/glass_fill.dart';
 import '../../../shared/widgets/glassmorphic_card.dart';
 import '../../../shared/widgets/shimmer_loading.dart';
 import '../../../shared/widgets/expanding_player.dart';
@@ -59,6 +61,9 @@ class _SearchTabState extends State<SearchTab> {
   void initState() {
     super.initState();
     _searchController.addListener(_onSearchChanged);
+    _searchFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -291,49 +296,62 @@ class _SearchTabState extends State<SearchTab> {
       );
     }
 
-    final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
-    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        // Search bar
+        // Search bar: the same glass as the rest of the app.
         Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: TextField(
-            controller: _searchController,
-            focusNode: _searchFocusNode,
-            style: const TextStyle(
-                color: Colors.white, fontFamily: FontConstants.fontFamily),
-            decoration: InputDecoration(
-              hintText: AppLocalizations.of(context).search,
-              hintStyle: const TextStyle(
-                  color: Colors.white54, fontFamily: FontConstants.fontFamily),
-              prefixIcon: const Icon(Icons.search, color: Colors.white54),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear, color: Colors.white54),
-                      onPressed: () {
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+          child: GlassFill(
+            radius: 28,
+            selected: _searchFocusNode.hasFocus,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Row(
+                children: [
+                  const iconoir.Search(
+                      color: Colors.white70, width: 22, height: 22),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      cursorColor: Colors.white,
+                      textInputAction: TextInputAction.search,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: FontConstants.fontFamily,
+                        fontSize: 16,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context).search,
+                        hintStyle: const TextStyle(
+                          color: Colors.white54,
+                          fontFamily: FontConstants.fontFamily,
+                          fontSize: 16,
+                        ),
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 18),
+                      ),
+                    ),
+                  ),
+                  if (_searchController.text.isNotEmpty)
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () {
                         _searchController.clear();
                         setState(() {});
                       },
-                    )
-                  : null,
-              filled: true,
-              fillColor: isLowEnd
-                  ? colorScheme.surfaceContainerHigh
-                  : Colors.white.withValues(alpha: 0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: const BorderSide(color: Colors.white24),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: iconoir.Xmark(
+                            color: Colors.white70, width: 20, height: 20),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -345,23 +363,11 @@ class _SearchTabState extends State<SearchTab> {
 
   Widget _buildSearchResults() {
     if (_searchController.text.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search,
-                size: 64, color: Colors.white.withValues(alpha: 0.3)),
-            const SizedBox(height: 16),
-            Text(
-              AppLocalizations.of(context).startType,
-              style: TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
+      return _buildMessage(
+        icon:
+            const iconoir.Search(color: Colors.white70, width: 30, height: 30),
+        text: AppLocalizations.of(context).startType,
+        hint: _searchHint(),
       );
     }
 
@@ -370,23 +376,10 @@ class _SearchTabState extends State<SearchTab> {
         _filteredAlbums.isNotEmpty;
 
     if (!hasResults) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.search_off,
-                size: 64, color: Colors.white.withValues(alpha: 0.3)),
-            const SizedBox(height: 16),
-            Text(
-              'No results found',
-              style: TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                color: Colors.white.withValues(alpha: 0.5),
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
+      return _buildMessage(
+        icon: const iconoir.SearchEngine(
+            color: Colors.white70, width: 30, height: 30),
+        text: AppLocalizations.of(context).noResults,
       );
     }
 
@@ -403,7 +396,8 @@ class _SearchTabState extends State<SearchTab> {
 
         // Artists section (horizontal scroll)
         if (_filteredArtists.isNotEmpty && _topResultType != 'artist') ...[
-          _buildSectionHeader(AppLocalizations.of(context).artists),
+          _buildSectionHeader(AppLocalizations.of(context).artists,
+              count: _filteredArtists.length),
           const SizedBox(height: 8),
           SizedBox(
             height: 140,
@@ -419,7 +413,8 @@ class _SearchTabState extends State<SearchTab> {
 
         // Albums section (horizontal scroll)
         if (_filteredAlbums.isNotEmpty && _topResultType != 'album') ...[
-          _buildSectionHeader(AppLocalizations.of(context).albums),
+          _buildSectionHeader(AppLocalizations.of(context).albums,
+              count: _filteredAlbums.length),
           const SizedBox(height: 8),
           SizedBox(
             height: GlassmorphicCard.listHeight(context),
@@ -435,7 +430,8 @@ class _SearchTabState extends State<SearchTab> {
 
         // Songs section
         if (_filteredSongs.isNotEmpty) ...[
-          _buildSectionHeader(AppLocalizations.of(context).songs),
+          _buildSectionHeader(AppLocalizations.of(context).songs,
+              count: _filteredSongs.length),
           const SizedBox(height: 8),
           ..._filteredSongs.take(20).map((song) => _SearchSongTile(
                 song: song,
@@ -461,15 +457,97 @@ class _SearchTabState extends State<SearchTab> {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontFamily: FontConstants.fontFamily,
-        color: Theme.of(context).textTheme.titleLarge?.color,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
+  /// What the library holds, shown under the empty search as a nudge.
+  String? _searchHint() {
+    if (widget.songs.isEmpty) return null;
+    final l10n = AppLocalizations.of(context);
+    return '${widget.songs.length} ${l10n.songs.toLowerCase()} · '
+        '${widget.artists.length} ${l10n.artists.toLowerCase()} · '
+        '${(widget.albums ?? const []).length} ${l10n.albums.toLowerCase()}';
+  }
+
+  Widget _buildMessage({
+    required Widget icon,
+    required String text,
+    String? hint,
+  }) {
+    return Padding(
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 48),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GlassFill(
+                radius: 36,
+                child: SizedBox(
+                  width: 72,
+                  height: 72,
+                  child: Center(child: icon),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (hint != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  hint,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: FontConstants.fontFamily,
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
+    );
+  }
+
+  /// Section title with how many matches it holds.
+  Widget _buildSectionHeader(String title, {int? count}) {
+    return Row(
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontFamily: FontConstants.fontFamily,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        if (count != null) ...[
+          const SizedBox(width: 10),
+          GlassFill(
+            radius: 10,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+            child: Text(
+              '$count',
+              style: const TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                color: Colors.white70,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -520,8 +598,8 @@ class _SearchTabState extends State<SearchTab> {
       typeLabel: AppLocalizations.of(context).albums.toUpperCase(),
       title: album.album,
       subtitle: album.artist ?? '',
-      trailing: Icon(Icons.chevron_right,
-          color: Colors.white.withValues(alpha: 0.5), size: 32),
+      trailing: iconoir.NavArrowRight(
+          color: Colors.white.withValues(alpha: 0.5), width: 30, height: 30),
     );
   }
 
@@ -540,8 +618,9 @@ class _SearchTabState extends State<SearchTab> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
         ),
-        child:
-            const Icon(Icons.play_arrow_rounded, color: Colors.black, size: 28),
+        child: const Center(
+          child: iconoir.PlaySolid(color: Colors.black, width: 22, height: 22),
+        ),
       ),
     );
   }
@@ -660,63 +739,66 @@ class _SearchSongTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
     return RepaintBoundary(
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 3),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border:
-              isLowEnd ? Border.all(color: colorScheme.outlineVariant) : null,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: GlassFill(
           child: Material(
-            color: isLowEnd
-                ? colorScheme.surfaceContainerHigh
-                : Colors.white.withValues(alpha: 0.07),
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-              leading: ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: artworkService.buildCachedArtwork(song.id,
-                    size: ResponsiveUtils.scaledArtwork(context, 50)),
-              ),
-              title: Text(
-                song.title,
-                style: TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Theme.of(context).textTheme.bodyLarge?.color,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              subtitle: Text(
-                song.artist ?? '',
-                style: TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.color
-                      ?.withValues(alpha: 0.7),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: IconButton(
-                icon: Icon(Icons.more_vert,
-                    color: Theme.of(context)
-                        .iconTheme
-                        .color
-                        ?.withValues(alpha: 0.5)),
-                onPressed: () => showSongContextMenu(context, song),
-              ),
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
               onTap: onTap,
+              onLongPress: () => showSongContextMenu(context, song),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 4, 8),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: artworkService.buildCachedArtwork(song.id,
+                          size: ResponsiveUtils.scaledArtwork(context, 50)),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            song.title,
+                            style: TextStyle(
+                              fontFamily: FontConstants.fontFamily,
+                              color: theme.textTheme.bodyLarge?.color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            song.artist ?? '',
+                            style: TextStyle(
+                              fontFamily: FontConstants.fontFamily,
+                              color: theme.textTheme.bodySmall?.color
+                                  ?.withValues(alpha: 0.7),
+                              fontSize: 13,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: iconoir.MoreVert(
+                          color: Colors.white.withValues(alpha: 0.5),
+                          width: 22,
+                          height: 22),
+                      onPressed: () => showSongContextMenu(context, song),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -769,8 +851,7 @@ class _TopResultCardWithArtwork extends HookWidget {
     final dominantColor = colorState.value.dominant;
     final accentColor = colorState.value.accent;
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     final cardDecoration = BoxDecoration(
@@ -1053,8 +1134,10 @@ class _TopArtistResultCard extends HookWidget {
               ],
             ),
           ),
-          Icon(Icons.chevron_right,
-              color: Colors.white.withValues(alpha: 0.5), size: 32),
+          iconoir.NavArrowRight(
+              color: Colors.white.withValues(alpha: 0.5),
+              width: 30,
+              height: 30),
         ],
       ),
     );

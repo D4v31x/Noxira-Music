@@ -70,6 +70,7 @@ class TrackTagsSection extends StatelessWidget {
           } else if (!trackTagService.suggestionDismissed) {
             child = _TagSuggestionBar(
               audioPlayerService: audioPlayerService,
+              isTablet: isTablet,
               onDismiss: trackTagService.dismissSuggestion,
             );
           }
@@ -145,12 +146,16 @@ class _TagsListCard extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.08),
             border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
           ),
-          child: StreamBuilder<Duration>(
-            stream: audioPlayerService.audioPlayer.positionStream,
-            initialData: audioPlayerService.audioPlayer.position,
+          // Only the active tag matters, so rebuild when it changes rather
+          // than on every position tick.
+          child: StreamBuilder<int>(
+            stream: audioPlayerService.audioPlayer.positionStream
+                .map((position) => _activeTagIndex(tags, position))
+                .distinct(),
+            initialData:
+                _activeTagIndex(tags, audioPlayerService.audioPlayer.position),
             builder: (context, snapshot) {
-              final currentPosition = snapshot.data ?? Duration.zero;
-              final activeIndex = _activeTagIndex(tags, currentPosition);
+              final activeIndex = snapshot.data ?? -1;
 
               return ClipRRect(
                 borderRadius: BorderRadius.circular(20),
@@ -244,10 +249,12 @@ class _TagsListCard extends StatelessWidget {
 
 class _TagSuggestionBar extends StatelessWidget {
   final AudioPlayerService audioPlayerService;
+  final bool isTablet;
   final VoidCallback onDismiss;
 
   const _TagSuggestionBar({
     required this.audioPlayerService,
+    required this.isTablet,
     required this.onDismiss,
   });
 
@@ -257,7 +264,10 @@ class _TagSuggestionBar extends StatelessWidget {
     final song = audioPlayerService.currentSong!;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 18.0),
+      // The like button's tap area adds ~21px above and the lyrics header
+      // adds its own top spacing below, so this keeps the box centred between
+      // the like row and the "Lyrics" title.
+      padding: EdgeInsets.fromLTRB(16.0, isTablet ? 58.0 : 38.0, 16.0, 0),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
@@ -292,19 +302,28 @@ class _TagSuggestionBar extends StatelessWidget {
                       fontSize: 12,
                     ),
                   ),
+                  // Under the text, not beside it: at large font sizes a
+                  // button in the row would squeeze the text to a sliver.
+                  const SizedBox(height: 4),
+                  TextButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TrackTagEditorScreen(song: song),
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 36),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      alignment: Alignment.centerLeft,
+                    ),
+                    child: Text(loc.tagThisTrack),
+                  ),
                 ],
               ),
             ),
             const SizedBox(width: 4),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => TrackTagEditorScreen(song: song),
-                ),
-              ),
-              child: Text(loc.tagThisTrack),
-            ),
             IconButton(
               onPressed: onDismiss,
               icon: const Icon(Icons.close_rounded,

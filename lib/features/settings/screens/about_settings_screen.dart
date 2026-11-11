@@ -63,27 +63,22 @@ class AboutSettingsScreen extends StatelessWidget {
 
   Future<void> _checkUpdates(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    notificationManager.showNotification(
-      l10n.settingsCheckingUpdates,
-      duration: const Duration(seconds: 2),
-    );
+    // The result is shown as a toast: the app bar title that
+    // [notificationManager] drives is hidden behind this page.
+    NotificationManager.showMessage(context, l10n.settingsCheckingUpdates);
     final result = await VersionService.checkForNewVersion();
     if (!context.mounted) return;
     if (result.isUpdateAvailable && result.latestVersion != null) {
-      notificationManager.showNotification(
-        l10n.settingsUpdateAvailable,
-        duration: const Duration(seconds: 2),
-        onComplete: () {
-          _showUpdateDialog(context, result.latestVersion!);
-          notificationManager.showDefaultTitle();
-        },
+      NotificationManager.showMessage(context, l10n.settingsUpdateAvailable);
+      _showUpdateDialog(context, result.latestVersion!);
+    } else if (result.failed) {
+      NotificationManager.showMessage(
+        context,
+        l10n.settingsUpdateCheckFailed,
+        duration: const Duration(seconds: 4),
       );
     } else {
-      notificationManager.showNotification(
-        l10n.settingsUpToDate,
-        duration: const Duration(seconds: 2),
-        onComplete: notificationManager.showDefaultTitle,
-      );
+      NotificationManager.showMessage(context, l10n.settingsUpToDate);
     }
   }
 
@@ -167,7 +162,7 @@ class AboutSettingsScreen extends StatelessWidget {
             ),
             children: [
               SettingsTiles.buildSectionHeader(context, l10n.settingsAbout),
-              const SupportGoalCard(),
+              if (DonationService.enabled) const SupportGoalCard(),
               SettingsTiles.buildGlassmorphicCard(context, children: [
                 SettingsTiles.buildActionTile(
                   context,
@@ -189,8 +184,8 @@ class AboutSettingsScreen extends StatelessWidget {
                 ),
                 SettingsTiles.buildActionTile(
                   context,
-                  icon: const Icon(Icons.auto_awesome_rounded,
-                      color: Colors.orange, size: 20),
+                  icon: const iconoir.Sparks(
+                      color: Colors.orange, width: 20, height: 20),
                   title: l10n.rebrandTitle,
                   subtitle: l10n.rebrandNewHeading,
                   iconColor: Colors.orange,
@@ -202,15 +197,16 @@ class AboutSettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SettingsTiles.buildActionTile(
-                  context,
-                  icon: const iconoir.HeartSolid(
-                      color: Colors.pink, width: 20, height: 20),
-                  title: l10n.supportAurora,
-                  subtitle: l10n.supportAuroraDescShort,
-                  iconColor: Colors.pink,
-                  onTap: () => DonationService.showDonationDialog(context),
-                ),
+                if (DonationService.enabled)
+                  SettingsTiles.buildActionTile(
+                    context,
+                    icon: const iconoir.HeartSolid(
+                        color: Colors.pink, width: 20, height: 20),
+                    title: l10n.supportAurora,
+                    subtitle: l10n.supportAuroraDescShort,
+                    iconColor: Colors.pink,
+                    onTap: () => DonationService.showDonationDialog(context),
+                  ),
                 SettingsTiles.buildActionTile(
                   context,
                   icon: const iconoir.ChatBubble(

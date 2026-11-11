@@ -238,7 +238,40 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
         body: Consumer<EqualizerService>(
           builder: (context, svc, _) {
             if (!svc.initialized) {
-              return const Center(child: CircularProgressIndicator());
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      iconoir.SoundHigh(
+                        color: Colors.white.withValues(alpha: 0.5),
+                        width: 48,
+                        height: 48,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        AppLocalizations.of(context).eqWaitingForAudio,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.grey,
+                          fontFamily: FontConstants.fontFamily,
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextButton(
+                        onPressed: () => svc.openSystemEqualizer(),
+                        child: Text(
+                          AppLocalizations.of(context).eqOpenSystem,
+                          style: const TextStyle(
+                              fontFamily: FontConstants.fontFamily),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
             }
             final params = svc.params;
             if (params == null) {
@@ -260,10 +293,10 @@ class _EqualizerScreenState extends State<EqualizerScreen> {
                       const SizedBox(height: 20),
                       FilledButton.tonal(
                         onPressed: () => svc.init(equalizer, retry: true),
-                        child: const Text(
-                          'Retry',
-                          style:
-                              TextStyle(fontFamily: FontConstants.fontFamily),
+                        child: Text(
+                          AppLocalizations.of(context).retry,
+                          style: const TextStyle(
+                              fontFamily: FontConstants.fontFamily),
                         ),
                       ),
                       const SizedBox(height: 10),
@@ -887,6 +920,31 @@ class _PresetsSection extends StatelessWidget {
 
   const _PresetsSection({required this.svc, required this.onSavePressed});
 
+  /// Built-in preset names are identifiers (they are saved), so only the
+  /// label shown on the chip is translated; custom names stay as typed.
+  static String _presetLabel(AppLocalizations l10n, String name) =>
+      switch (name) {
+        'Flat' => l10n.eqPresetFlat,
+        'Bass Boost' => l10n.eqPresetBassBoost,
+        'Bass Cut' => l10n.eqPresetBassCut,
+        'Treble Boost' => l10n.eqPresetTrebleBoost,
+        'Treble Cut' => l10n.eqPresetTrebleCut,
+        'Rock' => l10n.eqPresetRock,
+        'Pop' => l10n.eqPresetPop,
+        'Jazz' => l10n.eqPresetJazz,
+        'Classical' => l10n.eqPresetClassical,
+        'Electronic' => l10n.eqPresetElectronic,
+        'Hip Hop' => l10n.eqPresetHipHop,
+        'R&B' => l10n.eqPresetRnB,
+        'Vocal' => l10n.eqPresetVocal,
+        'Acoustic' => l10n.eqPresetAcoustic,
+        'Dance' => l10n.eqPresetDance,
+        'Metal' => l10n.eqPresetMetal,
+        'Lounge' => l10n.eqPresetLounge,
+        'Spoken Word' => l10n.eqPresetSpokenWord,
+        _ => name,
+      };
+
   TextStyle _labelStyle(bool isDark) => TextStyle(
         fontSize: 11,
         fontFamily: FontConstants.fontFamily,
@@ -922,7 +980,7 @@ class _PresetsSection extends StatelessWidget {
               final p = EqualizerService.builtInPresets[i];
               final selected = svc.preset == p.name;
               return _PresetChip(
-                label: p.name,
+                label: _presetLabel(AppLocalizations.of(context), p.name),
                 selected: selected,
                 eqEnabled: svc.enabled,
                 onTap: () {

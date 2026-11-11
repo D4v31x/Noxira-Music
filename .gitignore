@@ -76,3 +76,6 @@ backup/
 .vscode/
 .agents/
 skills-lock.json
+remoteconfig.template.json
+release/
+*.aab

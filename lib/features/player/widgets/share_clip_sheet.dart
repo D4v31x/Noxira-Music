@@ -98,10 +98,16 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
 
     Directory? workDir;
     try {
+      final l10n = AppLocalizations.of(context);
       final file = await _clipService.generateClip(
         song: widget.song,
         start: Duration(milliseconds: (_startSeconds * 1000).round()),
         clipDuration: Duration(seconds: _durationSeconds),
+        labels: ShareClipLabels(
+          listeningTo: l10n.shareClipListeningTo,
+          nowOn: l10n.shareClipNowOn,
+          unknownArtist: l10n.unknownArtist,
+        ),
         onProgress: (p) {
           if (mounted) setState(() => _progress = p);
         },
@@ -151,7 +157,9 @@ class _ShareClipSheetState extends State<_ShareClipSheet> {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.grey[900]!.withValues(alpha: 0.92),
+            color: isBlurDisabled(context)
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey[900]!.withValues(alpha: 0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),

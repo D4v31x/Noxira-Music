@@ -1,9 +1,13 @@
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import '../../../l10n/generated/app_localizations.dart';
-import '../../../shared/providers/performance_mode_provider.dart';
+import '../../../shared/services/donation_service.dart';
+import '../../../shared/services/remote_config_helper.dart';
 import '../../../shared/services/version_service.dart';
+import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../screens/appearance_settings_screen.dart';
 import '../screens/folder_filter_settings_screen.dart';
@@ -11,6 +15,8 @@ import '../screens/playback_settings_screen.dart';
 import '../screens/storage_settings_screen.dart';
 import '../screens/about_settings_screen.dart';
 import '../screens/insights_settings_screen.dart';
+import '../screens/support_settings_screen.dart';
+import 'settings_tile_builders.dart';
 
 /// A glassmorphic settings tab with translations.
 class SettingsTab extends StatefulWidget {
@@ -36,6 +42,17 @@ class _SettingsTabState extends State<SettingsTab> {
   void initState() {
     super.initState();
     _loadVersionInfo();
+    RemoteConfigHelper.updates.addListener(_onRemoteConfigUpdated);
+  }
+
+  @override
+  void dispose() {
+    RemoteConfigHelper.updates.removeListener(_onRemoteConfigUpdated);
+    super.dispose();
+  }
+
+  void _onRemoteConfigUpdated() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadVersionInfo() async {
@@ -57,246 +74,152 @@ class _SettingsTabState extends State<SettingsTab> {
 
   Widget _buildSectionWidgets() {
     final l10n = AppLocalizations.of(context);
+
+    void open(Widget screen) => unawaited(
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => screen)));
+
+    final rows = <({
+      Widget Function(Color) icon,
+      String title,
+      String subtitle,
+      VoidCallback onTap
+    })>[
+      (
+        icon: (c) => iconoir.Palette(color: c, width: 22, height: 22),
+        title: l10n.settingsAppearance,
+        subtitle: l10n.settingsAppearanceSubtitle,
+        onTap: () => open(const AppearanceSettingsScreen()),
+      ),
+      (
+        icon: (c) => iconoir.Play(color: c, width: 22, height: 22),
+        title: l10n.settingsPlayback,
+        subtitle: l10n.settingsPlaybackSubtitle,
+        onTap: () => open(const PlaybackSettingsScreen()),
+      ),
+      (
+        icon: (c) => iconoir.StatsReport(color: c, width: 22, height: 22),
+        title: l10n.settingsInsights,
+        subtitle: l10n.settingsInsightsSubtitle,
+        onTap: () => open(const InsightsSettingsScreen()),
+      ),
+      (
+        icon: (c) => iconoir.Database(color: c, width: 22, height: 22),
+        title: l10n.settingsStorage,
+        subtitle: l10n.settingsStorageSubtitle,
+        onTap: () => open(StorageSettingsScreen(
+              notificationManager: widget.notificationManager,
+            )),
+      ),
+      (
+        icon: (c) => iconoir.Folder(color: c, width: 22, height: 22),
+        title: l10n.settingsLibraryFolders,
+        subtitle: l10n.settingsLibraryFoldersSubtitle,
+        onTap: () => open(const FolderFilterSettingsScreen()),
+      ),
+      (
+        icon: (c) => iconoir.InfoCircle(color: c, width: 22, height: 22),
+        title: l10n.settingsAbout,
+        subtitle: l10n.settingsAboutSubtitle,
+        onTap: () => open(AboutSettingsScreen(
+              currentVersion: _currentVersion,
+              notificationManager: widget.notificationManager,
+              onResetSetup: widget.onResetSetup,
+            )),
+      ),
+      (
+        icon: (c) => iconoir.HeartSolid(color: c, width: 22, height: 22),
+        title: l10n.settingsSupport,
+        subtitle: l10n.settingsSupportSubtitle,
+        onTap: () => open(const SupportSettingsScreen()),
+      ),
+    ];
+
+    // Each group is its own card, with a heading and room around it.
+    final groups = <(String, List<int>)>[
+      (l10n.settingsGroupExperience, [0, 1]),
+      (l10n.settingsGroupLibrary, [4, 3, 2]),
+      (l10n.settingsGroupApp, [if (DonationService.enabled) 6, 5]),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 8),
-        _buildCategoryCard(
-          icon: Icons.palette_outlined,
-          title: l10n.settingsAppearance,
-          subtitle: l10n.settingsAppearanceSubtitle,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const AppearanceSettingsScreen(),
-            ),
-          ),
-          isFirst: true,
-        ),
-        _buildCategoryCard(
-          icon: Icons.play_circle_outline,
-          title: l10n.settingsPlayback,
-          subtitle: l10n.settingsPlaybackSubtitle,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const PlaybackSettingsScreen(),
-            ),
-          ),
-        ),
-        _buildCategoryCard(
-          icon: Icons.insights_outlined,
-          title: l10n.settingsInsights,
-          subtitle: l10n.settingsInsightsSubtitle,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const InsightsSettingsScreen(),
-            ),
-          ),
-        ),
-        _buildCategoryCard(
-          icon: Icons.storage_outlined,
-          title: l10n.settingsStorage,
-          subtitle: l10n.settingsStorageSubtitle,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => StorageSettingsScreen(
-                notificationManager: widget.notificationManager,
-              ),
-            ),
-          ),
-        ),
-        _buildCategoryCard(
-          icon: Icons.folder_outlined,
-          title: l10n.settingsLibraryFolders,
-          subtitle: l10n.settingsLibraryFoldersSubtitle,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const FolderFilterSettingsScreen(),
-            ),
-          ),
-        ),
-        _buildCategoryCard(
-          icon: Icons.info_outline,
-          title: l10n.settingsAbout,
-          subtitle: l10n.settingsAboutSubtitle,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => AboutSettingsScreen(
-                currentVersion: _currentVersion,
-                notificationManager: widget.notificationManager,
-                onResetSetup: widget.onResetSetup,
-              ),
-            ),
-          ),
-          isLast: true,
-        ),
-        const SizedBox(height: 32),
-      ],
-    );
-  }
-
-  Widget _buildCategoryCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    bool isFirst = false,
-    bool isLast = false,
-  }) {
-    final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = isLowEnd
-        ? Theme.of(context).colorScheme.surfaceContainerHigh
-        : Colors.white.withValues(alpha: 0.08);
-    final borderColor = isLowEnd
-        ? Theme.of(context).colorScheme.outlineVariant
-        : Colors.white.withValues(alpha: 0.12);
-
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: isFirst ? 0 : 0,
-        bottom: isLast ? 0 : 0,
-      ),
-      child: Column(
-        children: [
-          if (isFirst)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
-                border: Border(
-                  top: BorderSide(color: borderColor),
-                  left: BorderSide(color: borderColor),
-                  right: BorderSide(color: borderColor),
+        for (final (title, indexes) in groups) ...[
+          SettingsTiles.buildSectionHeader(context, title),
+          SettingsTiles.buildGlassmorphicCard(
+            context,
+            children: [
+              for (var i = 0; i < indexes.length; i++) ...[
+                if (i > 0) SettingsTiles.divider(context),
+                _categoryRow(
+                  rows[indexes[i]],
+                  first: i == 0,
+                  last: i == indexes.length - 1,
                 ),
-              ),
-              child: _categoryRow(icon, title, subtitle, onTap, isDark, isFirst,
-                  isLast: false),
-            )
-          else if (isLast)
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(20)),
-                border: Border(
-                  bottom: BorderSide(color: borderColor),
-                  left: BorderSide(color: borderColor),
-                  right: BorderSide(color: borderColor),
-                ),
-              ),
-              child: _categoryRow(icon, title, subtitle, onTap, isDark, isFirst,
-                  isLast: true),
-            )
-          else
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: bgColor,
-                border: Border(
-                  left: BorderSide(color: borderColor),
-                  right: BorderSide(color: borderColor),
-                ),
-              ),
-              child: _categoryRow(icon, title, subtitle, onTap, isDark, isFirst,
-                  isLast: false),
-            ),
+              ],
+            ],
+          ),
         ],
-      ),
+        SizedBox(height: ExpandingPlayer.bottomInsetFor(context, idle: 32)),
+      ],
     );
   }
 
   Widget _categoryRow(
-    IconData icon,
-    String title,
-    String subtitle,
-    VoidCallback onTap,
-    bool isDark,
-    bool isFirst, {
-    required bool isLast,
+    ({
+      Widget Function(Color) icon,
+      String title,
+      String subtitle,
+      VoidCallback onTap
+    }) row, {
+    required bool first,
+    required bool last,
   }) {
-    return Column(
-      children: [
-        if (!isFirst)
-          Divider(
-            height: 1,
-            indent: 72,
-            endIndent: 0,
-            thickness: 0.5,
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.07)
-                : Colors.black.withValues(alpha: 0.05),
-          ),
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.vertical(
-            top: isFirst ? const Radius.circular(20) : Radius.zero,
-            bottom: isLast ? const Radius.circular(20) : Radius.zero,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                // Icon container
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.08)
-                        : Colors.black.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(13),
+    return InkWell(
+      onTap: row.onTap,
+      borderRadius: BorderRadius.vertical(
+        top: first ? const Radius.circular(24) : Radius.zero,
+        bottom: last ? const Radius.circular(24) : Radius.zero,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        child: Row(
+          children: [
+            SizedBox(width: 28, child: Center(child: row.icon(Colors.white))),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    row.title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: FontConstants.fontFamily,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: Icon(
-                    icon,
-                    color: isDark
-                        ? Colors.white.withValues(alpha: 0.75)
-                        : Colors.black.withValues(alpha: 0.6),
-                    size: 22,
+                  const SizedBox(height: 3),
+                  Text(
+                    row.subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontFamily: FontConstants.fontFamily,
+                      color: Colors.white.withValues(alpha: 0.62),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          fontFamily: FontConstants.fontFamily,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontFamily: FontConstants.fontFamily,
-                          color: isDark
-                              ? Colors.white.withValues(alpha: 0.5)
-                              : Colors.black.withValues(alpha: 0.45),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : Colors.black.withValues(alpha: 0.3),
-                  size: 20,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+            iconoir.NavArrowRight(
+              color: Colors.white.withValues(alpha: 0.4),
+              width: 18,
+              height: 18,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

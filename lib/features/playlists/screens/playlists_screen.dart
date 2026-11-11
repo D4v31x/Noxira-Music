@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:provider/provider.dart';
 import '../../../shared/services/audio_player_service.dart';
@@ -13,13 +14,14 @@ import '../../../shared/models/models.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/widgets/library_screen_header.dart';
-import '../../../shared/widgets/glassmorphic_card.dart';
+import '../../../shared/widgets/glass_panel.dart';
 import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/providers/performance_mode_provider.dart';
 import '../../../shared/utils/sort_preferences.dart';
 import 'playlist_detail_screen.dart';
 import 'smart_playlist_editor_screen.dart';
 import '../../../shared/widgets/adaptive_blur.dart';
+import '../../../shared/services/notification_manager.dart';
 
 /// Data class to hold playlist-related state for efficient rebuilds
 class _PlaylistsState {
@@ -150,18 +152,17 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
   }
 
   String _getSortLabel(PlaylistSortOption opt) {
+    final l10n = AppLocalizations.of(context);
     switch (opt) {
       case PlaylistSortOption.name:
-        return 'Name';
+        return l10n.sortName;
       case PlaylistSortOption.trackCount:
-        return 'Tracks';
+        return l10n.tracks;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     final localizations = AppLocalizations.of(context);
 
     // Use Selector to only rebuild when playlists actually change
@@ -170,9 +171,34 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       shouldRebuild: (prev, next) => prev != next,
       builder: (context, state, _) {
         final audioService = context.read<AudioPlayerService>();
-        final likedPlaylist = state.likedPlaylist;
-        final autoPlaylists = state.autoPlaylists;
-        final userPlaylists = _filterAndSort(state.userPlaylists);
+        final query = _searchQuery.trim().toLowerCase();
+        bool matches(String name) =>
+            query.isEmpty || name.toLowerCase().contains(query);
+
+        final collections = <_Collection>[
+          if (state.likedPlaylist != null)
+            _Collection(
+              playlist: state.likedPlaylist!,
+              name: localizations.favoriteSongs,
+              asset: 'assets/images/UI/liked.png',
+            ),
+          for (final p in state.autoPlaylists)
+            _Collection(
+              playlist: p,
+              name: p.id == 'most_played'
+                  ? localizations.mostPlayed
+                  : p.id == 'recently_added'
+                      ? localizations.recentlyAdded
+                      : p.name,
+              asset: p.id == 'most_played'
+                  ? 'assets/images/UI/mostplayed.png'
+                  : 'assets/images/UI/recentlyadded.png',
+            ),
+        ].where((c) => matches(c.name)).toList();
+
+        final userPlaylists =
+            _filterAndSort(state.userPlaylists).where((p) => matches(p.name));
+        final userList = userPlaylists.toList();
         final totalCount = state.userPlaylists.length +
             state.autoPlaylists.length +
             (state.likedPlaylist != null ? 1 : 0);
@@ -183,271 +209,52 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
             body: CustomScrollView(
               physics: const ClampingScrollPhysics(),
               slivers: [
-                LibraryScreenHeader(
-                  badge: 'Library',
-                  title: localizations.playlists,
-                  subtitle:
-                      '$totalCount ${totalCount == 1 ? 'playlist' : 'playlists'}',
-                  accentColor: Colors.pink,
-                  showBackButton: true,
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.add_rounded, color: Colors.white),
-                      onPressed: () => _showCreatePlaylistDialog(context),
-                    ),
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert_rounded,
-                          color: Colors.white),
-                      color: Colors.grey.shade900,
-                      onSelected: (value) {
-                        switch (value) {
-                          case 'import':
-                            _importPlaylist(context, audioService);
-                            break;
-                          case 'sync_folder':
-                            _chooseSyncFolder(context, audioService);
-                            break;
-                          case 'sync_now':
-                            _syncNow(context, audioService);
-                            break;
-                          case 'create_smart':
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const SmartPlaylistEditorScreen(),
-                              ),
-                            );
-                            break;
-                        }
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'import',
-                          child: Text(localizations.importPlaylistM3u,
-                              style: const TextStyle(color: Colors.white)),
-                        ),
-                        PopupMenuItem(
-                          value: 'sync_folder',
-                          child: Text(localizations.setSyncFolder,
-                              style: const TextStyle(color: Colors.white)),
-                        ),
-                        PopupMenuItem(
-                          value: 'sync_now',
-                          child: Text(localizations.syncNow,
-                              style: const TextStyle(color: Colors.white)),
-                        ),
-                        PopupMenuItem(
-                          value: 'create_smart',
-                          child: Text(localizations.createSmartPlaylist,
-                              style: const TextStyle(color: Colors.white)),
-                        ),
+                _buildHeader(context, audioService, localizations, totalCount),
+
+                // System collections: Favorites, Most Played, Recently Added.
+                if (collections.isNotEmpty) ...[
+                  SliverToBoxAdapter(
+                    child: _buildSectionHeader(localizations.autoPlaylists),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _TileGrid(
+                      children: [
+                        for (final c in collections)
+                          _buildCollectionTile(
+                            context,
+                            name: c.name,
+                            count: c.playlist.songs.length,
+                            artwork: Image.asset(c.asset, fit: BoxFit.cover),
+                            onTap: () => _openPlaylist(context, c.playlist),
+                          ),
                       ],
                     ),
-                    const SizedBox(width: 8),
-                  ],
-                  searchField: LibrarySearchField(
-                    controller: _searchController,
-                    hint: localizations.searchPlaylists,
-                    onChanged: (q) => setState(() => _searchQuery = q),
-                    hasQuery: _searchQuery.isNotEmpty,
-                    onClear: () {
-                      _searchController.clear();
-                      setState(() => _searchQuery = '');
-                    },
                   ),
-                  controlsRow: Row(
-                    children: [
-                      Expanded(
-                        child: PopupMenuButton<PlaylistSortOption>(
-                          onSelected: (opt) {
-                            setState(() => _sortOption = opt);
-                            _persistSort();
-                          },
-                          color: Colors.grey.shade900,
-                          child: LibraryControlPill(
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.sort_rounded,
-                                    color: Colors.white70, size: 18),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    _getSortLabel(_sortOption),
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 13),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const Icon(Icons.arrow_drop_down_rounded,
-                                    color: Colors.white70),
-                              ],
-                            ),
-                          ),
-                          itemBuilder: (context) => [
-                            _sortItem(PlaylistSortOption.name, 'Name'),
-                            _sortItem(PlaylistSortOption.trackCount, 'Tracks'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      LibraryControlPill(
-                        onTap: () {
-                          setState(() => _isAscending = !_isAscending);
-                          _persistSort();
-                        },
-                        child: Icon(
-                          _isAscending
-                              ? Icons.arrow_upward_rounded
-                              : Icons.arrow_downward_rounded,
-                          color: Colors.white70,
-                          size: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (likedPlaylist != null)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                      child: _buildLikedSongsCard(
-                        context,
-                        likedPlaylist,
-                        audioService,
-                        isDark,
-                        localizations,
-                      ),
-                    ),
-                  ),
+                ],
 
-                // Auto Playlists Header
-                if (autoPlaylists.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                      child: Text(
-                        localizations.autoPlaylists,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          color: Colors.white.withValues(alpha: 0.6),
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // Auto Playlists Horizontal List
-                if (autoPlaylists.isNotEmpty)
-                  SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: GlassmorphicCard.listHeight(context),
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: autoPlaylists.length,
-                        itemBuilder: (context, index) {
-                          final playlist = autoPlaylists[index];
-                          String autoName;
-                          switch (playlist.id) {
-                            case 'most_played':
-                              autoName = localizations.mostPlayed;
-                              break;
-                            case 'recently_added':
-                              autoName = localizations.recentlyAdded;
-                              break;
-                            default:
-                              autoName = playlist.name;
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: GlassmorphicCard.playlist(
-                              playlistName: autoName,
-                              songCount: playlist.songs.length,
-                              subtitle: localizations
-                                  .songCount(playlist.songs.length),
-                              playlistId: playlist.id,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      PlaylistDetailScreen(playlist: playlist),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-
-                // Smart Playlists Section
+                // Smart playlists, shown in the same tile style.
                 SliverToBoxAdapter(
                   child: Consumer<SmartPlaylistService>(
                     builder: (context, smartService, _) {
-                      final smartPlaylists = smartService.smartPlaylists;
-                      if (smartPlaylists.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
+                      final smart = smartService.smartPlaylists
+                          .where((sp) => matches(sp.name))
+                          .toList();
+                      if (smart.isEmpty) return const SizedBox.shrink();
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                            child: Text(
-                              localizations.smartPlaylists,
-                              style: TextStyle(
-                                fontFamily: FontConstants.fontFamily,
-                                color: Colors.white.withValues(alpha: 0.6),
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: GlassmorphicCard.listHeight(context),
-                            child: ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              itemCount: smartPlaylists.length,
-                              itemBuilder: (context, index) {
-                                final sp = smartPlaylists[index];
-                                final built = smartService.buildPlaylist(
+                          _buildSectionHeader(localizations.smartPlaylists),
+                          _TileGrid(
+                            children: [
+                              for (final sp in smart)
+                                _buildSmartTile(
+                                  context,
                                   sp,
-                                  library: audioService.songs,
-                                  isLiked: audioService.isLiked,
-                                  playCountOf: audioService.playCountFor,
-                                );
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 4),
-                                  child: GestureDetector(
-                                    onLongPress: () =>
-                                        _showSmartPlaylistOptions(
-                                            context, sp, smartService),
-                                    child: GlassmorphicCard.playlist(
-                                      playlistName: sp.name,
-                                      songCount: built.songs.length,
-                                      subtitle: localizations
-                                          .songCount(built.songs.length),
-                                      playlistId: sp.id,
-                                      onTap: () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => PlaylistDetailScreen(
-                                              playlist: built),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                                  smartService,
+                                  audioService,
+                                  localizations,
+                                ),
+                            ],
                           ),
                         ],
                       );
@@ -455,46 +262,50 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                   ),
                 ),
 
-                // Your Playlists Header
+                // The user's own playlists.
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-                    child: Text(
-                      localizations.yourPlaylists,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
+                  child: _buildSectionHeader(
+                    localizations.yourPlaylists,
+                    count: state.userPlaylists.length,
                   ),
                 ),
-
-                // User Playlists List
-                userPlaylists.isEmpty
-                    ? SliverToBoxAdapter(
-                        child: _buildEmptyState(context, isDark, localizations),
-                      )
-                    : SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 4),
-                              child: _buildPlaylistTile(
-                                context,
-                                userPlaylists[index],
-                                audioService,
-                                isDark,
-                                localizations,
-                              ),
-                            );
-                          },
-                          childCount: userPlaylists.length,
-                        ),
-                      ),
+                if (state.userPlaylists.isEmpty)
+                  SliverToBoxAdapter(
+                    child: _buildEmptyState(context, localizations),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    sliver: SliverLayoutBuilder(
+                      builder: (context, constraints) {
+                        const spacing = 12.0;
+                        final columns =
+                            (constraints.crossAxisExtent / 190).ceil();
+                        final cardWidth = (constraints.crossAxisExtent -
+                                spacing * (columns - 1)) /
+                            columns;
+                        return SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: columns,
+                            mainAxisSpacing: spacing,
+                            crossAxisSpacing: spacing,
+                            // Square artwork + name and track count.
+                            mainAxisExtent: cardWidth + 50,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildPlaylistCard(
+                              context,
+                              userList[index],
+                              audioService,
+                              localizations,
+                            ),
+                            childCount: userList.length,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 SliverToBoxAdapter(
                   child: SizedBox(
                     height: ExpandingPlayer.getMiniPlayerPaddingHeight(context),
@@ -508,6 +319,138 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
     );
   }
 
+  void _openPlaylist(BuildContext context, Playlist playlist) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PlaylistDetailScreen(playlist: playlist),
+      ),
+    );
+  }
+
+  Widget _buildHeader(
+    BuildContext context,
+    AudioPlayerService audioService,
+    AppLocalizations localizations,
+    int totalCount,
+  ) {
+    return LibraryScreenHeader(
+      badge: localizations.library,
+      title: localizations.playlists,
+      subtitle: localizations.playlistsCountPlural(totalCount),
+      accentColor: Colors.pink,
+      showBackButton: true,
+      actions: [
+        IconButton(
+          tooltip: localizations.newPlaylist,
+          icon: const iconoir.Plus(color: Colors.white, width: 24, height: 24),
+          onPressed: () => _showCreatePlaylistDialog(context),
+        ),
+        PopupMenuButton<String>(
+          icon: const iconoir.MoreVert(
+              color: Colors.white, width: 24, height: 24),
+          color: Colors.grey.shade900,
+          onSelected: (value) {
+            switch (value) {
+              case 'import':
+                _importPlaylist(context, audioService);
+                break;
+              case 'sync_folder':
+                _chooseSyncFolder(context, audioService);
+                break;
+              case 'sync_now':
+                _syncNow(context, audioService);
+                break;
+              case 'create_smart':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const SmartPlaylistEditorScreen(),
+                  ),
+                );
+                break;
+            }
+          },
+          itemBuilder: (context) => [
+            _menuItem('import', localizations.importPlaylistM3u),
+            _menuItem('sync_folder', localizations.setSyncFolder),
+            _menuItem('sync_now', localizations.syncNow),
+            _menuItem('create_smart', localizations.createSmartPlaylist),
+          ],
+        ),
+        const SizedBox(width: 8),
+      ],
+      searchField: LibrarySearchField(
+        controller: _searchController,
+        hint: localizations.searchPlaylists,
+        onChanged: (q) => setState(() => _searchQuery = q),
+        hasQuery: _searchQuery.isNotEmpty,
+        onClear: () {
+          _searchController.clear();
+          setState(() => _searchQuery = '');
+        },
+      ),
+      controlsRow: Row(
+        children: [
+          Expanded(
+            child: PopupMenuButton<PlaylistSortOption>(
+              onSelected: (opt) {
+                setState(() => _sortOption = opt);
+                _persistSort();
+              },
+              color: Colors.grey.shade900,
+              child: LibraryControlPill(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const iconoir.Sort(
+                        color: Colors.white70, width: 18, height: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _getSortLabel(_sortOption),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 13),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const iconoir.NavArrowDown(
+                        color: Colors.white70, width: 18, height: 18),
+                  ],
+                ),
+              ),
+              itemBuilder: (context) => [
+                _sortItem(PlaylistSortOption.name,
+                    AppLocalizations.of(context).sortName),
+                _sortItem(PlaylistSortOption.trackCount,
+                    AppLocalizations.of(context).tracks),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          LibraryControlPill(
+            onTap: () {
+              setState(() => _isAscending = !_isAscending);
+              _persistSort();
+            },
+            child: _isAscending
+                ? const iconoir.ArrowUp(
+                    color: Colors.white70, width: 18, height: 18)
+                : const iconoir.ArrowDown(
+                    color: Colors.white70, width: 18, height: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _menuItem(String value, String label) {
+    return PopupMenuItem(
+      value: value,
+      child: Text(label, style: const TextStyle(color: Colors.white)),
+    );
+  }
+
   PopupMenuItem<PlaylistSortOption> _sortItem(
       PlaylistSortOption opt, String label) {
     return PopupMenuItem(
@@ -515,7 +458,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       child: Row(
         children: [
           if (_sortOption == opt)
-            const Icon(Icons.check, color: Colors.white, size: 18)
+            const iconoir.Check(color: Colors.white, width: 18, height: 18)
           else
             const SizedBox(width: 18),
           const SizedBox(width: 8),
@@ -525,183 +468,95 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
     );
   }
 
-  Widget _buildLikedSongsCard(
-    BuildContext context,
-    Playlist playlist,
-    AudioPlayerService audioService,
-    bool isDark,
-    AppLocalizations localizations,
-  ) {
-    return Press3D(
-        child: GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PlaylistDetailScreen(playlist: playlist),
-        ),
-      ),
-      child: Container(
-        height: 72,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+  Widget _buildSectionHeader(String title, {int? count}) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 10),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: FontConstants.fontFamily,
+              color: Colors.white,
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // Icon
-            ArtworkHero(
-                radius: 16,
-                child: Container(
-                  width: 72,
-                  height: 72,
-                  decoration: const BoxDecoration(
-                    borderRadius:
-                        BorderRadius.horizontal(left: Radius.circular(16)),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(16)),
-                    child: Image.asset(
-                      'assets/images/UI/liked.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                )),
-            // Text
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      localizations.favoriteSongs,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${playlist.songs.length} ${localizations.tracks}',
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white54 : Colors.black45,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-            // Play Button
-            GestureDetector(
-              onTap: playlist.songs.isEmpty
-                  ? null
-                  : () => audioService.setPlaylist(playlist.songs, 0),
-              child: Container(
-                width: 40,
-                height: 40,
-                margin: const EdgeInsets.only(right: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  color: Colors.white,
-                  size: 24,
+              child: Text(
+                '$count',
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white70,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
           ],
-        ),
+        ],
       ),
-    ));
+    );
   }
 
-  Widget _buildPlaylistTile(
-    BuildContext context,
-    Playlist playlist,
-    AudioPlayerService audioService,
-    bool isDark,
-    AppLocalizations localizations,
-  ) {
+  /// Compact tile: artwork on the left, name and track count on the right.
+  /// Used for the automatic collections and smart playlists.
+  Widget _buildCollectionTile(
+    BuildContext context, {
+    required String name,
+    required int count,
+    required Widget artwork,
+    required VoidCallback onTap,
+    VoidCallback? onLongPress,
+  }) {
+    final localizations = AppLocalizations.of(context);
     return Press3D(
-        child: GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PlaylistDetailScreen(playlist: playlist),
-        ),
-      ),
-      onLongPress: () =>
-          _showPlaylistOptions(context, audioService, playlist, localizations),
-      child: Container(
-        height: 64,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+      cornerRadius: 18,
+      child: GlassPanel(
+        blur: false,
+        radius: 18,
+        onTap: onTap,
+        onLongPress: onLongPress,
         child: Row(
           children: [
-            // Artwork
             ArtworkHero(
-              radius: 14,
-              child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.horizontal(left: Radius.circular(14)),
-                child: SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: _buildPlaylistArtwork(playlist),
-                ),
-              ),
+              radius: 18,
+              child: SizedBox(width: 68, height: 68, child: artwork),
             ),
-            // Info
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      playlist.name,
-                      style: TextStyle(
-                        fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white : Colors.black87,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
+                      name,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '${playlist.songs.length} ${localizations.tracks}',
-                      style: TextStyle(
+                      '$count ${localizations.tracks}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
                         fontFamily: FontConstants.fontFamily,
-                        color: isDark ? Colors.white54 : Colors.black45,
+                        color: Colors.white54,
                         fontSize: 12,
                       ),
                     ),
@@ -709,74 +564,257 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
                 ),
               ),
             ),
-            // Chevron
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmartTile(
+    BuildContext context,
+    SmartPlaylist sp,
+    SmartPlaylistService smartService,
+    AudioPlayerService audioService,
+    AppLocalizations localizations,
+  ) {
+    final built = smartService.buildPlaylist(
+      sp,
+      library: audioService.songs,
+      isLiked: audioService.isLiked,
+      playCountOf: audioService.playCountFor,
+    );
+    return _buildCollectionTile(
+      context,
+      name: sp.name,
+      count: built.songs.length,
+      artwork: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.deepPurple.withValues(alpha: 0.7),
+              Colors.blue.withValues(alpha: 0.6),
+            ],
+          ),
+        ),
+        child: const Center(
+          child: iconoir.Sparks(color: Colors.white, width: 28, height: 28),
+        ),
+      ),
+      onTap: () => _openPlaylist(context, built),
+      onLongPress: () => _showSmartPlaylistOptions(context, sp, smartService),
+    );
+  }
+
+  /// Grid card: square artwork with a play button, name and track count.
+  Widget _buildPlaylistCard(
+    BuildContext context,
+    Playlist playlist,
+    AudioPlayerService audioService,
+    AppLocalizations localizations,
+  ) {
+    return Press3D(
+      cornerRadius: 22,
+      child: GlassPanel(
+        blur: false,
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+        onTap: () => _openPlaylist(context, playlist),
+        onLongPress: () => _showPlaylistOptions(
+            context, audioService, playlist, localizations),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            AspectRatio(
+              aspectRatio: 1,
+              child: ArtworkHero(
+                radius: 16,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: _buildPlaylistArtwork(playlist),
+                    ),
+                    if (playlist.songs.isNotEmpty)
+                      Positioned(
+                        right: 8,
+                        bottom: 8,
+                        child: GestureDetector(
+                          onTap: () =>
+                              audioService.setPlaylist(playlist.songs, 0),
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.55),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3)),
+                            ),
+                            child: const Center(
+                              child: iconoir.Play(
+                                  color: Colors.white, width: 18, height: 18),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Icon(
-                Icons.chevron_right_rounded,
-                color: isDark ? Colors.white38 : Colors.black26,
-                size: 24,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                playlist.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                '${playlist.songs.length} ${localizations.tracks}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white54,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildPlaylistArtwork(Playlist playlist) {
     if (playlist.songs.isEmpty) {
-      return ColoredBox(
-        color: Colors.grey.withValues(alpha: 0.2),
-        child: Icon(
-          Icons.music_note_rounded,
-          color: Colors.grey.withValues(alpha: 0.5),
-          size: 28,
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.white.withValues(alpha: 0.12),
+              Colors.white.withValues(alpha: 0.04),
+            ],
+          ),
+        ),
+        child: Center(
+          child: iconoir.MusicNote(
+            color: Colors.white.withValues(alpha: 0.45),
+            width: 40,
+            height: 40,
+          ),
         ),
       );
     }
 
-    // Use first song artwork
-    return _artworkService.buildCachedArtwork(playlist.songs.first.id,
-        size: 64);
+    Widget art(int id) => SizedBox.expand(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            clipBehavior: Clip.hardEdge,
+            child: _artworkService.buildCachedArtwork(id, size: 200),
+          ),
+        );
+
+    final ids = <int>{};
+    for (final s in playlist.songs) {
+      ids.add(s.id);
+      if (ids.length == 4) break;
+    }
+    if (ids.length < 4) return art(playlist.songs.first.id);
+
+    final list = ids.toList();
+    return Column(
+      children: [
+        Expanded(
+          child: Row(children: [
+            Expanded(child: art(list[0])),
+            Expanded(child: art(list[1])),
+          ]),
+        ),
+        Expanded(
+          child: Row(children: [
+            Expanded(child: art(list[2])),
+            Expanded(child: art(list[3])),
+          ]),
+        ),
+      ],
+    );
   }
 
   Widget _buildEmptyState(
     BuildContext context,
-    bool isDark,
     AppLocalizations localizations,
   ) {
     return Padding(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.playlist_add_rounded,
-            size: 56,
-            color: isDark ? Colors.white24 : Colors.black12,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GlassPanel(
+        blur: false,
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            children: [
+              const iconoir.PlaylistPlus(
+                  color: Colors.white54, width: 48, height: 48),
+              const SizedBox(height: 14),
+              Text(
+                localizations.noPlaylists,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                localizations.createFirstPlaylist,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  color: Colors.white60,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 18),
+              LibraryControlPill(
+                onTap: () => _showCreatePlaylistDialog(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const iconoir.Plus(
+                        color: Colors.white, width: 18, height: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      localizations.newPlaylist,
+                      style: const TextStyle(
+                        fontFamily: FontConstants.fontFamily,
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            localizations.noPlaylists,
-            style: TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: isDark ? Colors.white54 : Colors.black45,
-              fontSize: 15,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            localizations.createFirstPlaylist,
-            style: TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: isDark ? Colors.white38 : Colors.black26,
-              fontSize: 13,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -798,7 +836,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.edit_outlined, color: Colors.white),
+              leading: const iconoir.EditPencil(
+                  color: Colors.white, width: 22, height: 22),
               title: Text(l10n.editSmartPlaylist,
                   style: const TextStyle(color: Colors.white)),
               onTap: () {
@@ -813,8 +852,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete_outline_rounded,
-                  color: Colors.redAccent),
+              leading: const iconoir.Trash(
+                  color: Colors.redAccent, width: 22, height: 22),
               title: Text(l10n.delete,
                   style: const TextStyle(color: Colors.redAccent)),
               onTap: () async {
@@ -852,7 +891,6 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
 
   Future<void> _importPlaylist(
       BuildContext context, AudioPlayerService audioService) async {
-    final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context);
     try {
       final result = await FilePicker.pickFiles();
@@ -860,56 +898,49 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       if (path == null) return;
       final lower = path.toLowerCase();
       if (!lower.endsWith('.m3u') && !lower.endsWith('.m3u8')) {
-        messenger
-            .showSnackBar(SnackBar(content: Text(loc.pleaseSelectM3uFile)));
+        NotificationManager.show(loc.pleaseSelectM3uFile);
         return;
       }
       final playlist = await audioService.importPlaylistFromM3uFile(path);
       if (playlist == null) {
-        messenger.showSnackBar(
-            SnackBar(content: Text(loc.noMatchingSongsForPlaylist)));
+        NotificationManager.show(loc.noMatchingSongsForPlaylist);
       } else {
-        messenger.showSnackBar(SnackBar(
-            content: Text(
-                loc.importedPlaylist(playlist.name, playlist.songs.length))));
+        NotificationManager.show(
+            loc.importedPlaylist(playlist.name, playlist.songs.length));
       }
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(loc.importFailed('$e'))));
+      NotificationManager.show(loc.importFailed('$e'));
     }
   }
 
   Future<void> _chooseSyncFolder(
       BuildContext context, AudioPlayerService audioService) async {
-    final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context);
     try {
       final folder = await FilePicker.getDirectoryPath();
       if (folder == null) return;
       await audioService.setPlaylistSyncFolder(folder);
       await audioService.syncPlaylistsWithFolder();
-      messenger
-          .showSnackBar(SnackBar(content: Text(loc.playlistsSyncWith(folder))));
+      NotificationManager.show(loc.playlistsSyncWith(folder));
     } catch (e) {
-      messenger.showSnackBar(
-          SnackBar(content: Text(loc.couldNotSetSyncFolder('$e'))));
+      NotificationManager.show(loc.couldNotSetSyncFolder('$e'));
     }
   }
 
   Future<void> _syncNow(
       BuildContext context, AudioPlayerService audioService) async {
-    final messenger = ScaffoldMessenger.of(context);
     final loc = AppLocalizations.of(context);
     final folder = await audioService.playlistSyncFolder();
     if (folder == null) {
-      messenger.showSnackBar(SnackBar(content: Text(loc.setSyncFolderFirst)));
+      NotificationManager.show(loc.setSyncFolderFirst);
       return;
     }
     try {
       final changed = await audioService.syncPlaylistsWithFolder();
-      messenger.showSnackBar(SnackBar(
-          content: Text(changed ? loc.playlistsSynced : loc.alreadyUpToDate)));
+      NotificationManager.show(
+          changed ? loc.playlistsSynced : loc.alreadyUpToDate);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(loc.syncFailed('$e'))));
+      NotificationManager.show(loc.syncFailed('$e'));
     }
   }
 
@@ -1110,7 +1141,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
             // Rename option
             _buildOptionTile(
               context,
-              Icons.edit_rounded,
+              (color) =>
+                  iconoir.EditPencil(color: color, width: 22, height: 22),
               localizations.rename,
               isDark,
               () {
@@ -1121,7 +1153,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
             // Delete option
             _buildOptionTile(
               context,
-              Icons.delete_outline_rounded,
+              (color) => iconoir.Trash(color: color, width: 22, height: 22),
               localizations.delete,
               isDark,
               () {
@@ -1139,7 +1171,7 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
 
   Widget _buildOptionTile(
     BuildContext context,
-    IconData icon,
+    Widget Function(Color color) icon,
     String label,
     bool isDark,
     VoidCallback onTap, {
@@ -1158,13 +1190,9 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color: isDestructive
-                  ? Colors.red
-                  : (isDark ? Colors.white70 : Colors.black54),
-              size: 22,
-            ),
+            icon(isDestructive
+                ? Colors.red
+                : (isDark ? Colors.white70 : Colors.black54)),
             const SizedBox(width: 14),
             Text(
               label,
@@ -1316,10 +1344,10 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.delete_outline_rounded,
+              iconoir.Trash(
                 color: Colors.red.withValues(alpha: 0.8),
-                size: 48,
+                width: 48,
+                height: 48,
               ),
               const SizedBox(height: 16),
               Text(
@@ -1387,6 +1415,59 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// An automatic playlist (Favorites, Most Played, Recently Added) with its
+/// localized name and artwork asset.
+class _Collection {
+  const _Collection({
+    required this.playlist,
+    required this.name,
+    required this.asset,
+  });
+
+  final Playlist playlist;
+  final String name;
+  final String asset;
+}
+
+/// Lays tiles out in equal-width columns (two on phones, more on tablets).
+/// With an odd number of tiles on two columns, the first one spans the full
+/// width so the last row is never left with a gap.
+class _TileGrid extends StatelessWidget {
+  const _TileGrid({required this.children});
+
+  final List<Widget> children;
+
+  static const double _spacing = 10;
+  static const double _tileHeight = 68;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = (constraints.maxWidth / 260).ceil();
+          final tileWidth =
+              (constraints.maxWidth - _spacing * (columns - 1)) / columns;
+          final spanFirst = columns == 2 && children.length.isOdd;
+          return Wrap(
+            spacing: _spacing,
+            runSpacing: _spacing,
+            children: [
+              for (var i = 0; i < children.length; i++)
+                SizedBox(
+                  width: i == 0 && spanFirst ? constraints.maxWidth : tileWidth,
+                  height: _tileHeight,
+                  child: children[i],
+                ),
+            ],
+          );
+        },
       ),
     );
   }

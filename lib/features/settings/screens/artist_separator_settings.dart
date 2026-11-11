@@ -9,6 +9,7 @@ import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/widgets/glassmorphic_dialog.dart';
+import '../widgets/settings_tile_builders.dart';
 
 /// Settings screen for configuring artist name separation
 class ArtistSeparatorSettingsScreen extends StatefulWidget {
@@ -149,13 +150,16 @@ class _ArtistSeparatorSettingsScreenState
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Switch(
-                        value: _isEnabled,
-                        onChanged: (value) async {
-                          await _service.setEnabled(value);
-                          setState(() => _isEnabled = value);
-                          _updateTestResult();
-                        },
+                      SettingsTiles.glassSwitchTheme(
+                        context,
+                        Switch(
+                          value: _isEnabled,
+                          onChanged: (value) async {
+                            await _service.setEnabled(value);
+                            setState(() => _isEnabled = value);
+                            _updateTestResult();
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -276,8 +280,8 @@ class _ArtistSeparatorSettingsScreenState
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 12),
                               border: InputBorder.none,
-                              hintText:
-                                  'e.g. Artist One / Artist Two feat. Three',
+                              hintText: AppLocalizations.of(context)
+                                  .artistSeparatorTestHint,
                               hintStyle: TextStyle(
                                   color: cs.onSurface.withValues(alpha: 0.35),
                                   fontSize: 13),
@@ -435,24 +439,7 @@ class _ArtistSeparatorSettingsScreenState
   }
 
   Widget _glassCard({required Widget child}) {
-    final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
-    final colorScheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: isLowEnd
-            ? colorScheme.surfaceContainerHigh
-            : Colors.white.withValues(alpha: 0.07),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: isLowEnd
-              ? colorScheme.outlineVariant
-              : Colors.white.withValues(alpha: 0.10),
-        ),
-      ),
-      child: child,
-    );
+    return SettingsTiles.buildGlassRow(context, child: child);
   }
 
   Widget _chipTag({
@@ -464,9 +451,9 @@ class _ArtistSeparatorSettingsScreenState
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 6, 6, 6),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
+        color: Colors.white.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

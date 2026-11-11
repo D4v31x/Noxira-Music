@@ -929,6 +929,15 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsAboutSubtitle => 'Verze, zpětná vazba a aktualizace';
 
   @override
+  String get settingsGroupExperience => 'Zážitek';
+
+  @override
+  String get settingsGroupLibrary => 'Knihovna a data';
+
+  @override
+  String get settingsGroupApp => 'Aplikace';
+
+  @override
   String get settingsAccentColor => 'Barva zvýraznění';
 
   @override
@@ -1064,6 +1073,16 @@ class AppLocalizationsCs extends AppLocalizations {
       'Při vypnutí se tempo mění bez změny výšky tónu';
 
   @override
+  String get playbackPitch => 'Výška tónu';
+
+  @override
+  String get playbackPitchDesc =>
+      'Posune zvuk výše nebo níže nezávisle na rychlosti';
+
+  @override
+  String get playbackPitchLinkedDesc => 'Sleduje rychlost přehrávání';
+
+  @override
   String get settingsPlayback => 'Přehrávání';
 
   @override
@@ -1123,6 +1142,10 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get settingsUpToDate => 'Máte nejnovější verzi';
+
+  @override
+  String get settingsUpdateCheckFailed =>
+      'Aktualizace se nepodařilo zkontrolovat. Aktualizace přicházejí z Google Play.';
 
   @override
   String get settingsWeeklyRecap => 'Týdenní přehled';
@@ -1191,7 +1214,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get supportAuroraTitle => 'Podpořte Noxira Music';
 
   @override
-  String get updatedTitle => 'Noxira Music was updated';
+  String get updatedTitle => 'Noxira Music byla aktualizována';
 
   @override
   String get tapAddToAddSongs => 'Klepněte na + pro přidání skladeb';
@@ -1319,29 +1342,30 @@ class AppLocalizationsCs extends AppLocalizations {
   String get send_feedback_desc => 'Nahlásit chyby nebo navrhnout funkce';
 
   @override
-  String get rateApp => 'Rate Noxira Music';
+  String get rateApp => 'Ohodnotit Noxira Music';
 
   @override
-  String get rateAppDesc => 'Enjoying the app? Leave a review on Google Play';
+  String get rateAppDesc =>
+      'Líbí se vám aplikace? Zanechte recenzi na Google Play';
 
   @override
-  String get feedbackTypeBug => 'Bug';
+  String get feedbackTypeBug => 'Chyba';
 
   @override
-  String get feedbackTypeSuggestion => 'Suggestion';
+  String get feedbackTypeSuggestion => 'Návrh';
 
   @override
-  String get feedbackHint => 'Describe the bug or suggestion...';
+  String get feedbackHint => 'Popište chybu nebo návrh...';
 
   @override
-  String get feedbackSend => 'Send';
+  String get feedbackSend => 'Odeslat';
 
   @override
-  String get feedbackSentThanks => 'Thanks for your feedback!';
+  String get feedbackSentThanks => 'Děkujeme za vaši zpětnou vazbu!';
 
   @override
   String get feedbackSentError =>
-      'Couldn\'t send feedback. Please try again later.';
+      'Zpětnou vazbu se nepodařilo odeslat. Zkuste to prosím později.';
 
   @override
   String get contributeTranslations => 'Přeložit aplikaci';
@@ -1370,16 +1394,6 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String get settingsHighendUiDesc =>
       'Povolit pokročilé vizuální efekty a animace';
-
-  @override
-  String get restartRequired => 'Vyžadován restart';
-
-  @override
-  String get restartRequiredDesc =>
-      'Aplikace musí být restartována pro aplikování změny režimu UI. Restartovat nyní?';
-
-  @override
-  String get restartNow => 'Restartovat nyní';
 
   @override
   String get clearUpcoming => 'Vymazat nadcházející';
@@ -1483,7 +1497,7 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String lyricsAdded(String title) {
-    return 'Lyrics added for \"$title\"';
+    return 'Text písně přidán pro „$title“';
   }
 
   @override
@@ -1724,6 +1738,28 @@ class AppLocalizationsCs extends AppLocalizations {
       'Uvidíte, co hrálo a co bude dál. Přetažením změníte pořadí, švihnutím odstraníte.';
 
   @override
+  String get rebrandSlideOutputTitle => 'Vyberte, kam se hraje';
+
+  @override
+  String get rebrandSlideOutputBody =>
+      'Klepněte na Bluetooth čip na domovské obrazovce nebo na nové tlačítko na obrazovce Právě hraje a přepínejte přehrávání mezi reproduktorem telefonu a připojenými zařízeními přímo v aplikaci.';
+
+  @override
+  String get rebrandSlideLibraryTitle => 'Přehlednější knihovna';
+
+  @override
+  String get rebrandSlideLibraryBody =>
+      'Noxira rozpozná duplicitní skladby a nechá vás vybrat, kterou kopii ponechat. Playlisty mají nové rozložení s Oblíbenými, automatickými a chytrými playlisty na jednom místě.';
+
+  @override
+  String get rebrandMoreMessages =>
+      'Zprávy se nově zobrazují jako malý ostrůvek ve spodní části obrazovky.';
+
+  @override
+  String get rebrandMorePerformance =>
+      'Rychlejší hledání, svižnější start a lehčí načítání obrázků.';
+
+  @override
   String get translateLyricsTo => 'Přeložit texty do';
 
   @override
@@ -1748,6 +1784,14 @@ class AppLocalizationsCs extends AppLocalizations {
       'Plynulejší a hezčí přechody v celé aplikaci.';
 
   @override
+  String get rebrandMorePlayback =>
+      'Samostatné posuvníky rychlosti a výšky tónu, které lze propojit.';
+
+  @override
+  String get rebrandMoreSearch =>
+      'Přepracovaná záložka Hledání a Nastavení rozdělené do skupin.';
+
+  @override
   String get rebrandMoreFixes =>
       'Vyšší stabilita a opravy chyb v celé aplikaci, včetně blikání textů.';
 
@@ -1762,6 +1806,9 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get eqNotAvailable => 'Ekvalizér na tomto zařízení není k dispozici.';
+
+  @override
+  String get eqWaitingForAudio => 'Spusťte skladbu a upravte ekvalizér.';
 
   @override
   String get eqOpenSystem => 'Otevřít systémový ekvalizér';
@@ -1880,6 +1927,13 @@ class AppLocalizationsCs extends AppLocalizations {
   String get closeVisualiser => 'Zavřít vizualizér';
 
   @override
+  String get visualizerWaitingForAudio => 'Čekání na zvuk přehrávání...';
+
+  @override
+  String get visualizerUnavailable =>
+      'Živá analýza zvuku není pro tento výstup k dispozici.';
+
+  @override
   String get previousMode => 'Předchozí režim';
 
   @override
@@ -1950,20 +2004,20 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get translationDisclaimerNote =>
-      'Some translations are AI-generated or community-contributed and may contain errors. Help us improve them on Crowdin.';
+      'Některé překlady jsou generované umělou inteligencí nebo vytvořené komunitou a mohou obsahovat chyby. Pomozte nám je vylepšit na Crowdinu.';
 
   @override
-  String get newLanguagesAvailableTitle => 'New Languages Available';
+  String get newLanguagesAvailableTitle => 'Nové jazyky k dispozici';
 
   @override
   String get newLanguagesAvailableBody =>
-      'Noxira Music now supports German, Spanish, Hindi, and Russian. You can change your language in Settings.';
+      'Noxira Music nově podporuje němčinu, španělštinu, hindštinu a ruštinu. Jazyk můžete změnit v Nastavení.';
 
   @override
-  String get newLanguagesGoToSettings => 'Change Language';
+  String get newLanguagesGoToSettings => 'Změnit jazyk';
 
   @override
-  String get newLanguagesDismiss => 'Got it';
+  String get newLanguagesDismiss => 'Rozumím';
 
   @override
   String get settingsLyricsSources => 'Zdroje textů';
@@ -2032,5 +2086,956 @@ class AppLocalizationsCs extends AppLocalizations {
   @override
   String onboardingHeaviestNote(String option) {
     return '$option je nejnáročnější možnost a na vašem zařízení nemusí běžet tak plynule.';
+  }
+
+  @override
+  String get audioOutput => 'Zvukový výstup';
+
+  @override
+  String get audioOutputBluetoothDevice => 'Zařízení Bluetooth';
+
+  @override
+  String get audioOutputPhoneSpeaker => 'Reproduktor telefonu';
+
+  @override
+  String get audioOutputWired => 'Kabelová sluchátka';
+
+  @override
+  String get audioOutputUsb => 'USB audio';
+
+  @override
+  String get audioOutputOther => 'Jiný výstup';
+
+  @override
+  String get audioOutputNoOthers => 'Nebyla nalezena žádná další zařízení';
+
+  @override
+  String get audioOutputCurrentDevice => 'Aktuální zařízení';
+
+  @override
+  String get audioOutputSwitchFailed => 'Zvukový výstup se nepodařilo přepnout';
+
+  @override
+  String get duplicatesBannerTitle => 'Nalezeny duplicitní skladby';
+
+  @override
+  String duplicatesBannerSubtitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skladeb existuje ve více kopiích',
+      many: '$count skladby existují ve více kopiích',
+      few: '$count skladby existují ve více kopiích',
+      one: '1 skladba existuje ve více kopiích',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesReview => 'Zkontrolovat';
+
+  @override
+  String get duplicatesScreenTitle => 'Duplicitní skladby';
+
+  @override
+  String get duplicatesEmpty => 'Žádné duplicity nenalezeny';
+
+  @override
+  String get duplicatesIgnore => 'Ignorovat';
+
+  @override
+  String get duplicatesIgnoreAll => 'Ignorovat vše';
+
+  @override
+  String get duplicatesKeepBest => 'Nejlepší kvalita';
+
+  @override
+  String duplicatesCopies(int count) {
+    return 'Kopií: $count';
+  }
+
+  @override
+  String duplicatesDeleteOthers(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ponechat vybranou, smazat $count dalších',
+      many: 'Ponechat vybranou, smazat $count dalších',
+      few: 'Ponechat vybranou, smazat $count další',
+      one: 'Ponechat vybranou, smazat 1 další',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get duplicatesDeleteFailed => 'Některé kopie se nepodařilo smazat';
+
+  @override
+  String get duplicatesResolved => 'Duplicity odstraněny';
+
+  @override
+  String get duplicatesHint =>
+      'Vyberte kopii, kterou ponechat. Ostatní se ze zařízení smažou.';
+
+  @override
+  String get remoteAnnouncementOpenLink => 'Zjistit více';
+
+  @override
+  String get remoteAnnouncementOpenScreen => 'Otevřít';
+
+  @override
+  String get updateRequiredTitle => 'Vyžadována aktualizace';
+
+  @override
+  String get updateRequiredMessage =>
+      'Tato verze již není podporována. Pro další používání aktualizujte Noxira Music.';
+
+  @override
+  String get settingsSupport => 'Podpora';
+
+  @override
+  String get settingsSupportSubtitle => 'Podporovatelé a způsoby, jak pomoci';
+
+  @override
+  String get supportSupporters => 'Podporovatelé';
+
+  @override
+  String get supportNoSupportersYet => 'Zatím tu nikdo není. Buďte první!';
+
+  @override
+  String get musicInsightsTitle => 'Hudební přehled';
+
+  @override
+  String get insightsActivityByTimeOfDay => 'Aktivita podle denní doby';
+
+  @override
+  String get insightsActivityByDay => 'Aktivita podle dne';
+
+  @override
+  String get insightsGenreBreakdown => 'Rozdělení podle žánrů';
+
+  @override
+  String get insightsNoDataTitle => 'Zatím žádná data o poslechu';
+
+  @override
+  String get insightsNoDataBody =>
+      'Pusťte si nějakou hudbu a začněte sestavovat svůj přehled.';
+
+  @override
+  String insightsMostActiveAround(String time) {
+    return 'Nejaktivnější kolem $time';
+  }
+
+  @override
+  String insightsMostActiveOn(String day) {
+    return 'Nejaktivnější den: $day';
+  }
+
+  @override
+  String moreFromArtist(String artist) {
+    return 'Další od $artist';
+  }
+
+  @override
+  String tracksCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skladeb',
+      many: '$count skladby',
+      few: '$count skladby',
+      one: '1 skladba',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String songsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skladeb',
+      many: '$count skladby',
+      few: '$count skladby',
+      one: '1 skladba',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String albumsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count alb',
+      many: '$count alba',
+      few: '$count alba',
+      one: '1 album',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String playlistsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count playlistů',
+      many: '$count playlisty',
+      few: '$count playlisty',
+      one: '1 playlist',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String foldersCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count složek',
+      many: '$count složky',
+      few: '$count složky',
+      one: '1 složka',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String foldersExcludedCount(int count) {
+    return 'vyloučeno: $count';
+  }
+
+  @override
+  String get unknownAlbum => 'Neznámé album';
+
+  @override
+  String get queueNextUp => 'Následující';
+
+  @override
+  String queueNextFrom(String source) {
+    return 'Další z: $source';
+  }
+
+  @override
+  String get queueNothingElse => 'Ve frontě nic dalšího není';
+
+  @override
+  String get queueMoveToEnd => 'Přesunout na konec';
+
+  @override
+  String get translateLyrics => 'Přeložit text písně';
+
+  @override
+  String get translateFailedTapToRetry =>
+      'Překlad selhal — klepnutím to zkusíte znovu';
+
+  @override
+  String get translateShowOriginal => 'Zobrazit originál';
+
+  @override
+  String get translateShowTranslation => 'Zobrazit překlad';
+
+  @override
+  String get lyricsAiTranslatedNote =>
+      'Přeloženo pomocí AI · přesnost se může lišit';
+
+  @override
+  String lyricsCantTranslateSameLanguage(String language) {
+    return 'Nelze přeložit — text už je v cílovém jazyce ($language)';
+  }
+
+  @override
+  String get lyricsAddLyrics => 'Přidat text písně';
+
+  @override
+  String get lyricsBlurOn => 'Rozmazání textu: zapnuto';
+
+  @override
+  String get lyricsBlurOff => 'Rozmazání textu: vypnuto';
+
+  @override
+  String get lyricsAutoHideOn => 'Automaticky skrývat ovládání: zapnuto';
+
+  @override
+  String get lyricsAutoHideOff => 'Automaticky skrývat ovládání: vypnuto';
+
+  @override
+  String get lyricsEditCreate => 'Upravit / vytvořit text písně';
+
+  @override
+  String get sleepTimerMinShort => 'min';
+
+  @override
+  String sleepTimerMinutesValue(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get sleepTimerMusicStopsAfter => 'Hudba se zastaví za…';
+
+  @override
+  String get sleepTimerPickDuration => 'Níže vyberte dobu';
+
+  @override
+  String get visualizerBarSpectrum => 'Spektrum sloupců';
+
+  @override
+  String get visualizerCircularBars => 'Kruhové sloupce';
+
+  @override
+  String get visualizerMirrorBars => 'Zrcadlové sloupce';
+
+  @override
+  String get visualizerFrequencyLine => 'Frekvenční křivka';
+
+  @override
+  String get visualizerDotMatrix => 'Bodová matice';
+
+  @override
+  String get visualizerPeakBars => 'Špičkové sloupce';
+
+  @override
+  String get visualizerCircularWave => 'Kruhová vlna';
+
+  @override
+  String get visualizerAuroraWaves => 'Vlny polární záře';
+
+  @override
+  String get visualizerPulseRings => 'Pulzující kruhy';
+
+  @override
+  String get smartFieldFolderPath => 'Cesta ke složce';
+
+  @override
+  String get smartFieldLiked => 'Oblíbené';
+
+  @override
+  String get smartFieldPlayCount => 'Počet přehrání';
+
+  @override
+  String get smartFieldDurationSeconds => 'Délka (sekundy)';
+
+  @override
+  String get smartFieldDaysSinceAdded => 'Dnů od přidání';
+
+  @override
+  String get smartOpContains => 'obsahuje';
+
+  @override
+  String get smartOpNotContains => 'neobsahuje';
+
+  @override
+  String get smartOpEquals => 'je rovno';
+
+  @override
+  String get smartOpNotEquals => 'není rovno';
+
+  @override
+  String get smartOpGreaterThan => 'je větší než';
+
+  @override
+  String get smartOpLessThan => 'je menší než';
+
+  @override
+  String get smartOpIsTrue => 'je pravda';
+
+  @override
+  String get smartOpIsFalse => 'je nepravda';
+
+  @override
+  String get smartSortTitleAZ => 'Název (A–Z)';
+
+  @override
+  String get smartSortArtistAZ => 'Interpret (A–Z)';
+
+  @override
+  String get smartSortDateAddedNewest => 'Datum přidání (nejnovější)';
+
+  @override
+  String get smartSortPlayCountHighest => 'Počet přehrání (nejvyšší)';
+
+  @override
+  String get smartSortDurationLongest => 'Délka (nejdelší)';
+
+  @override
+  String get smartSortRandom => 'Náhodně';
+
+  @override
+  String get folderFilterTitle => 'Filtr složek';
+
+  @override
+  String get artistSeparatorTestHint =>
+      'např. Interpret 1 / Interpret 2 feat. 3';
+
+  @override
+  String get tracksPermissionRequired =>
+      'Je vyžadováno oprávnění k přístupu do hudební knihovny. Udělte oprávnění při úvodním nastavení nebo v nastavení aplikace.';
+
+  @override
+  String tracksErrorFetching(String error) {
+    return 'Chyba při načítání skladeb: $error';
+  }
+
+  @override
+  String get seeAll => 'Zobrazit vše';
+
+  @override
+  String get selectItemToViewDetails =>
+      'Vyberte položku pro zobrazení podrobností';
+
+  @override
+  String get takeMeThere => 'Přejít tam';
+
+  @override
+  String get notNow => 'Teď ne';
+
+  @override
+  String get aboutCodename => 'Kódové jméno';
+
+  @override
+  String get aboutDeveloper => 'Vývojář';
+
+  @override
+  String get aboutCopyright => 'Autorská práva';
+
+  @override
+  String get aboutWebsite => 'Web';
+
+  @override
+  String get openSourcePackages => 'Open source balíčky';
+
+  @override
+  String packagesUsedCount(int count) {
+    return 'Použité balíčky: $count';
+  }
+
+  @override
+  String get packagesThanks => 'Děkujeme všem přispěvatelům open source!';
+
+  @override
+  String versionWithCodename(String version, String codename) {
+    return 'Verze $version ($codename)';
+  }
+
+  @override
+  String get customColor => 'Vlastní barva';
+
+  @override
+  String exportPlaylistAs(String format) {
+    return 'Exportovat ($format)';
+  }
+
+  @override
+  String get shareClipListeningTo => 'POSLOUCHÁM';
+
+  @override
+  String get shareClipNowOn => 'NYNÍ NA';
+
+  @override
+  String get splashInitializingServices => 'Inicializace služeb';
+
+  @override
+  String get splashLoadingLibrary => 'Načítání knihovny';
+
+  @override
+  String get splashPreparingHome => 'Příprava domovské obrazovky';
+
+  @override
+  String get splashCachingArtwork => 'Ukládání obalů do mezipaměti';
+
+  @override
+  String get splashFinalPreparations => 'Závěrečné přípravy';
+
+  @override
+  String get queueHistory => 'Historie';
+
+  @override
+  String get sortName => 'Název';
+
+  @override
+  String get bannerInsightsNewTitle => 'Váš hudební přehled je tady ✦';
+
+  @override
+  String get bannerInsightsNewBody =>
+      'Podívejte se na své nejposlouchanější skladby, interprety a vzorce poslechu';
+
+  @override
+  String get bannerRecapTitle => 'Váš hudební souhrn na vás čeká';
+
+  @override
+  String get bannerRecapBody =>
+      'Objevte své nejposlouchanější skladby a trendy poslechu';
+
+  @override
+  String get musicalArtist => 'Hudební interpret';
+
+  @override
+  String get eqPresetFlat => 'Plochý';
+
+  @override
+  String get eqPresetBassBoost => 'Zesílení basů';
+
+  @override
+  String get eqPresetBassCut => 'Potlačení basů';
+
+  @override
+  String get eqPresetTrebleBoost => 'Zesílení výšek';
+
+  @override
+  String get eqPresetTrebleCut => 'Potlačení výšek';
+
+  @override
+  String get eqPresetRock => 'Rock';
+
+  @override
+  String get eqPresetPop => 'Pop';
+
+  @override
+  String get eqPresetJazz => 'Jazz';
+
+  @override
+  String get eqPresetClassical => 'Klasika';
+
+  @override
+  String get eqPresetElectronic => 'Elektronika';
+
+  @override
+  String get eqPresetHipHop => 'Hip hop';
+
+  @override
+  String get eqPresetRnB => 'R&B';
+
+  @override
+  String get eqPresetVocal => 'Vokály';
+
+  @override
+  String get eqPresetAcoustic => 'Akustická';
+
+  @override
+  String get eqPresetDance => 'Taneční';
+
+  @override
+  String get eqPresetMetal => 'Metal';
+
+  @override
+  String get eqPresetLounge => 'Lounge';
+
+  @override
+  String get eqPresetSpokenWord => 'Mluvené slovo';
+
+  @override
+  String get supportOfMonthlyGoal => 'z cíle tohoto měsíce';
+
+  @override
+  String get cl200Hl1 => 'Aurora Music je nově Noxira Music, s novým vzhledem';
+
+  @override
+  String get cl200Hl2 =>
+      'Překládejte texty písní do libovolného jazyka, z více zdrojů textů';
+
+  @override
+  String get cl200Hl3 => 'Přepracovaný widget na ploše s ovládáním přehrávání';
+
+  @override
+  String get cl200Hl4 => 'Přepracovaná fronta';
+
+  @override
+  String get cl200Hl5 =>
+      'Vyberte, kam se zvuk přehrává, z Bluetooth čipu nebo z obrazovky Právě hraje';
+
+  @override
+  String get cl200Hl6 => 'Texty slovo po slovu, pokud zdroj obsahuje časování';
+
+  @override
+  String get cl200Hl7 =>
+      'Duplicitní skladby se rozpoznají a vy si vyberete, kterou kopii ponechat';
+
+  @override
+  String get cl200Hl8 =>
+      'Skleněné povrchy, které se přizpůsobí vašemu telefonu';
+
+  @override
+  String get cl200Hl9 => 'Plynulejší přechody a rychlejší stránky s detaily';
+
+  @override
+  String get cl200SecWelcome => 'Vítejte v Noxira';
+
+  @override
+  String get cl200SecNew => 'Nové funkce';
+
+  @override
+  String get cl200SecLibrary => 'Playlisty a knihovna';
+
+  @override
+  String get cl200SecSetup => 'Nastavení';
+
+  @override
+  String get cl200SecLook => 'Vzhled a dojem';
+
+  @override
+  String get cl200SecPerf => 'Výkon';
+
+  @override
+  String get cl200SecHood => 'Pod kapotou';
+
+  @override
+  String get cl200Welcome1 =>
+      'Aurora Music je nově Noxira Music s novým názvem, logem a ikonou aplikace';
+
+  @override
+  String get cl200Welcome2 =>
+      'Nová animovaná úvodní obrazovka kreslí logo Noxira';
+
+  @override
+  String get cl200Welcome3 =>
+      'Stávající uživatelé uvidí krátkou uvítací stránku s novinkami, kterou lze znovu otevřít v Nastavení';
+
+  @override
+  String get cl200New1 =>
+      'Překládejte texty písní do libovolného jazyka, nejen do jazyků aplikace';
+
+  @override
+  String get cl200New2 =>
+      'Přepracovaný widget na ploše: sklo podbarvené obalem alba, tlačítka předchozí / přehrát / další fungují bez otevření aplikace a u vysokého widgetu se zobrazují doporučené skladby';
+
+  @override
+  String get cl200New3 =>
+      'Přepracovaná stránka fronty — uvidíte, co hrálo a co bude dál, přetažením změníte pořadí, švihnutím odeberete; náhled „Následuje“ je nově i na obrazovce Právě hraje';
+
+  @override
+  String get cl200New4 =>
+      'Měsíční cíl podpory se čas od času objeví v horní liště domovské obrazovky a v Nastavení v části O aplikaci';
+
+  @override
+  String get cl200New5 => 'Potažením dolů v Knihovně ji obnovíte';
+
+  @override
+  String get cl200New6 =>
+      'Vyberte, kam se zvuk přehrává: klepněte na Bluetooth čip na domovské obrazovce nebo na nový výstupní ostrůvek na obrazovce Právě hraje a přepínejte přehrávání mezi reproduktorem telefonu a připojenými zařízeními, aniž byste opustili aplikaci';
+
+  @override
+  String get cl200New7 =>
+      'Rychlost a výška tónu mají vlastní posuvníky a výšku tónu můžete propojit s rychlostí';
+
+  @override
+  String get cl200New8 =>
+      'Pět nových stylů vizualizéru a jemnější spektrum s více sloupci';
+
+  @override
+  String get cl200New9 =>
+      'Na domovské obrazovce se mohou objevit nepovinná oznámení od týmu Noxira s tlačítkem, které otevře odkaz nebo obrazovku aplikace';
+
+  @override
+  String get cl200Lyrics1 =>
+      'Přepracovaná stránka textů: klepnutím na řádek na něj skočíte, tečky označují instrumentální pasáže a okno textu na obrazovce Právě hraje se pohybuje společně s hudbou';
+
+  @override
+  String get cl200Lyrics2 =>
+      'Pokud LRCLIB nic nemá, zkusí se další zdroje textů (BetterLyrics, YouLyPlus a KuGou); které použít, vyberete v Nastavení';
+
+  @override
+  String get cl200Lyrics3 =>
+      'Texty uložené v audiosouboru nebo v souboru .lrc vedle skladby se používají jako první a fungují offline';
+
+  @override
+  String get cl200Lyrics4 =>
+      'Automatické skrývání ovládání na celoobrazovkových textech je nově volitelné a ve výchozím stavu vypnuté';
+
+  @override
+  String get cl200Lyrics5 =>
+      'Opraveny texty, které blikaly a pak zmizely s hláškou „text není k dispozici“, i po obnovení nebo ručním hledání';
+
+  @override
+  String get cl200Lyrics6 =>
+      'Texty slovo po slovu: pokud zdroj obsahuje časování slov, každé slovo se rozsvítí ve chvíli, kdy zazní';
+
+  @override
+  String get cl200Library1 =>
+      'Nový panel přidání do playlistu: přidávejte, odebírejte a vytvářejte playlisty na jednom místě, skladby, které už v playlistu jsou, jsou označeny';
+
+  @override
+  String get cl200Library2 =>
+      'Skladbu už nelze přidat do stejného playlistu dvakrát a volba Odstranit duplicity vyčistí ty stávající';
+
+  @override
+  String get cl200Library3 =>
+      'Noxira nově rozpozná duplicitní skladby v knihovně a na záložce Knihovna nabídne jejich kontrolu: vyberete, kterou kopii ponechat';
+
+  @override
+  String get cl200Library4 =>
+      'Přepracovaná stránka Playlistů: nahoře Oblíbené, automatické playlisty jako dlaždice a vaše vlastní playlisty jako mřížka s mozaikami obalů';
+
+  @override
+  String get cl200Library5 =>
+      'Přepracovaná záložka Hledání: skleněný vyhledávací panel, počty výsledků a přehlednější stavy bez výsledků';
+
+  @override
+  String get cl200Library6 =>
+      'Ikona přehrávané skladby nově sleduje skladbu v playlistech';
+
+  @override
+  String get cl200Library7 =>
+      'Volitelné online návrhy: informace o interpretech a podobní interpreti z Deezeru a Wikipedie (odesílá se pouze jméno interpreta)';
+
+  @override
+  String get cl200Library8 =>
+      'Ekvalizér se už omylem nehlásí jako nedostupný; zkouší to sám znovu a nabízí Zkusit znovu a Otevřít systémový ekvalizér';
+
+  @override
+  String get cl200Library9 =>
+      'Informace o mezipaměti ukazují skutečné velikosti, tlačítko zavře dialog a Vymazat mezipaměť smaže i stažené obrázky interpretů';
+
+  @override
+  String get cl200Setup1 =>
+      'Přepracované úvodní nastavení se skleněnými panely, vstupními animacemi a plynulým pozadím';
+
+  @override
+  String get cl200Setup2 =>
+      'Nastavení doporučí styl rozhraní, který vašemu telefonu sedí (výkonný nebo odlehčený), a odpovídající pozadí a umožní vyzkoušet i ten druhý';
+
+  @override
+  String get cl200Setup3 =>
+      'Odlehčené rozhraní nově vždy používá jednoduché pozadí; možnost Animované kapky byla odstraněna';
+
+  @override
+  String get cl200Setup4 =>
+      'Nastavení je nově rozdělené do skupin (Zážitek, Knihovna a data, Aplikace) ve stejném jednoduchém skleněném vzhledu jako úvodní nastavení';
+
+  @override
+  String get cl200Setup5 =>
+      'Zprávy se místo lišty zobrazují jako malý ostrůvek ve spodní části obrazovky';
+
+  @override
+  String get cl200Look1 =>
+      'Nové písmo aplikace (Cal Sans) a o něco kompaktnější text v celé aplikaci';
+
+  @override
+  String get cl200Look2 =>
+      'Matné skleněné povrchy všude, na slabých telefonech vykreslené jako jednoduché plné plochy';
+
+  @override
+  String get cl200Look3 =>
+      'Obal se přesouvá z karet na stránky alb, interpretů, složek a playlistů; stisknuté karty reagují, oblíbené skladby vybuchnou srdíčky a časové údaje se otáčejí';
+
+  @override
+  String get cl200Look4 =>
+      'Zaoblené čtvercové tlačítko přehrávání u Oblíbených skladeb';
+
+  @override
+  String get cl200Look5 =>
+      'Karty na domovské obrazovce a v Knihovně mají stejný skleněný vzhled jako úvodní nastavení, bez dalšího rozostření nad rozmazaným pozadím';
+
+  @override
+  String get cl200Perf1 =>
+      'Noxira rozpozná hardware vašeho telefonu a přizpůsobí mu skleněné efekty, mezipaměti obrázků a přechody';
+
+  @override
+  String get cl200Perf2 =>
+      'Stránky alb, interpretů, složek a playlistů se otevírají plynule: načítají se po dokončení úvodní animace, vytvoří krátkou první stránku skladeb a rozostří obal záhlaví předem';
+
+  @override
+  String get cl200Perf3 =>
+      'Překrývající se dotazy do knihovny se sdílejí místo opakování, což snižuje spotřebu paměti u velkých knihoven';
+
+  @override
+  String get cl200Perf4 =>
+      'Rychlejší hledání a prohledávání knihovny, lehčí načítání obrázků a méně práce při posouvání seznamů';
+
+  @override
+  String get cl200Hood1 =>
+      'Opraveno několik pádů: klepnutí na Zavřít v editoru textů, editoru tagů nebo časovači spánku po zmizení stránky, přidání do fronty nebo nastavení vyzvánění z nabídky skladby, překlad textů a otevření Noxira z widgetu';
+
+  @override
+  String get cl200Hood2 =>
+      'Aplikace už nepadá, když chybí oprávnění k úložišti';
+
+  @override
+  String get cl200Hood3 =>
+      'Playlisty, oblíbené skladby, počty přehrání a nastavení se ukládají bezpečně, takže přerušené uložení už nezanechá prázdný soubor';
+
+  @override
+  String get cl200Hood4 =>
+      'Soubory FLAC, jejichž metadatové bloky nechal editor tagů neúplné, se při uložení opraví, takže se znovu přehrají';
+
+  @override
+  String get cl200Hood5 =>
+      'Obal v oznámení médií se zmenšuje, aby se zabránilo zamrznutím při jeho sestavování';
+
+  @override
+  String get cl200Hood6 =>
+      'Úprava tagů u hlasových záznamů (M4A) už neselhává kvůli zbytkovým datům na konci souboru';
+
+  @override
+  String get cl200Hood7 =>
+      'Vizualizér už nezkresluje skladby Dolby Atmos; používají simulovanou animaci';
+
+  @override
+  String get cl200Hood8 =>
+      'Telefony, které nedokážou vytvořit efekt ekvalizéru, nyní přehrávají normálně a ekvalizér čeká na první skladbu místo vypršení časového limitu';
+
+  @override
+  String get cl200Hood9 =>
+      'Kontrola aktualizací nově zobrazí výsledek a uvede, když aktualizace přicházejí z Google Play';
+
+  @override
+  String get cl200Hood10 =>
+      'Oznámení, cíl podpory a některé online služby lze upravit bez aktualizace aplikace';
+
+  @override
+  String get cl200Hood11 => 'Aktualizované závislosti';
+
+  @override
+  String get pkgJustAudio => 'Funkčně bohatý audio přehrávač pro Flutter';
+
+  @override
+  String get pkgAudioService => 'Přehrávání na pozadí a ovládání médií';
+
+  @override
+  String get pkgAudioSession => 'Správa audio relací pro správný audio fokus';
+
+  @override
+  String get pkgOnAudioQuery => 'Vyhledávání audio souborů v úložišti zařízení';
+
+  @override
+  String get pkgHaudiotagger => 'Čtení a zápis metadat (tagů) audia';
+
+  @override
+  String get pkgProvider => 'Řešení pro správu stavu ve Flutteru';
+
+  @override
+  String get pkgSharedPreferences => 'Trvalé úložiště klíč–hodnota';
+
+  @override
+  String get pkgPathProvider => 'Přístup k cestám souborového systému zařízení';
+
+  @override
+  String get pkgPermissionHandler => 'Správa oprávnění za běhu';
+
+  @override
+  String get pkgDynamicColor => 'Dynamické barevné motivy Material You';
+
+  @override
+  String get pkgPaletteGenerator => 'Získávání barev z obrázků';
+
+  @override
+  String get pkgLottie => 'Animace Lottie pro Flutter';
+
+  @override
+  String get pkgStaggeredAnimations => 'Postupné animace seznamů';
+
+  @override
+  String get pkgMesh => 'Pozadí se sítovými přechody';
+
+  @override
+  String get pkgHttp => 'HTTP požadavky pro volání API';
+
+  @override
+  String get pkgUrlLauncher => 'Otevírání adres URL v prohlížeči';
+
+  @override
+  String get pkgSharePlus => 'Sdílení obsahu s dalšími aplikacemi';
+
+  @override
+  String get pkgPackageInfoPlus =>
+      'Zjištění verze aplikace a informací o balíčku';
+
+  @override
+  String get pkgDeviceInfoPlus => 'Zjištění informací o zařízení';
+
+  @override
+  String get pkgFlutterDotenv =>
+      'Načítání proměnných prostředí ze souboru .env';
+
+  @override
+  String get pkgCrypto => 'Kryptografické hashovací funkce';
+
+  @override
+  String get pkgIntl => 'Internacionalizace a lokalizace';
+
+  @override
+  String get pkgVersion => 'Zpracování a porovnávání verzí';
+
+  @override
+  String get pkgPubSemver => 'Nástroje pro sémantické verzování';
+
+  @override
+  String get pkgClarityFlutter => 'Analytika Microsoft Clarity';
+
+  @override
+  String get pkgFlutterHooks => 'Hooky ve stylu Reactu pro Flutter';
+
+  @override
+  String get themeAurora => 'Aurora';
+
+  @override
+  String get themeMidnight => 'Půlnoc';
+
+  @override
+  String get themeOcean => 'Oceán';
+
+  @override
+  String get themeTeal => 'Modrozelená';
+
+  @override
+  String get themeForest => 'Les';
+
+  @override
+  String get themeNeon => 'Neon';
+
+  @override
+  String get themeGold => 'Zlatá';
+
+  @override
+  String get themeEmber => 'Žhavý uhlík';
+
+  @override
+  String get themeRose => 'Růže';
+
+  @override
+  String get themeSakura => 'Sakura';
+
+  @override
+  String artistsCountPlural(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count interpretů',
+      many: '$count interpretů',
+      few: '$count interpreti',
+      one: '1 interpret',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get playbackInvalidPlaylist =>
+      'Neplatný playlist nebo počáteční pozice';
+
+  @override
+  String playbackCouldNotPlayTitleSkipping(String title) {
+    return 'Skladbu „$title“ se nepodařilo přehrát — přeskakuji';
+  }
+
+  @override
+  String get playbackCouldNotPlaySkipping =>
+      'Tuto skladbu se nepodařilo přehrát — přeskakuji';
+
+  @override
+  String playbackCouldNotPlayTitle(String title) {
+    return 'Skladbu „$title“ se nepodařilo přehrát';
+  }
+
+  @override
+  String get playbackFailed => 'Přehrávání selhalo';
+
+  @override
+  String playbackSetPlaylistFailed(String error) {
+    return 'Nepodařilo se nastavit playlist: $error';
+  }
+
+  @override
+  String playbackUpdatePlaylistFailed(String error) {
+    return 'Nepodařilo se aktualizovat playlist: $error';
   }
 }

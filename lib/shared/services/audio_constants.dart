@@ -103,16 +103,39 @@ const List<String> kAllowedUriSchemes = [
   'https',
 ];
 
-// MARK: - Error Messages
+// MARK: - Media notification fallbacks
 
-/// Error message for invalid playlist.
-const String kErrorInvalidPlaylist = 'Invalid playlist or start index';
+/// Texts for songs without tags, shown in the notification, lock screen and
+/// Android Auto where there is no [BuildContext]. The app sets them to the
+/// user's language once localizations are available.
+class MediaFallbackLabels {
+  MediaFallbackLabels._();
 
-/// Error message for permission denied.
-const String kErrorPermissionDenied = 'Storage permission denied';
+  static String unknownArtist = 'Unknown Artist';
+  static String unknownAlbum = 'Unknown Album';
+}
 
-/// Error message for audio load failure.
-const String kErrorAudioLoadFailed = 'Failed to load audio file';
+// MARK: - Playback errors
 
-/// Error message for invalid file path.
-const String kErrorInvalidPath = 'Invalid file path';
+/// What went wrong during playback, so the UI can show it in the user's
+/// language instead of the service producing English text.
+enum PlaybackErrorKind {
+  invalidPlaylist,
+  couldNotPlaySkipping,
+  couldNotPlay,
+  playbackFailed,
+  setPlaylistFailed,
+  updatePlaylistFailed,
+}
+
+class PlaybackError {
+  const PlaybackError(this.kind, {this.title, this.detail});
+
+  final PlaybackErrorKind kind;
+
+  /// Title of the song that failed, when known.
+  final String? title;
+
+  /// Technical detail (the caught error) for the kinds that show it.
+  final String? detail;
+}

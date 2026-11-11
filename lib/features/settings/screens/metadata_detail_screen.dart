@@ -19,6 +19,7 @@ import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
 import '../../../shared/utils/flac_repair.dart';
+import '../../../shared/utils/mp4_repair.dart';
 
 class MetadataDetailScreen extends StatefulWidget {
   final SongModel song;
@@ -103,9 +104,30 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
     }
   }
 
+  /// Reads tags from [path]. If the parser rejects the file, retries on a
+  /// temporary copy stripped of trailing non-MP4 data (e.g. recorder trailers).
+  Future<Tag?> _readTag(String path) async {
+    try {
+      return await Haudiotagger.read(path);
+    } catch (_) {
+      final tempDir = await getTemporaryDirectory();
+      final copy = File(
+          '${tempDir.path}/aurora_read_${DateTime.now().millisecondsSinceEpoch}${_extension()}');
+      try {
+        await File(path).copy(copy.path);
+        if (!await Mp4Repair.trimTrailingGarbage(copy.path)) rethrow;
+        return await Haudiotagger.read(copy.path);
+      } finally {
+        try {
+          await copy.delete();
+        } catch (_) {}
+      }
+    }
+  }
+
   Future<void> _loadTags() async {
     try {
-      _currentTag = await Haudiotagger.read(widget.song.data);
+      _currentTag = await _readTag(widget.song.data);
       if (_currentTag != null) {
         // Update controllers with loaded tag data if available
         if (_currentTag?.title != null && _currentTag!.title!.isNotEmpty) {
@@ -517,6 +539,9 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
       await originalFile.copy(tempFile.path);
       debugPrint(
           '[META] Step 1 – copy OK, temp size: ${tempFile.lengthSync()} bytes');
+      if (await Mp4Repair.trimTrailingGarbage(tempFile.path)) {
+        debugPrint('[META] Step 1 – trimmed trailing non-MP4 data');
+      }
 
       // 2. Build the updated tag and write it to the temp copy.
       debugPrint('[META] Step 2 – writing tags to temp file');

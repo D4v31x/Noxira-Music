@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:aurora_music_v01/core/constants/font_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../widgets/motion/musicfy_motion.dart';
 
 enum HighEndBackground { blurredArtwork, solid }
@@ -22,6 +23,21 @@ class AppThemePreset {
     AppThemePreset(name: 'Rose', seedColor: Color(0xFFD50000)),
     AppThemePreset(name: 'Sakura', seedColor: Color(0xFFFF4081)),
   ];
+
+  /// [name] is an identifier; this is the label shown to the user.
+  String label(AppLocalizations l10n) => switch (name) {
+        'Aurora' => l10n.themeAurora,
+        'Midnight' => l10n.themeMidnight,
+        'Ocean' => l10n.themeOcean,
+        'Teal' => l10n.themeTeal,
+        'Forest' => l10n.themeForest,
+        'Neon' => l10n.themeNeon,
+        'Gold' => l10n.themeGold,
+        'Ember' => l10n.themeEmber,
+        'Rose' => l10n.themeRose,
+        'Sakura' => l10n.themeSakura,
+        _ => name,
+      };
 }
 
 class ThemeProvider with ChangeNotifier {
@@ -75,6 +91,50 @@ class ThemeProvider with ChangeNotifier {
       );
 
   ThemeData get darkTheme => _cachedDarkTheme ??= _buildDarkTheme();
+
+  ThemeData? _accentSolidBase;
+  ThemeData? _accentSolidTheme;
+
+  /// The dark theme, optionally with its solid surfaces (page background,
+  /// cards, sheets, dialogs) drawn in the active accent: the Material You
+  /// colour or the chosen preset/custom colour. Low-end devices use this
+  /// because they replace glass and blur with plain fills.
+  ThemeData darkThemeFor({required bool accentSolids}) {
+    final base = darkTheme;
+    if (!accentSolids) return base;
+    // `base` is rebuilt whenever an accent input changes, so its identity is
+    // enough to know when the tinted copy is stale.
+    if (!identical(_accentSolidBase, base)) {
+      _accentSolidBase = base;
+      _accentSolidTheme = accentSolidTheme(base);
+    }
+    return _accentSolidTheme!;
+  }
+
+  @visibleForTesting
+  static ThemeData accentSolidTheme(ThemeData base) {
+    final s = base.colorScheme;
+    Color tint(Color surface, double amount) =>
+        Color.lerp(surface, s.primaryContainer, amount)!;
+    final scheme = s.copyWith(
+      surface: tint(s.surface, 0.7),
+      surfaceDim: tint(s.surfaceDim, 0.7),
+      surfaceBright: tint(s.surfaceBright, 0.8),
+      surfaceContainerLowest: tint(s.surfaceContainerLowest, 0.6),
+      surfaceContainerLow: tint(s.surfaceContainerLow, 0.7),
+      surfaceContainer: tint(s.surfaceContainer, 0.8),
+      surfaceContainerHigh: tint(s.surfaceContainerHigh, 0.9),
+      surfaceContainerHighest: tint(s.surfaceContainerHighest, 1),
+    );
+    return base.copyWith(
+      colorScheme: scheme,
+      scaffoldBackgroundColor: scheme.surface,
+      dialogTheme: base.dialogTheme
+          .copyWith(backgroundColor: scheme.surfaceContainerHigh),
+      bottomSheetTheme: base.bottomSheetTheme
+          .copyWith(backgroundColor: scheme.surfaceContainerHigh),
+    );
+  }
 
   ThemeData _buildDarkTheme() {
     final colorScheme = _useDynamicColor && _darkDynamicColorScheme != null

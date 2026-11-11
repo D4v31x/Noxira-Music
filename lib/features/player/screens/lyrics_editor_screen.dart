@@ -9,6 +9,7 @@ import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/lyrics_service.dart';
 import '../../../shared/widgets/app_background.dart';
+import '../../../shared/services/notification_manager.dart';
 
 /// Full-screen editor for creating and timing synchronized lyrics.
 ///
@@ -237,14 +238,14 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
   // ──────────────────────────────── file import ────────────────────────────
 
   Future<void> _importLrcFile() async {
-    final messenger = ScaffoldMessenger.of(context);
     try {
       final result = await FilePicker.pickFiles();
       final path = result?.files.single.path;
       if (path == null) return;
       if (!path.toLowerCase().endsWith('.lrc')) {
-        messenger.showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context).lyricsSelectLrcFile)));
+        if (!mounted) return;
+        NotificationManager.show(
+            AppLocalizations.of(context).lyricsSelectLrcFile);
         return;
       }
 
@@ -277,8 +278,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       // no manual stamping required.
       final lines = _extractPlainLines(content);
       if (lines.isEmpty) {
-        messenger.showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context).lyricsNoLyricsInFile)));
+        NotificationManager.show(
+            AppLocalizations.of(context).lyricsNoLyricsInFile);
         return;
       }
 
@@ -312,8 +313,7 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      messenger.showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).importFailed('$e'))));
+      NotificationManager.show(AppLocalizations.of(context).importFailed('$e'));
     }
   }
 
@@ -326,13 +326,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
     }
 
     if (stampedIndices.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context).lyricsNoTimestampsYet,
-          ),
-        ),
-      );
+      NotificationManager.show(
+          AppLocalizations.of(context).lyricsNoTimestampsYet);
       return;
     }
 

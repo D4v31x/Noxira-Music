@@ -1,10 +1,9 @@
 /// Appearance settings sub-screen — Themes, colors, language & home layout.
 library;
 
-import 'dart:io';
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
@@ -88,7 +87,7 @@ class AppearanceSettingsScreen extends StatelessWidget {
                           width: 20,
                           height: 20),
                       title: l10n.settingsAccentColor,
-                      subtitle: _selectedPresetName(themeProvider),
+                      subtitle: _selectedPresetName(context, themeProvider),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -139,7 +138,11 @@ class AppearanceSettingsScreen extends StatelessWidget {
                     title: l10n.settingsHighendUi,
                     subtitle: l10n.settingsHighendUiDesc,
                     value: perfProvider.currentMode == PerformanceLevel.high,
-                    onChanged: (value) => _showRestartDialog(context, value),
+                    onChanged: (value) => unawaited(
+                      perfProvider.setPerformanceMode(
+                        value ? PerformanceLevel.high : PerformanceLevel.low,
+                      ),
+                    ),
                     isFirst: true,
                   ),
                   // High-end background style
@@ -250,63 +253,15 @@ class AppearanceSettingsScreen extends StatelessWidget {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-String _selectedPresetName(ThemeProvider themeProvider) {
+String _selectedPresetName(BuildContext context, ThemeProvider themeProvider) {
   final idx = themeProvider.selectedPresetIndex;
-  if (idx < 0 || idx >= AppThemePreset.presets.length) return 'Custom color';
-  return AppThemePreset.presets[idx].name;
+  if (idx < 0 || idx >= AppThemePreset.presets.length) {
+    return AppLocalizations.of(context).customColor;
+  }
+  return AppThemePreset.presets[idx].label(AppLocalizations.of(context));
 }
 
 // ── Dialogs ───────────────────────────────────────────────────────────────────
-
-void _showRestartDialog(BuildContext context, bool newIsHighEnd) {
-  final l10n = AppLocalizations.of(context);
-  final perfProvider =
-      Provider.of<PerformanceModeProvider>(context, listen: false);
-
-  showDialog(
-    context: context,
-    builder: (dialogContext) => GlassmorphicDialog(
-      title: Text(l10n.restartRequired,
-          style: const TextStyle(
-              fontFamily: FontConstants.fontFamily,
-              color: Colors.white,
-              fontWeight: FontWeight.bold)),
-      content: Text(l10n.restartRequiredDesc,
-          style: const TextStyle(
-              fontFamily: FontConstants.fontFamily, color: Colors.white70)),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
-          child: Text(l10n.cancel,
-              style: const TextStyle(
-                  fontFamily: FontConstants.fontFamily, color: Colors.white70)),
-        ),
-        TextButton(
-          onPressed: () async {
-            await perfProvider.setPerformanceMode(
-              newIsHighEnd ? PerformanceLevel.high : PerformanceLevel.low,
-            );
-            if (!context.mounted) return;
-            final audio =
-                Provider.of<AudioPlayerService>(context, listen: false);
-            await audio.stop();
-            audio.dispose();
-            if (Platform.isAndroid) {
-              await SystemNavigator.pop();
-            } else if (Platform.isIOS) {
-              exit(0);
-            }
-          },
-          child: Text(l10n.restartNow,
-              style: TextStyle(
-                  fontFamily: FontConstants.fontFamily,
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold)),
-        ),
-      ],
-    ),
-  );
-}
 
 void _showColorPickerDialog(BuildContext context, ThemeProvider themeProvider) {
   final l10n = AppLocalizations.of(context);
@@ -379,7 +334,7 @@ void _showColorPickerDialog(BuildContext context, ThemeProvider themeProvider) {
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        preset.name,
+                        preset.label(AppLocalizations.of(context)),
                         style: TextStyle(
                           fontFamily: FontConstants.fontFamily,
                           fontSize: 13,
@@ -421,66 +376,46 @@ class _LanguageTile extends StatelessWidget {
     final currentCode = LocaleProvider.of(context)!.locale.languageCode;
     final currentLang = SupportedLanguages.forCode(currentCode);
     final displayName = currentLang?.nativeName ?? currentCode.toUpperCase();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = Theme.of(context).colorScheme.primary;
 
     return Column(
       children: [
-        if (!isFirst)
-          Divider(
-            height: 1,
-            indent: 64,
-            endIndent: 16,
-            thickness: 0.5,
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.07)
-                : Colors.black.withValues(alpha: 0.05),
-          ),
+        if (!isFirst) SettingsTiles.divider(context),
         ListTile(
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          leading: Container(
-            width: 40,
-            height: 40,
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: primary.withValues(alpha: 0.22)),
-            ),
-            child: iconoir.Language(color: primary, width: 20, height: 20),
+          leading: SettingsTiles.iconChip(
+            context,
+            const iconoir.Language(color: Colors.white, width: 20, height: 20),
+            Colors.white,
           ),
           title: Text(
             l10n.settingsLanguage,
             style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
               fontFamily: FontConstants.fontFamily,
+              color: Colors.white,
             ),
           ),
-          trailing: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: primary.withValues(alpha: 0.25)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  displayName,
-                  style: TextStyle(
-                    fontFamily: FontConstants.fontFamily,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: primary,
-                  ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                displayName,
+                style: TextStyle(
+                  fontFamily: FontConstants.fontFamily,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white.withValues(alpha: 0.75),
                 ),
-                const SizedBox(width: 5),
-                iconoir.NavArrowDown(color: primary, width: 13, height: 13),
-              ],
-            ),
+              ),
+              const SizedBox(width: 6),
+              iconoir.NavArrowRight(
+                color: Colors.white.withValues(alpha: 0.4),
+                width: 18,
+                height: 18,
+              ),
+            ],
           ),
           onTap: () => showLanguagePicker(context),
         ),

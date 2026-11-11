@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'online_sources.dart';
 import 'package:path_provider/path_provider.dart';
 
 class LocalCachingArtistService {
@@ -331,7 +332,7 @@ class LocalCachingArtistService {
   }
 
   Future<String?> _getArtistImageFromSpotify(String artistName) async {
-    if (!_spotifyEnabled) {
+    if (!_spotifyEnabled || !OnlineSources.isEnabled('spotify')) {
       return null;
     }
 

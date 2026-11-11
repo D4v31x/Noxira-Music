@@ -16,12 +16,14 @@ import 'shared/models/artist_utils.dart';
 import 'shared/services/audio_handler.dart';
 import 'shared/services/error_tracking_service.dart';
 import 'shared/services/notification_manager.dart';
+import 'shared/services/audio_constants.dart';
 import 'shared/services/background_manager_service.dart';
 import 'shared/services/sleep_timer_controller.dart';
 import 'shared/services/artist_separator_service.dart';
 import 'shared/services/home_layout_service.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'features/features.dart';
+import 'features/splash/animated_logo.dart';
 import 'l10n/locale_provider.dart';
 import 'shared/providers/providers.dart';
 import 'shared/utils/app_text_scaler.dart';
@@ -35,7 +37,10 @@ import 'package:firebase_performance/firebase_performance.dart';
 import 'firebase_options.dart';
 import 'shared/services/device_performance_service.dart' show PerformanceLevel;
 import 'shared/services/artwork_cache_service.dart';
+import 'shared/services/audio_analysis/audio_analysis_diagnostics.dart';
+import 'shared/services/effect_support.dart';
 import 'shared/services/equalizer_service.dart';
+import 'shared/services/remote_config_helper.dart';
 import 'shared/services/smart_playlist_service.dart';
 import 'shared/services/track_tag_service.dart';
 
@@ -63,9 +68,12 @@ late AndroidEqualizer equalizer;
 Future<AuroraAudioHandler> _initAudioHandler() async {
   final eq = AndroidEqualizer();
   equalizer = eq;
-  final player = AudioPlayer(
-    audioPipeline: AudioPipeline(androidAudioEffects: [eq]),
-  );
+  // A player whose pipeline holds an equalizer fails to start when the device
+  // can't create the effect, so the equalizer is only attached when it can.
+  await EffectSupport.probe();
+  final player = EffectSupport.equalizerAvailable
+      ? AudioPlayer(audioPipeline: AudioPipeline(androidAudioEffects: [eq]))
+      : AudioPlayer();
   return AudioService.init(
     builder: () => AuroraAudioHandler(player),
     config: const AudioServiceConfig(
@@ -117,6 +125,7 @@ void main() async {
     final firebaseInit =
         Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     final audioInit = _initAudioHandler();
+    AudioAnalysisDiagnostics.startIfEnabled();
 
     // Silence all debug output in release builds — kDebugMode is a
     // compile-time constant so the AOT compiler eliminates this in debug.
@@ -132,6 +141,7 @@ void main() async {
       ArtistSeparatorService().initialize(),
       HomeLayoutService().initialize(),
       performanceProvider.initialize(),
+      AnimatedLogo.preload(),
     ]);
     final prefs = results[0] as SharedPreferences;
     final languageCode =
@@ -140,10 +150,27 @@ void main() async {
     // Size the decoded-image and artwork caches for this device's tier, and
     // re-tune if the tier changes later (manual choice or runtime step-down).
     _applyMemoryTuning(performanceProvider.currentMode);
-    performanceProvider
-        .addListener(() => _applyMemoryTuning(performanceProvider.currentMode));
+    // Switching the interface style applies live. Anything cached at the old
+    // tier (decoded images, artwork thumbnails at the old resolution) is
+    // dropped so memory and artwork sizes match the new tier straight away.
+    var appliedLevel = performanceProvider.currentMode;
+    performanceProvider.addListener(() {
+      final level = performanceProvider.currentMode;
+      _applyMemoryTuning(level);
+      if (level == appliedLevel) return;
+      appliedLevel = level;
+      final imageCache = PaintingBinding.instance.imageCache;
+      imageCache
+        ..clear()
+        ..clearLiveImages();
+      ArtworkCacheService().clearCache();
+    });
 
     await firebaseInit;
+
+    // Fetch the Remote Config values early so the announcement, goal and
+    // switches are ready by the time the home screen asks for them.
+    unawaited(RemoteConfigHelper.instance());
 
     // Disable performance data collection in debug to keep overhead low
     if (kDebugMode) {
@@ -233,9 +260,11 @@ void main() async {
             // pipeline for the standby player used during non-gapless
             // crossfade hand-offs (gapless crossfades never swap players, so
             // they always keep the original equalizer pipeline untouched).
-            audioPlayerService.attachCrossfadePipelineFactory(
-              () => AudioPipeline(androidAudioEffects: [AndroidEqualizer()]),
-            );
+            if (EffectSupport.equalizerAvailable) {
+              audioPlayerService.attachCrossfadePipelineFactory(
+                () => AudioPipeline(androidAudioEffects: [AndroidEqualizer()]),
+              );
+            }
 
             // Initialize performance provider and equalizer eagerly
             WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -369,6 +398,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
+    final lowEnd =
+        context.select<PerformanceModeProvider, bool>((p) => p.isLowEndDevice);
 
     return DynamicColorBuilder(
       builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -387,10 +418,19 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             debugShowCheckedModeBanner: false,
             locale: _locale,
             themeMode: ThemeMode.dark,
-            darkTheme: themeProvider.darkTheme,
+            darkTheme: themeProvider.darkThemeFor(accentSolids: lowEnd),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             builder: (context, child) {
+              final l10n = AppLocalizations.of(context);
+              MediaFallbackLabels.unknownArtist = l10n.unknownArtist;
+              MediaFallbackLabels.unknownAlbum = l10n.unknownAlbum;
+              audioHandler.setBrowseTitles(
+                songs: l10n.songs,
+                albums: l10n.albums,
+                artists: l10n.artists,
+                playlists: l10n.playlists,
+              );
               final media = MediaQuery.of(context);
               return MediaQuery(
                 data: media.copyWith(
@@ -444,7 +484,7 @@ class _AppShellState extends State<_AppShell> {
     createRectTween: (Rect? begin, Rect? end) =>
         MaterialRectCenterArcTween(begin: begin, end: end),
   );
-  StreamSubscription<String>? _playbackErrorSub;
+  StreamSubscription<PlaybackError>? _playbackErrorSub;
 
   @override
   void initState() {
@@ -455,8 +495,25 @@ class _AppShellState extends State<_AppShell> {
       if (!mounted) return;
       final audioService =
           Provider.of<AudioPlayerService>(context, listen: false);
-      _playbackErrorSub = audioService.errorStream.listen((message) {
-        if (mounted) NotificationManager.showMessage(context, message);
+      _playbackErrorSub = audioService.errorStream.listen((error) {
+        if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
+        final title = error.title;
+        final message = switch (error.kind) {
+          PlaybackErrorKind.invalidPlaylist => l10n.playbackInvalidPlaylist,
+          PlaybackErrorKind.couldNotPlaySkipping => title != null
+              ? l10n.playbackCouldNotPlayTitleSkipping(title)
+              : l10n.playbackCouldNotPlaySkipping,
+          PlaybackErrorKind.couldNotPlay => title != null
+              ? l10n.playbackCouldNotPlayTitle(title)
+              : l10n.playbackFailed,
+          PlaybackErrorKind.playbackFailed => l10n.playbackFailed,
+          PlaybackErrorKind.setPlaylistFailed =>
+            l10n.playbackSetPlaylistFailed(error.detail ?? ''),
+          PlaybackErrorKind.updatePlaylistFailed =>
+            l10n.playbackUpdatePlaylistFailed(error.detail ?? ''),
+        };
+        NotificationManager.showMessage(context, message);
       });
     });
   }

@@ -1858,6 +1858,24 @@ abstract class AppLocalizations {
   /// **'Version, feedback & updates'**
   String get settingsAboutSubtitle;
 
+  /// No description provided for @settingsGroupExperience.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience'**
+  String get settingsGroupExperience;
+
+  /// No description provided for @settingsGroupLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library & data'**
+  String get settingsGroupLibrary;
+
+  /// No description provided for @settingsGroupApp.
+  ///
+  /// In en, this message translates to:
+  /// **'App'**
+  String get settingsGroupApp;
+
   /// No description provided for @settingsAccentColor.
   ///
   /// In en, this message translates to:
@@ -2107,14 +2125,32 @@ abstract class AppLocalizations {
   /// No description provided for @adjustPitchWithSpeed.
   ///
   /// In en, this message translates to:
-  /// **'Adjust pitch with speed'**
+  /// **'Link pitch to speed'**
   String get adjustPitchWithSpeed;
 
   /// No description provided for @adjustPitchWithSpeedDesc.
   ///
   /// In en, this message translates to:
-  /// **'When off, tempo changes without pitch shift'**
+  /// **'Pitch rises and falls with speed. Turn off to set it yourself.'**
   String get adjustPitchWithSpeedDesc;
+
+  /// No description provided for @playbackPitch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pitch'**
+  String get playbackPitch;
+
+  /// No description provided for @playbackPitchDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Shift the sound up or down, independent of speed'**
+  String get playbackPitchDesc;
+
+  /// No description provided for @playbackPitchLinkedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Following playback speed'**
+  String get playbackPitchLinkedDesc;
 
   /// No description provided for @settingsPlayback.
   ///
@@ -2223,6 +2259,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'re up to date'**
   String get settingsUpToDate;
+
+  /// No description provided for @settingsUpdateCheckFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check for updates. Updates come from Google Play.'**
+  String get settingsUpdateCheckFailed;
 
   /// No description provided for @settingsWeeklyRecap.
   ///
@@ -2697,24 +2739,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enable advanced visual effects and animations'**
   String get settingsHighendUiDesc;
-
-  /// No description provided for @restartRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart Required'**
-  String get restartRequired;
-
-  /// No description provided for @restartRequiredDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'The app needs to restart to apply the UI mode change. Restart now?'**
-  String get restartRequiredDesc;
-
-  /// No description provided for @restartNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Restart Now'**
-  String get restartNow;
 
   /// No description provided for @clearUpcoming.
   ///
@@ -3289,7 +3313,7 @@ abstract class AppLocalizations {
   /// No description provided for @rebrandSlideLyricsBody.
   ///
   /// In en, this message translates to:
-  /// **'A redesigned lyrics page and more lyric sources, so more songs find their words. Tap a line to jump to it. You can now translate lyrics into any language you like.'**
+  /// **'A redesigned lyrics page and more lyric sources, so more songs find their words. Songs with word-by-word timing light up word by word. Tap a line to jump to it, and translate lyrics into any language you like.'**
   String get rebrandSlideLyricsBody;
 
   /// No description provided for @rebrandSlideWidgetTitle.
@@ -3315,6 +3339,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'See what played and what\'s next. Drag to reorder, swipe to remove.'**
   String get rebrandSlideQueueBody;
+
+  /// No description provided for @rebrandSlideOutputTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where it plays'**
+  String get rebrandSlideOutputTitle;
+
+  /// No description provided for @rebrandSlideOutputBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the Bluetooth chip on the home screen, or the new button on Now Playing, to move playback between your phone speaker and connected devices, right inside the app.'**
+  String get rebrandSlideOutputBody;
+
+  /// No description provided for @rebrandSlideLibraryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A tidier library'**
+  String get rebrandSlideLibraryTitle;
+
+  /// No description provided for @rebrandSlideLibraryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Noxira spots duplicate tracks and lets you pick which copy to keep. Playlists have a new layout with Favorites, automatic and smart playlists in one place.'**
+  String get rebrandSlideLibraryBody;
+
+  /// No description provided for @rebrandMoreMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages now appear as a small island at the bottom of the screen.'**
+  String get rebrandMoreMessages;
+
+  /// No description provided for @rebrandMorePerformance.
+  ///
+  /// In en, this message translates to:
+  /// **'Faster search, a quicker start and lighter image loading.'**
+  String get rebrandMorePerformance;
 
   /// No description provided for @translateLyricsTo.
   ///
@@ -3358,10 +3418,22 @@ abstract class AppLocalizations {
   /// **'Smoother, better transitions across the whole app.'**
   String get rebrandMoreMotion;
 
+  /// No description provided for @rebrandMorePlayback.
+  ///
+  /// In en, this message translates to:
+  /// **'Separate speed and pitch sliders, which you can link together.'**
+  String get rebrandMorePlayback;
+
+  /// No description provided for @rebrandMoreSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'A redesigned Search tab and a Settings page sorted into groups.'**
+  String get rebrandMoreSearch;
+
   /// No description provided for @rebrandMoreFixes.
   ///
   /// In en, this message translates to:
-  /// **'Stability and bug fixes across the app, including lyrics that no longer flicker.'**
+  /// **'Stability fixes, including editing tags on voice recordings, the visualizer on Dolby tracks and phones without an equalizer.'**
   String get rebrandMoreFixes;
 
   /// No description provided for @eqTitle.
@@ -3387,6 +3459,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Equalizer not available on this device.'**
   String get eqNotAvailable;
+
+  /// No description provided for @eqWaitingForAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Start playing a song to adjust the equalizer.'**
+  String get eqWaitingForAudio;
 
   /// No description provided for @eqOpenSystem.
   ///
@@ -3585,6 +3663,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close visualiser'**
   String get closeVisualiser;
+
+  /// No description provided for @visualizerWaitingForAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for playback audio...'**
+  String get visualizerWaitingForAudio;
+
+  /// No description provided for @visualizerUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Live audio analysis is unavailable for this output.'**
+  String get visualizerUnavailable;
 
   /// No description provided for @previousMode.
   ///
@@ -3861,6 +3951,1548 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{option} is the heaviest option and may feel less smooth on your device.'**
   String onboardingHeaviestNote(String option);
+
+  /// No description provided for @audioOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio Output'**
+  String get audioOutput;
+
+  /// No description provided for @audioOutputBluetoothDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Bluetooth Device'**
+  String get audioOutputBluetoothDevice;
+
+  /// No description provided for @audioOutputPhoneSpeaker.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone Speaker'**
+  String get audioOutputPhoneSpeaker;
+
+  /// No description provided for @audioOutputWired.
+  ///
+  /// In en, this message translates to:
+  /// **'Wired Headphones'**
+  String get audioOutputWired;
+
+  /// No description provided for @audioOutputUsb.
+  ///
+  /// In en, this message translates to:
+  /// **'USB Audio'**
+  String get audioOutputUsb;
+
+  /// No description provided for @audioOutputOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other output'**
+  String get audioOutputOther;
+
+  /// No description provided for @audioOutputNoOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'No other devices detected'**
+  String get audioOutputNoOthers;
+
+  /// No description provided for @audioOutputCurrentDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Device'**
+  String get audioOutputCurrentDevice;
+
+  /// No description provided for @audioOutputSwitchFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t switch the audio output'**
+  String get audioOutputSwitchFailed;
+
+  /// No description provided for @duplicatesBannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate tracks found'**
+  String get duplicatesBannerTitle;
+
+  /// No description provided for @duplicatesBannerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track exists in multiple copies} other{{count} tracks exist in multiple copies}}'**
+  String duplicatesBannerSubtitle(int count);
+
+  /// No description provided for @duplicatesReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get duplicatesReview;
+
+  /// No description provided for @duplicatesScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate tracks'**
+  String get duplicatesScreenTitle;
+
+  /// No description provided for @duplicatesEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No duplicates found'**
+  String get duplicatesEmpty;
+
+  /// No description provided for @duplicatesIgnore.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore'**
+  String get duplicatesIgnore;
+
+  /// No description provided for @duplicatesIgnoreAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Ignore all'**
+  String get duplicatesIgnoreAll;
+
+  /// No description provided for @duplicatesKeepBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Best quality'**
+  String get duplicatesKeepBest;
+
+  /// No description provided for @duplicatesCopies.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} copies'**
+  String duplicatesCopies(int count);
+
+  /// No description provided for @duplicatesDeleteOthers.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Keep selected, delete 1 other} other{Keep selected, delete {count} others}}'**
+  String duplicatesDeleteOthers(int count);
+
+  /// No description provided for @duplicatesDeleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete some copies'**
+  String get duplicatesDeleteFailed;
+
+  /// No description provided for @duplicatesResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicates removed'**
+  String get duplicatesResolved;
+
+  /// No description provided for @duplicatesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the copy to keep. The others will be deleted from your device.'**
+  String get duplicatesHint;
+
+  /// No description provided for @remoteAnnouncementOpenLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get remoteAnnouncementOpenLink;
+
+  /// No description provided for @remoteAnnouncementOpenScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get remoteAnnouncementOpenScreen;
+
+  /// No description provided for @updateRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Update required'**
+  String get updateRequiredTitle;
+
+  /// No description provided for @updateRequiredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This version is no longer supported. Please update Noxira Music to keep using it.'**
+  String get updateRequiredMessage;
+
+  /// No description provided for @settingsSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get settingsSupport;
+
+  /// No description provided for @settingsSupportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporters and ways to help'**
+  String get settingsSupportSubtitle;
+
+  /// No description provided for @supportSupporters.
+  ///
+  /// In en, this message translates to:
+  /// **'Supporters'**
+  String get supportSupporters;
+
+  /// No description provided for @supportNoSupportersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No supporters listed yet. Be the first to appear here!'**
+  String get supportNoSupportersYet;
+
+  /// No description provided for @musicInsightsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Music Insights'**
+  String get musicInsightsTitle;
+
+  /// No description provided for @insightsActivityByTimeOfDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity by Time of Day'**
+  String get insightsActivityByTimeOfDay;
+
+  /// No description provided for @insightsActivityByDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity by Day'**
+  String get insightsActivityByDay;
+
+  /// No description provided for @insightsGenreBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Genre Breakdown'**
+  String get insightsGenreBreakdown;
+
+  /// No description provided for @insightsNoDataTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No listening data yet'**
+  String get insightsNoDataTitle;
+
+  /// No description provided for @insightsNoDataBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Play some music to start building your insights.'**
+  String get insightsNoDataBody;
+
+  /// No description provided for @insightsMostActiveAround.
+  ///
+  /// In en, this message translates to:
+  /// **'Most active around {time}'**
+  String insightsMostActiveAround(String time);
+
+  /// No description provided for @insightsMostActiveOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Most active on {day}'**
+  String insightsMostActiveOn(String day);
+
+  /// No description provided for @moreFromArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'More from {artist}'**
+  String moreFromArtist(String artist);
+
+  /// No description provided for @tracksCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 track} other{{count} tracks}}'**
+  String tracksCountPlural(int count);
+
+  /// No description provided for @songsCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 song} other{{count} songs}}'**
+  String songsCountPlural(int count);
+
+  /// No description provided for @albumsCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 album} other{{count} albums}}'**
+  String albumsCountPlural(int count);
+
+  /// No description provided for @playlistsCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 playlist} other{{count} playlists}}'**
+  String playlistsCountPlural(int count);
+
+  /// No description provided for @foldersCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 folder} other{{count} folders}}'**
+  String foldersCountPlural(int count);
+
+  /// No description provided for @foldersExcludedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} excluded'**
+  String foldersExcludedCount(int count);
+
+  /// No description provided for @unknownAlbum.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown Album'**
+  String get unknownAlbum;
+
+  /// No description provided for @queueNextUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Up'**
+  String get queueNextUp;
+
+  /// No description provided for @queueNextFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Next from {source}'**
+  String queueNextFrom(String source);
+
+  /// No description provided for @queueNothingElse.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing else queued'**
+  String get queueNothingElse;
+
+  /// No description provided for @queueMoveToEnd.
+  ///
+  /// In en, this message translates to:
+  /// **'Move to end'**
+  String get queueMoveToEnd;
+
+  /// No description provided for @translateLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics'**
+  String get translateLyrics;
+
+  /// No description provided for @translateFailedTapToRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation failed — tap to retry'**
+  String get translateFailedTapToRetry;
+
+  /// No description provided for @translateShowOriginal.
+  ///
+  /// In en, this message translates to:
+  /// **'Show original'**
+  String get translateShowOriginal;
+
+  /// No description provided for @translateShowTranslation.
+  ///
+  /// In en, this message translates to:
+  /// **'Show translation'**
+  String get translateShowTranslation;
+
+  /// No description provided for @lyricsAiTranslatedNote.
+  ///
+  /// In en, this message translates to:
+  /// **'AI translated · accuracy may vary'**
+  String get lyricsAiTranslatedNote;
+
+  /// No description provided for @lyricsCantTranslateSameLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t translate — lyrics are already in the target language ({language})'**
+  String lyricsCantTranslateSameLanguage(String language);
+
+  /// No description provided for @lyricsAddLyrics.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Lyrics'**
+  String get lyricsAddLyrics;
+
+  /// No description provided for @lyricsBlurOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics blur: on'**
+  String get lyricsBlurOn;
+
+  /// No description provided for @lyricsBlurOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics blur: off'**
+  String get lyricsBlurOff;
+
+  /// No description provided for @lyricsAutoHideOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-hide controls: on'**
+  String get lyricsAutoHideOn;
+
+  /// No description provided for @lyricsAutoHideOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-hide controls: off'**
+  String get lyricsAutoHideOff;
+
+  /// No description provided for @lyricsEditCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit / Create Lyrics'**
+  String get lyricsEditCreate;
+
+  /// No description provided for @sleepTimerMinShort.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get sleepTimerMinShort;
+
+  /// No description provided for @sleepTimerMinutesValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String sleepTimerMinutesValue(int minutes);
+
+  /// No description provided for @sleepTimerMusicStopsAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Music stops after…'**
+  String get sleepTimerMusicStopsAfter;
+
+  /// No description provided for @sleepTimerPickDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a duration below'**
+  String get sleepTimerPickDuration;
+
+  /// No description provided for @visualizerBarSpectrum.
+  ///
+  /// In en, this message translates to:
+  /// **'Bar Spectrum'**
+  String get visualizerBarSpectrum;
+
+  /// No description provided for @visualizerCircularBars.
+  ///
+  /// In en, this message translates to:
+  /// **'Circular Bars'**
+  String get visualizerCircularBars;
+
+  /// No description provided for @visualizerMirrorBars.
+  ///
+  /// In en, this message translates to:
+  /// **'Mirror Bars'**
+  String get visualizerMirrorBars;
+
+  /// No description provided for @visualizerFrequencyLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequency Line'**
+  String get visualizerFrequencyLine;
+
+  /// No description provided for @visualizerDotMatrix.
+  ///
+  /// In en, this message translates to:
+  /// **'Dot Matrix'**
+  String get visualizerDotMatrix;
+
+  /// No description provided for @visualizerPeakBars.
+  ///
+  /// In en, this message translates to:
+  /// **'Peak Bars'**
+  String get visualizerPeakBars;
+
+  /// No description provided for @visualizerCircularWave.
+  ///
+  /// In en, this message translates to:
+  /// **'Circular Wave'**
+  String get visualizerCircularWave;
+
+  /// No description provided for @visualizerAuroraWaves.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora Waves'**
+  String get visualizerAuroraWaves;
+
+  /// No description provided for @visualizerPulseRings.
+  ///
+  /// In en, this message translates to:
+  /// **'Pulse Rings'**
+  String get visualizerPulseRings;
+
+  /// No description provided for @smartFieldFolderPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder path'**
+  String get smartFieldFolderPath;
+
+  /// No description provided for @smartFieldLiked.
+  ///
+  /// In en, this message translates to:
+  /// **'Liked'**
+  String get smartFieldLiked;
+
+  /// No description provided for @smartFieldPlayCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Play count'**
+  String get smartFieldPlayCount;
+
+  /// No description provided for @smartFieldDurationSeconds.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (seconds)'**
+  String get smartFieldDurationSeconds;
+
+  /// No description provided for @smartFieldDaysSinceAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Days since added'**
+  String get smartFieldDaysSinceAdded;
+
+  /// No description provided for @smartOpContains.
+  ///
+  /// In en, this message translates to:
+  /// **'contains'**
+  String get smartOpContains;
+
+  /// No description provided for @smartOpNotContains.
+  ///
+  /// In en, this message translates to:
+  /// **'does not contain'**
+  String get smartOpNotContains;
+
+  /// No description provided for @smartOpEquals.
+  ///
+  /// In en, this message translates to:
+  /// **'equals'**
+  String get smartOpEquals;
+
+  /// No description provided for @smartOpNotEquals.
+  ///
+  /// In en, this message translates to:
+  /// **'does not equal'**
+  String get smartOpNotEquals;
+
+  /// No description provided for @smartOpGreaterThan.
+  ///
+  /// In en, this message translates to:
+  /// **'is greater than'**
+  String get smartOpGreaterThan;
+
+  /// No description provided for @smartOpLessThan.
+  ///
+  /// In en, this message translates to:
+  /// **'is less than'**
+  String get smartOpLessThan;
+
+  /// No description provided for @smartOpIsTrue.
+  ///
+  /// In en, this message translates to:
+  /// **'is true'**
+  String get smartOpIsTrue;
+
+  /// No description provided for @smartOpIsFalse.
+  ///
+  /// In en, this message translates to:
+  /// **'is false'**
+  String get smartOpIsFalse;
+
+  /// No description provided for @smartSortTitleAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'Title (A-Z)'**
+  String get smartSortTitleAZ;
+
+  /// No description provided for @smartSortArtistAZ.
+  ///
+  /// In en, this message translates to:
+  /// **'Artist (A-Z)'**
+  String get smartSortArtistAZ;
+
+  /// No description provided for @smartSortDateAddedNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Date added (newest)'**
+  String get smartSortDateAddedNewest;
+
+  /// No description provided for @smartSortPlayCountHighest.
+  ///
+  /// In en, this message translates to:
+  /// **'Play count (highest)'**
+  String get smartSortPlayCountHighest;
+
+  /// No description provided for @smartSortDurationLongest.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (longest)'**
+  String get smartSortDurationLongest;
+
+  /// No description provided for @smartSortRandom.
+  ///
+  /// In en, this message translates to:
+  /// **'Random'**
+  String get smartSortRandom;
+
+  /// No description provided for @folderFilterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Folder Filter'**
+  String get folderFilterTitle;
+
+  /// No description provided for @artistSeparatorTestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Artist One / Artist Two feat. Three'**
+  String get artistSeparatorTestHint;
+
+  /// No description provided for @tracksPermissionRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Permission to access media library is required. Please grant permissions in the onboarding or app settings.'**
+  String get tracksPermissionRequired;
+
+  /// No description provided for @tracksErrorFetching.
+  ///
+  /// In en, this message translates to:
+  /// **'Error fetching songs: {error}'**
+  String tracksErrorFetching(String error);
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// No description provided for @selectItemToViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an item to view details'**
+  String get selectItemToViewDetails;
+
+  /// No description provided for @takeMeThere.
+  ///
+  /// In en, this message translates to:
+  /// **'Take me there'**
+  String get takeMeThere;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @aboutCodename.
+  ///
+  /// In en, this message translates to:
+  /// **'Codename'**
+  String get aboutCodename;
+
+  /// No description provided for @aboutDeveloper.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get aboutDeveloper;
+
+  /// No description provided for @aboutCopyright.
+  ///
+  /// In en, this message translates to:
+  /// **'Copyright'**
+  String get aboutCopyright;
+
+  /// No description provided for @aboutWebsite.
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get aboutWebsite;
+
+  /// No description provided for @openSourcePackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Source Packages'**
+  String get openSourcePackages;
+
+  /// No description provided for @packagesUsedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} packages used'**
+  String packagesUsedCount(int count);
+
+  /// No description provided for @packagesThanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you to all the open source contributors!'**
+  String get packagesThanks;
+
+  /// No description provided for @versionWithCodename.
+  ///
+  /// In en, this message translates to:
+  /// **'Version {version} ({codename})'**
+  String versionWithCodename(String version, String codename);
+
+  /// No description provided for @customColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom color'**
+  String get customColor;
+
+  /// No description provided for @exportPlaylistAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Export ({format})'**
+  String exportPlaylistAs(String format);
+
+  /// No description provided for @shareClipListeningTo.
+  ///
+  /// In en, this message translates to:
+  /// **'LISTENING TO'**
+  String get shareClipListeningTo;
+
+  /// No description provided for @shareClipNowOn.
+  ///
+  /// In en, this message translates to:
+  /// **'NOW ON'**
+  String get shareClipNowOn;
+
+  /// No description provided for @splashInitializingServices.
+  ///
+  /// In en, this message translates to:
+  /// **'Initializing Services'**
+  String get splashInitializingServices;
+
+  /// No description provided for @splashLoadingLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Library'**
+  String get splashLoadingLibrary;
+
+  /// No description provided for @splashPreparingHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing Home'**
+  String get splashPreparingHome;
+
+  /// No description provided for @splashCachingArtwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Caching Artwork'**
+  String get splashCachingArtwork;
+
+  /// No description provided for @splashFinalPreparations.
+  ///
+  /// In en, this message translates to:
+  /// **'Final Preparations'**
+  String get splashFinalPreparations;
+
+  /// No description provided for @queueHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'History'**
+  String get queueHistory;
+
+  /// No description provided for @sortName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get sortName;
+
+  /// No description provided for @bannerInsightsNewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Music Insights Are Here ✦'**
+  String get bannerInsightsNewTitle;
+
+  /// No description provided for @bannerInsightsNewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'See your top tracks, artists & listening patterns'**
+  String get bannerInsightsNewBody;
+
+  /// No description provided for @bannerRecapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Music Recap Awaits'**
+  String get bannerRecapTitle;
+
+  /// No description provided for @bannerRecapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover your top songs and listening trends'**
+  String get bannerRecapBody;
+
+  /// No description provided for @musicalArtist.
+  ///
+  /// In en, this message translates to:
+  /// **'Musical artist'**
+  String get musicalArtist;
+
+  /// No description provided for @eqPresetFlat.
+  ///
+  /// In en, this message translates to:
+  /// **'Flat'**
+  String get eqPresetFlat;
+
+  /// No description provided for @eqPresetBassBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Bass Boost'**
+  String get eqPresetBassBoost;
+
+  /// No description provided for @eqPresetBassCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Bass Cut'**
+  String get eqPresetBassCut;
+
+  /// No description provided for @eqPresetTrebleBoost.
+  ///
+  /// In en, this message translates to:
+  /// **'Treble Boost'**
+  String get eqPresetTrebleBoost;
+
+  /// No description provided for @eqPresetTrebleCut.
+  ///
+  /// In en, this message translates to:
+  /// **'Treble Cut'**
+  String get eqPresetTrebleCut;
+
+  /// No description provided for @eqPresetRock.
+  ///
+  /// In en, this message translates to:
+  /// **'Rock'**
+  String get eqPresetRock;
+
+  /// No description provided for @eqPresetPop.
+  ///
+  /// In en, this message translates to:
+  /// **'Pop'**
+  String get eqPresetPop;
+
+  /// No description provided for @eqPresetJazz.
+  ///
+  /// In en, this message translates to:
+  /// **'Jazz'**
+  String get eqPresetJazz;
+
+  /// No description provided for @eqPresetClassical.
+  ///
+  /// In en, this message translates to:
+  /// **'Classical'**
+  String get eqPresetClassical;
+
+  /// No description provided for @eqPresetElectronic.
+  ///
+  /// In en, this message translates to:
+  /// **'Electronic'**
+  String get eqPresetElectronic;
+
+  /// No description provided for @eqPresetHipHop.
+  ///
+  /// In en, this message translates to:
+  /// **'Hip Hop'**
+  String get eqPresetHipHop;
+
+  /// No description provided for @eqPresetRnB.
+  ///
+  /// In en, this message translates to:
+  /// **'R&B'**
+  String get eqPresetRnB;
+
+  /// No description provided for @eqPresetVocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Vocal'**
+  String get eqPresetVocal;
+
+  /// No description provided for @eqPresetAcoustic.
+  ///
+  /// In en, this message translates to:
+  /// **'Acoustic'**
+  String get eqPresetAcoustic;
+
+  /// No description provided for @eqPresetDance.
+  ///
+  /// In en, this message translates to:
+  /// **'Dance'**
+  String get eqPresetDance;
+
+  /// No description provided for @eqPresetMetal.
+  ///
+  /// In en, this message translates to:
+  /// **'Metal'**
+  String get eqPresetMetal;
+
+  /// No description provided for @eqPresetLounge.
+  ///
+  /// In en, this message translates to:
+  /// **'Lounge'**
+  String get eqPresetLounge;
+
+  /// No description provided for @eqPresetSpokenWord.
+  ///
+  /// In en, this message translates to:
+  /// **'Spoken Word'**
+  String get eqPresetSpokenWord;
+
+  /// No description provided for @supportOfMonthlyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'of this month\'s goal'**
+  String get supportOfMonthlyGoal;
+
+  /// No description provided for @cl200Hl1.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora Music is now Noxira Music, with a new look'**
+  String get cl200Hl1;
+
+  /// No description provided for @cl200Hl2.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics into any language, from more lyric sources'**
+  String get cl200Hl2;
+
+  /// No description provided for @cl200Hl3.
+  ///
+  /// In en, this message translates to:
+  /// **'A redesigned home screen widget with playback controls'**
+  String get cl200Hl3;
+
+  /// No description provided for @cl200Hl4.
+  ///
+  /// In en, this message translates to:
+  /// **'A redesigned queue'**
+  String get cl200Hl4;
+
+  /// No description provided for @cl200Hl5.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where audio plays from the Bluetooth chip or Now Playing'**
+  String get cl200Hl5;
+
+  /// No description provided for @cl200Hl6.
+  ///
+  /// In en, this message translates to:
+  /// **'Word-by-word lyrics when the source has the timing'**
+  String get cl200Hl6;
+
+  /// No description provided for @cl200Hl7.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate tracks are spotted, and you pick the copy to keep'**
+  String get cl200Hl7;
+
+  /// No description provided for @cl200Hl8.
+  ///
+  /// In en, this message translates to:
+  /// **'Glass surfaces that adapt to your phone'**
+  String get cl200Hl8;
+
+  /// No description provided for @cl200Hl9.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoother transitions and faster detail pages'**
+  String get cl200Hl9;
+
+  /// No description provided for @cl200SecWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Noxira'**
+  String get cl200SecWelcome;
+
+  /// No description provided for @cl200SecNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New Features'**
+  String get cl200SecNew;
+
+  /// No description provided for @cl200SecLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists & Library'**
+  String get cl200SecLibrary;
+
+  /// No description provided for @cl200SecSetup.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup'**
+  String get cl200SecSetup;
+
+  /// No description provided for @cl200SecLook.
+  ///
+  /// In en, this message translates to:
+  /// **'Look & Feel'**
+  String get cl200SecLook;
+
+  /// No description provided for @cl200SecPerf.
+  ///
+  /// In en, this message translates to:
+  /// **'Performance'**
+  String get cl200SecPerf;
+
+  /// No description provided for @cl200SecHood.
+  ///
+  /// In en, this message translates to:
+  /// **'Under the Hood'**
+  String get cl200SecHood;
+
+  /// No description provided for @cl200Welcome1.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora Music is now Noxira Music, with a new name, wordmark and app icon'**
+  String get cl200Welcome1;
+
+  /// No description provided for @cl200Welcome2.
+  ///
+  /// In en, this message translates to:
+  /// **'A new animated splash screen draws the Noxira wordmark'**
+  String get cl200Welcome2;
+
+  /// No description provided for @cl200Welcome3.
+  ///
+  /// In en, this message translates to:
+  /// **'Existing users get a short welcome page explaining what is new, and you can open it again from Settings'**
+  String get cl200Welcome3;
+
+  /// No description provided for @cl200New1.
+  ///
+  /// In en, this message translates to:
+  /// **'Translate lyrics into any language you like, not only the app languages'**
+  String get cl200New1;
+
+  /// No description provided for @cl200New2.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned home screen widget: glass tinted with your artwork, previous / play / next buttons that work without opening the app, and recommended songs when the widget is tall'**
+  String get cl200New2;
+
+  /// No description provided for @cl200New3.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned queue page — see what played and what is next, drag to reorder, swipe to remove; an Up next preview now sits on Now Playing'**
+  String get cl200New3;
+
+  /// No description provided for @cl200New4.
+  ///
+  /// In en, this message translates to:
+  /// **'A monthly support goal appears on the home app bar from time to time, and in Settings under About'**
+  String get cl200New4;
+
+  /// No description provided for @cl200New5.
+  ///
+  /// In en, this message translates to:
+  /// **'Pull down in the Library to refresh it'**
+  String get cl200New5;
+
+  /// No description provided for @cl200New6.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose where audio plays: tap the Bluetooth chip on the home screen, or the new output island on Now Playing, to move playback between your phone speaker and connected devices without leaving the app'**
+  String get cl200New6;
+
+  /// No description provided for @cl200New7.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed and pitch now have their own sliders, and you can link pitch to speed'**
+  String get cl200New7;
+
+  /// No description provided for @cl200New8.
+  ///
+  /// In en, this message translates to:
+  /// **'Five new visualizer styles, and a finer spectrum with more bars'**
+  String get cl200New8;
+
+  /// No description provided for @cl200New9.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional announcements from the Noxira team can appear on the home screen, with a button that opens a link or a screen of the app'**
+  String get cl200New9;
+
+  /// No description provided for @cl200Lyrics1.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned lyrics page: tap a line to jump to it, dots mark instrumental breaks, and the lyrics box on Now Playing follows along'**
+  String get cl200Lyrics1;
+
+  /// No description provided for @cl200Lyrics2.
+  ///
+  /// In en, this message translates to:
+  /// **'More lyric sources (BetterLyrics, YouLyPlus and KuGou) are tried when LRCLIB has nothing; choose which ones to use in Settings'**
+  String get cl200Lyrics2;
+
+  /// No description provided for @cl200Lyrics3.
+  ///
+  /// In en, this message translates to:
+  /// **'Lyrics stored in the audio file, or in a .lrc file next to the song, are used first and work offline'**
+  String get cl200Lyrics3;
+
+  /// No description provided for @cl200Lyrics4.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-hide controls on the full-screen lyrics is now an option and off by default'**
+  String get cl200Lyrics4;
+
+  /// No description provided for @cl200Lyrics5.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed lyrics that flickered and then disappeared with “no lyrics available”, including after a refresh or a manual search'**
+  String get cl200Lyrics5;
+
+  /// No description provided for @cl200Lyrics6.
+  ///
+  /// In en, this message translates to:
+  /// **'Word-by-word lyrics: when a source has per-word timing, each word lights up as it is sung'**
+  String get cl200Lyrics6;
+
+  /// No description provided for @cl200Library1.
+  ///
+  /// In en, this message translates to:
+  /// **'New add-to-playlist sheet: add, remove and create playlists in one place, with songs already in a playlist marked'**
+  String get cl200Library1;
+
+  /// No description provided for @cl200Library2.
+  ///
+  /// In en, this message translates to:
+  /// **'A song can no longer be added to the same playlist twice, and a Remove duplicates option cleans up existing ones'**
+  String get cl200Library2;
+
+  /// No description provided for @cl200Library3.
+  ///
+  /// In en, this message translates to:
+  /// **'Noxira now notices duplicate tracks in your library and, in the Library tab, offers to review them: you pick which copy to keep'**
+  String get cl200Library3;
+
+  /// No description provided for @cl200Library4.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned Playlists page: Favorites on top, automatic playlists as tiles and your own playlists as a grid with artwork mosaics'**
+  String get cl200Library4;
+
+  /// No description provided for @cl200Library5.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned Search tab: a glass search bar, result counts and clearer empty and no-result states'**
+  String get cl200Library5;
+
+  /// No description provided for @cl200Library6.
+  ///
+  /// In en, this message translates to:
+  /// **'The playing-song icon now follows the track in playlists'**
+  String get cl200Library6;
+
+  /// No description provided for @cl200Library7.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional online suggestions: artist info and similar artists from Deezer and Wikipedia (only the artist name is sent)'**
+  String get cl200Library7;
+
+  /// No description provided for @cl200Library8.
+  ///
+  /// In en, this message translates to:
+  /// **'The equalizer no longer reports itself as unavailable by mistake; it retries on its own and offers Retry and Open system equalizer'**
+  String get cl200Library8;
+
+  /// No description provided for @cl200Library9.
+  ///
+  /// In en, this message translates to:
+  /// **'Cache Information now shows real sizes, its button closes the dialog, and Clear Cache also clears downloaded artist images'**
+  String get cl200Library9;
+
+  /// No description provided for @cl200Setup1.
+  ///
+  /// In en, this message translates to:
+  /// **'Redesigned onboarding with glass panels, entrance animations and a flowing background'**
+  String get cl200Setup1;
+
+  /// No description provided for @cl200Setup2.
+  ///
+  /// In en, this message translates to:
+  /// **'Setup recommends the interface style that suits your phone (high-end or lightweight) and the matching background, and lets you try the other one'**
+  String get cl200Setup2;
+
+  /// No description provided for @cl200Setup3.
+  ///
+  /// In en, this message translates to:
+  /// **'The lightweight interface now always uses a plain background; the Animated Blobs option was removed'**
+  String get cl200Setup3;
+
+  /// No description provided for @cl200Setup4.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings is now sorted into groups (Experience, Library & data, App) with the same simple glass look as setup'**
+  String get cl200Setup4;
+
+  /// No description provided for @cl200Setup5.
+  ///
+  /// In en, this message translates to:
+  /// **'Messages appear as a small island at the bottom of the screen instead of snack bars'**
+  String get cl200Setup5;
+
+  /// No description provided for @cl200Look1.
+  ///
+  /// In en, this message translates to:
+  /// **'New app font (Cal Sans) and slightly more compact text across the app'**
+  String get cl200Look1;
+
+  /// No description provided for @cl200Look2.
+  ///
+  /// In en, this message translates to:
+  /// **'Frosted glass surfaces throughout, drawn as plain solid surfaces on low-end phones'**
+  String get cl200Look2;
+
+  /// No description provided for @cl200Look3.
+  ///
+  /// In en, this message translates to:
+  /// **'Artwork flies from cards into album, artist, folder and playlist pages; pressed cards respond, liked songs burst into hearts, and the time labels roll'**
+  String get cl200Look3;
+
+  /// No description provided for @cl200Look4.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounded-square play button on Favorite Songs'**
+  String get cl200Look4;
+
+  /// No description provided for @cl200Look5.
+  ///
+  /// In en, this message translates to:
+  /// **'Home and Library cards use the same glass look as setup, without an extra blur on top of the blurred background'**
+  String get cl200Look5;
+
+  /// No description provided for @cl200Perf1.
+  ///
+  /// In en, this message translates to:
+  /// **'Noxira detects your phone\'s hardware and tunes glass effects, image caches and transitions to it'**
+  String get cl200Perf1;
+
+  /// No description provided for @cl200Perf2.
+  ///
+  /// In en, this message translates to:
+  /// **'Album, artist, folder and playlist pages open smoothly: they load after the opening animation, build a short first page of songs and blur their header artwork ahead of time'**
+  String get cl200Perf2;
+
+  /// No description provided for @cl200Perf3.
+  ///
+  /// In en, this message translates to:
+  /// **'Library queries that overlap are shared instead of repeated, which lowers memory use on big libraries'**
+  String get cl200Perf3;
+
+  /// No description provided for @cl200Perf4.
+  ///
+  /// In en, this message translates to:
+  /// **'Faster search and library rescans, lighter image loading and less work while lists scroll'**
+  String get cl200Perf4;
+
+  /// No description provided for @cl200Hood1.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed several crashes: tapping Close in the lyrics editor, the tag editor or the sleep timer after the page was gone, adding to the queue or setting a ringtone from a song menu, translating lyrics, and opening Noxira from the widget'**
+  String get cl200Hood1;
+
+  /// No description provided for @cl200Hood2.
+  ///
+  /// In en, this message translates to:
+  /// **'The app no longer crashes when storage permission is missing'**
+  String get cl200Hood2;
+
+  /// No description provided for @cl200Hood3.
+  ///
+  /// In en, this message translates to:
+  /// **'Playlists, liked songs, play counts and settings are saved safely, so an interrupted save can no longer leave an empty file'**
+  String get cl200Hood3;
+
+  /// No description provided for @cl200Hood4.
+  ///
+  /// In en, this message translates to:
+  /// **'FLAC files whose metadata blocks were left incomplete by a tag editor are repaired when saved, so they play again'**
+  String get cl200Hood4;
+
+  /// No description provided for @cl200Hood5.
+  ///
+  /// In en, this message translates to:
+  /// **'Media notification artwork is downscaled to avoid freezes while the notification is built'**
+  String get cl200Hood5;
+
+  /// No description provided for @cl200Hood6.
+  ///
+  /// In en, this message translates to:
+  /// **'Editing tags on voice recordings (M4A) no longer fails because of leftover data at the end of the file'**
+  String get cl200Hood6;
+
+  /// No description provided for @cl200Hood7.
+  ///
+  /// In en, this message translates to:
+  /// **'The visualizer no longer distorts Dolby Atmos tracks; they use the simulated animation instead'**
+  String get cl200Hood7;
+
+  /// No description provided for @cl200Hood8.
+  ///
+  /// In en, this message translates to:
+  /// **'Phones that cannot create an equalizer effect now play normally, and the equalizer waits for the first song instead of timing out'**
+  String get cl200Hood8;
+
+  /// No description provided for @cl200Hood9.
+  ///
+  /// In en, this message translates to:
+  /// **'Check for updates now shows its result, and says so when updates come from Google Play'**
+  String get cl200Hood9;
+
+  /// No description provided for @cl200Hood10.
+  ///
+  /// In en, this message translates to:
+  /// **'Announcements, the support goal and some online services can be adjusted without an app update'**
+  String get cl200Hood10;
+
+  /// No description provided for @cl200Hood11.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated dependencies'**
+  String get cl200Hood11;
+
+  /// No description provided for @pkgJustAudio.
+  ///
+  /// In en, this message translates to:
+  /// **'Feature-rich audio player for Flutter'**
+  String get pkgJustAudio;
+
+  /// No description provided for @pkgAudioService.
+  ///
+  /// In en, this message translates to:
+  /// **'Background audio playback and media controls'**
+  String get pkgAudioService;
+
+  /// No description provided for @pkgAudioSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Audio session management for proper audio focus'**
+  String get pkgAudioSession;
+
+  /// No description provided for @pkgOnAudioQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Query audio files from device storage'**
+  String get pkgOnAudioQuery;
+
+  /// No description provided for @pkgHaudiotagger.
+  ///
+  /// In en, this message translates to:
+  /// **'Read and write audio metadata tags'**
+  String get pkgHaudiotagger;
+
+  /// No description provided for @pkgProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'State management solution for Flutter'**
+  String get pkgProvider;
+
+  /// No description provided for @pkgSharedPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Persistent key-value storage'**
+  String get pkgSharedPreferences;
+
+  /// No description provided for @pkgPathProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Access to device file system paths'**
+  String get pkgPathProvider;
+
+  /// No description provided for @pkgPermissionHandler.
+  ///
+  /// In en, this message translates to:
+  /// **'Handle runtime permissions'**
+  String get pkgPermissionHandler;
+
+  /// No description provided for @pkgDynamicColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Material You dynamic color theming'**
+  String get pkgDynamicColor;
+
+  /// No description provided for @pkgPaletteGenerator.
+  ///
+  /// In en, this message translates to:
+  /// **'Extract colors from images'**
+  String get pkgPaletteGenerator;
+
+  /// No description provided for @pkgLottie.
+  ///
+  /// In en, this message translates to:
+  /// **'Lottie animations for Flutter'**
+  String get pkgLottie;
+
+  /// No description provided for @pkgStaggeredAnimations.
+  ///
+  /// In en, this message translates to:
+  /// **'Staggered list animations'**
+  String get pkgStaggeredAnimations;
+
+  /// No description provided for @pkgMesh.
+  ///
+  /// In en, this message translates to:
+  /// **'Mesh gradient backgrounds'**
+  String get pkgMesh;
+
+  /// No description provided for @pkgHttp.
+  ///
+  /// In en, this message translates to:
+  /// **'HTTP requests for API calls'**
+  String get pkgHttp;
+
+  /// No description provided for @pkgUrlLauncher.
+  ///
+  /// In en, this message translates to:
+  /// **'Launch URLs in browser'**
+  String get pkgUrlLauncher;
+
+  /// No description provided for @pkgSharePlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Share content with other apps'**
+  String get pkgSharePlus;
+
+  /// No description provided for @pkgPackageInfoPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Get app version and package info'**
+  String get pkgPackageInfoPlus;
+
+  /// No description provided for @pkgDeviceInfoPlus.
+  ///
+  /// In en, this message translates to:
+  /// **'Get device information'**
+  String get pkgDeviceInfoPlus;
+
+  /// No description provided for @pkgFlutterDotenv.
+  ///
+  /// In en, this message translates to:
+  /// **'Load environment variables from .env file'**
+  String get pkgFlutterDotenv;
+
+  /// No description provided for @pkgCrypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Cryptographic hashing functions'**
+  String get pkgCrypto;
+
+  /// No description provided for @pkgIntl.
+  ///
+  /// In en, this message translates to:
+  /// **'Internationalization and localization'**
+  String get pkgIntl;
+
+  /// No description provided for @pkgVersion.
+  ///
+  /// In en, this message translates to:
+  /// **'Version parsing and comparison'**
+  String get pkgVersion;
+
+  /// No description provided for @pkgPubSemver.
+  ///
+  /// In en, this message translates to:
+  /// **'Semantic versioning utilities'**
+  String get pkgPubSemver;
+
+  /// No description provided for @pkgClarityFlutter.
+  ///
+  /// In en, this message translates to:
+  /// **'Microsoft Clarity analytics'**
+  String get pkgClarityFlutter;
+
+  /// No description provided for @pkgFlutterHooks.
+  ///
+  /// In en, this message translates to:
+  /// **'React-like hooks for Flutter'**
+  String get pkgFlutterHooks;
+
+  /// No description provided for @themeAurora.
+  ///
+  /// In en, this message translates to:
+  /// **'Aurora'**
+  String get themeAurora;
+
+  /// No description provided for @themeMidnight.
+  ///
+  /// In en, this message translates to:
+  /// **'Midnight'**
+  String get themeMidnight;
+
+  /// No description provided for @themeOcean.
+  ///
+  /// In en, this message translates to:
+  /// **'Ocean'**
+  String get themeOcean;
+
+  /// No description provided for @themeTeal.
+  ///
+  /// In en, this message translates to:
+  /// **'Teal'**
+  String get themeTeal;
+
+  /// No description provided for @themeForest.
+  ///
+  /// In en, this message translates to:
+  /// **'Forest'**
+  String get themeForest;
+
+  /// No description provided for @themeNeon.
+  ///
+  /// In en, this message translates to:
+  /// **'Neon'**
+  String get themeNeon;
+
+  /// No description provided for @themeGold.
+  ///
+  /// In en, this message translates to:
+  /// **'Gold'**
+  String get themeGold;
+
+  /// No description provided for @themeEmber.
+  ///
+  /// In en, this message translates to:
+  /// **'Ember'**
+  String get themeEmber;
+
+  /// No description provided for @themeRose.
+  ///
+  /// In en, this message translates to:
+  /// **'Rose'**
+  String get themeRose;
+
+  /// No description provided for @themeSakura.
+  ///
+  /// In en, this message translates to:
+  /// **'Sakura'**
+  String get themeSakura;
+
+  /// No description provided for @artistsCountPlural.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 artist} other{{count} artists}}'**
+  String artistsCountPlural(int count);
+
+  /// No description provided for @playbackInvalidPlaylist.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid playlist or start index'**
+  String get playbackInvalidPlaylist;
+
+  /// No description provided for @playbackCouldNotPlayTitleSkipping.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play \"{title}\" — skipping'**
+  String playbackCouldNotPlayTitleSkipping(String title);
+
+  /// No description provided for @playbackCouldNotPlaySkipping.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play this song — skipping'**
+  String get playbackCouldNotPlaySkipping;
+
+  /// No description provided for @playbackCouldNotPlayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t play \"{title}\"'**
+  String playbackCouldNotPlayTitle(String title);
+
+  /// No description provided for @playbackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Playback failed'**
+  String get playbackFailed;
+
+  /// No description provided for @playbackSetPlaylistFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to set playlist: {error}'**
+  String playbackSetPlaylistFailed(String error);
+
+  /// No description provided for @playbackUpdatePlaylistFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update playlist: {error}'**
+  String playbackUpdatePlaylistFailed(String error);
 }
 
 class _AppLocalizationsDelegate

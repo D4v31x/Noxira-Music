@@ -31,7 +31,12 @@ import '../../../shared/widgets/animated_progress_line.dart';
 import '../../../shared/services/local_caching_service.dart';
 import '../../../shared/services/notification_manager.dart';
 import '../../../shared/services/download_progress_monitor.dart';
+import '../../../shared/services/audio_output_service.dart';
 import '../../../shared/services/bluetooth_service.dart';
+import '../../../shared/widgets/audio_output_dialog.dart';
+import '../../../shared/services/remote_config_helper.dart';
+import '../../../shared/widgets/app_update_prompt.dart';
+import '../../../shared/widgets/remote_announcement_dialog.dart';
 import '../widgets/library_tab.dart';
 import 'package:aurora_music_v01/features/onboarding/screens/onboarding_screen.dart';
 import '../../../shared/widgets/app_background.dart';
@@ -116,7 +121,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _showWelcomeMessage();
     _checkAndShowFeedbackReminder();
     _checkAndShowTranslationReminder();
+    _checkRemoteAnnouncement();
+    RemoteConfigHelper.updates.addListener(_onRemoteConfigUpdated);
     _checkRecapBanner();
+  }
+
+  void _onRemoteConfigUpdated() {
+    if (!mounted) return;
+    unawaited(AppUpdatePrompt.showIfNeeded(context));
+    unawaited(RemoteAnnouncementDialog.showIfNeeded(context));
   }
 
   // Initialize the home screen and check permissions
@@ -202,6 +215,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     await Future.delayed(const Duration(seconds: 10));
     if (mounted) {
       await FeedbackPopupWidget.showIfNeeded(context);
+    }
+  }
+
+  Future<void> _checkRemoteAnnouncement() async {
+    // A short beat so the dialog doesn't land on the first frame; the values
+    // were already requested at startup.
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (mounted) {
+      await AppUpdatePrompt.showIfNeeded(context);
+    }
+    if (mounted) {
+      await RemoteAnnouncementDialog.showIfNeeded(context);
     }
   }
 
@@ -304,6 +329,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   void dispose() {
+    RemoteConfigHelper.updates.removeListener(_onRemoteConfigUpdated);
     _audioServiceRef?.songsNotifier.removeListener(_onSongsListChanged);
     _animationController?.dispose();
     _scrollController.removeListener(_scrollListener);
@@ -512,17 +538,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 });
 
                 // Show a snackbar explaining how to enable later
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(AppLocalizations.of(context).permissionLater),
-                    duration: const Duration(seconds: 5),
-                    action: SnackBarAction(
-                      label: AppLocalizations.of(context).settings,
-                      onPressed: () async {
-                        await permissionhandler.openAppSettings();
-                      },
-                    ),
-                  ),
+                NotificationManager.show(
+                  AppLocalizations.of(context).permissionLater,
+                  duration: const Duration(seconds: 5),
+                  actionLabel: AppLocalizations.of(context).settings,
+                  onAction: () =>
+                      unawaited(permissionhandler.openAppSettings()),
                 );
               },
             ),
@@ -578,11 +599,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       songs = [];
                     });
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(localizations.libraryError),
-                      ),
-                    );
+                    NotificationManager.show(localizations.libraryError);
                   }
                 } else {
                   // Still no permissions - handle accordingly
@@ -590,16 +607,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     songs = [];
                   });
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(localizations.permDeny),
-                      action: SnackBarAction(
-                        label: localizations.settings,
-                        onPressed: () async {
-                          await permissionhandler.openAppSettings();
-                        },
-                      ),
-                    ),
+                  NotificationManager.show(
+                    localizations.permDeny,
+                    duration: const Duration(seconds: 5),
+                    actionLabel: localizations.settings,
+                    onAction: () =>
+                        unawaited(permissionhandler.openAppSettings()),
                   );
                 }
               },
@@ -661,10 +674,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return shouldExit;
   }
 
+  /// The island is green while audio plays on the connected device and white
+  /// once it is routed to the phone itself.
+  Color get _islandColor {
+    final current = AudioOutputService.instance.current;
+    return current != null && current.kind == AudioOutputKind.speaker
+        ? Colors.white70
+        : audioOutputAccent;
+  }
+
+  Widget _buildOutputIslandContent(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final current = AudioOutputService.instance.current;
+    // Until the real routing is known, show the connected Bluetooth device.
+    final kind = current?.kind ?? AudioOutputKind.bluetooth;
+    final label = current != null
+        ? audioOutputLabel(l10n, current)
+        : _bluetoothService.connectedDeviceName;
+    final iconSize = MediaQuery.textScalerOf(context).scale(16);
+    final color = _islandColor;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        audioOutputIcon(kind, color: color, size: iconSize),
+        const SizedBox(width: 6),
+        Flexible(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            child: Text(
+              label,
+              key: ValueKey(label),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: FontConstants.fontFamily,
+                fontSize: 12,
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   // All library initialization is now handled by AudioPlayerService
   Widget buildAppBarTitle() {
     return ListenableBuilder(
-      listenable: _bluetoothService,
+      listenable:
+          Listenable.merge([_bluetoothService, AudioOutputService.instance]),
       builder: (context, child) {
         final isConnected = _bluetoothService.isBluetoothConnected;
         return Column(
@@ -718,55 +781,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               duration: const Duration(milliseconds: 400),
               curve: Curves.easeInOutCubic,
               child: isConnected
-                  ? Container(
-                      constraints: BoxConstraints(
-                        minHeight: 30,
-                        maxWidth: MediaQuery.sizeOf(context).width - 48,
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 4),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: const Color(0xFF10B981), // Green color
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.bluetooth_connected,
-                            color: const Color(0xFF10B981),
-                            size: MediaQuery.textScalerOf(context).scale(16),
-                          ),
-                          const SizedBox(width: 6),
-                          Flexible(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 300),
-                              transitionBuilder:
-                                  (Widget child, Animation<double> animation) {
-                                return FadeTransition(
-                                    opacity: animation, child: child);
-                              },
-                              child: Text(
-                                _bluetoothService.connectedDeviceName,
-                                key: ValueKey(
-                                    _bluetoothService.connectedDeviceName),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontFamily: FontConstants.fontFamily,
-                                  fontSize: 12,
-                                  color: Color(0xFF10B981),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                  ? GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => showAudioOutputDialog(context,
+                          heroTag: audioOutputIslandHeroTag),
+                      child: Hero(
+                          tag: audioOutputIslandHeroTag,
+                          flightShuttleBuilder: audioOutputHeroShuttle,
+                          child: Container(
+                            constraints: BoxConstraints(
+                              minHeight: 30,
+                              maxWidth: MediaQuery.sizeOf(context).width - 48,
                             ),
-                          ),
-                        ],
-                      ),
-                    )
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _islandColor,
+                                width: 1.5,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: _buildOutputIslandContent(context),
+                          )))
                   : const SizedBox.shrink(),
             ),
           ],

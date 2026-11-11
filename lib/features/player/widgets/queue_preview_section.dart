@@ -32,8 +32,7 @@ class QueuePreviewSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isLowEnd =
-        Provider.of<PerformanceModeProvider>(context, listen: false)
-            .isLowEndDevice;
+        Provider.of<PerformanceModeProvider>(context).isLowEndDevice;
     final colorScheme = Theme.of(context).colorScheme;
 
     return ListenableBuilder(
@@ -114,7 +113,7 @@ class QueuePreviewSection extends StatelessWidget {
                             : Column(
                                 children: [
                                   for (var i = 0; i < upcoming.length; i++)
-                                    _row(upcoming[i], i),
+                                    _row(context, upcoming[i], i),
                                 ],
                               ),
                       ),
@@ -129,11 +128,11 @@ class QueuePreviewSection extends StatelessWidget {
     );
   }
 
-  Widget _row(SongModel song, int index) {
+  Widget _row(BuildContext context, SongModel song, int index) {
     final keys =
         index < kPlayerPageRows ? PlayerPageSources.previewRows[index] : null;
     final artist = ArtistSeparatorService()
-        .splitArtists(song.artist ?? 'Unknown Artist')
+        .splitArtists(song.artist ?? AppLocalizations.of(context).unknownArtist)
         .join(', ');
     final row = SizedBox(
       height: 56,

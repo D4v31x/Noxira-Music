@@ -17,46 +17,10 @@ class LyricsIsolate {
 
   /// Parse LRC content - can be run in isolate or main thread
   static List<TimedLyric> _parseLrc(String lrcContent) {
-    final List<TimedLyric> timedLyrics = [];
-
-    // Properly decode and normalize the content
-    final normalizedContent = utf8
+    final normalized = utf8
         .decode(utf8.encode(lrcContent), allowMalformed: true)
         .replaceAll(RegExp(r'[\uFFFD]'), '');
-
-    final lines = normalizedContent.split('\n');
-
-    // Basic LRC format regex
-    final timeRegex = RegExp(r'\[(\d{2}):(\d{2})[\.:](\d{2,3})\]');
-
-    for (var i = 0; i < lines.length; i++) {
-      final line = lines[i].trim();
-      if (line.isEmpty) continue;
-
-      final matches = timeRegex.allMatches(line);
-      if (matches.isEmpty) continue;
-
-      // Extract text after the timestamp
-      final textMatch = RegExp(r'\](.*)$').firstMatch(line);
-      if (textMatch == null) continue;
-
-      final String text = textMatch.group(1)?.trim() ?? '';
-      if (text.isEmpty) continue;
-
-      // Parse all timestamps for this line (some lines have multiple timestamps)
-      for (final match in matches) {
-        timedLyrics.add(TimedLyric(
-          time: TimedLyric.parseTimestamp(
-              match.group(1)!, match.group(2)!, match.group(3)),
-          text: text,
-        ));
-      }
-    }
-
-    // Sort by timestamp
-    timedLyrics.sort((a, b) => a.time.compareTo(b.time));
-
-    return timedLyrics;
+    return parseLrc(normalized);
   }
 
   /// Generate suggestions for song metadata in isolate

@@ -40,8 +40,9 @@ class GlassmorphicDialog extends StatelessWidget {
             .shouldEnableBlur;
     final dialogContent = DecoratedBox(
       decoration: BoxDecoration(
-        color:
-            shouldBlur ? Colors.white.withValues(alpha: 0.1) : Colors.grey[900],
+        color: shouldBlur
+            ? Colors.white.withValues(alpha: 0.1)
+            : Theme.of(context).colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: Colors.white.withValues(alpha: 0.2),
@@ -143,7 +144,9 @@ class GlassDialogSurface extends StatelessWidget {
       decoration: BoxDecoration(
         color: shouldBlur
             ? Colors.white.withValues(alpha: 0.1)
-            : (isDark ? Colors.grey.shade900 : Colors.grey.shade100),
+            : (isDark
+                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                : Colors.grey.shade100),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
         boxShadow: [

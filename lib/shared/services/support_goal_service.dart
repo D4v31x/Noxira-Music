@@ -2,11 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// This month's support goal, as published in the small JSON file at
-/// [SupportGoalService.goalUrl].
+import 'remote_config_helper.dart';
+
+/// This month's support goal, as set in the Firebase console (Remote Config).
 @immutable
 class SupportGoal {
   const SupportGoal({
@@ -49,18 +49,17 @@ class SupportGoal {
 /// Decides when the "Support Noxira!" banner appears on the home app bar and
 /// supplies the monthly goal it displays.
 ///
-/// The goal is read from a tiny public JSON file (no personal data is sent);
-/// the last good value is cached and a built-in default is used offline.
+/// The goal is set in the Firebase console (Remote Config); the last good
+/// value is cached and a built-in default is used offline.
 class SupportGoalService {
   SupportGoalService._();
 
-  /// A file in the project repository, editable at any time:
-  /// `{"goal": 50, "raised": 12, "currency": "€"}`.
-  static const String goalUrl =
-      'https://raw.githubusercontent.com/D4v31x/Aurora-Music/main/support_goal.json';
-
-  /// The banner returns this many calendar days after it was last shown.
-  static const int intervalDays = 3;
+  /// The banner returns this many calendar days after it was last shown
+  /// (`prompt_support_banner_interval_days`).
+  static int get intervalDays => RemoteConfigHelper.integer(
+        'prompt_support_banner_interval_days',
+        min: 1,
+      );
 
   static const String _lastShownKey = 'support_banner_last_shown';
   static const String _cachedGoalKey = 'support_goal_cached';
@@ -82,6 +81,8 @@ class SupportGoalService {
   /// today as used, so it stays away for the rest of the day and for the
   /// following [intervalDays] days whichever button (or none) is pressed.
   static Future<void> checkAndTrigger() async {
+    _followConsoleUpdates();
+    if (!RemoteConfigHelper.boolean('donation_enabled')) return;
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
 
@@ -108,8 +109,18 @@ class SupportGoalService {
 
   /// Refreshes the current goal without changing the app-bar reminder schedule.
   static Future<void> refreshGoal() async {
+    _followConsoleUpdates();
     final prefs = await SharedPreferences.getInstance();
     await _loadGoal(prefs);
+  }
+
+  static bool _following = false;
+
+  /// Re-reads the goal as soon as new values are published in the console.
+  static void _followConsoleUpdates() {
+    if (_following) return;
+    _following = true;
+    RemoteConfigHelper.updates.addListener(() => unawaited(refreshGoal()));
   }
 
   static Future<void> _loadGoal(SharedPreferences prefs) async {
@@ -121,17 +132,27 @@ class SupportGoalService {
             SupportGoal.fromJson(json.decode(cached) as Map<String, dynamic>);
       } catch (_) {}
     }
+    await _loadGoalFromRemoteConfig(prefs);
+  }
+
+  /// Reads the goal from the Firebase console (parameters
+  /// `support_goal_amount`, `support_goal_raised`, `support_goal_currency`).
+  /// Returns false if no goal is set there, keeping the cached / default goal.
+  static Future<bool> _loadGoalFromRemoteConfig(SharedPreferences prefs) async {
+    final config = await RemoteConfigHelper.instance();
+    if (config == null) return false;
     try {
-      final response = await http
-          .get(Uri.parse(goalUrl))
-          .timeout(const Duration(seconds: 6));
-      if (response.statusCode != 200) return;
-      final body = utf8.decode(response.bodyBytes);
-      goal.value =
-          SupportGoal.fromJson(json.decode(body) as Map<String, dynamic>);
-      await prefs.setString(_cachedGoalKey, body);
+      final data = {
+        'goal': config.getDouble('support_goal_amount'),
+        'raised': config.getDouble('support_goal_raised'),
+        'currency': config.getString('support_goal_currency'),
+      };
+      if ((data['goal'] as double) <= 0) return false;
+      goal.value = SupportGoal.fromJson(data);
+      await prefs.setString(_cachedGoalKey, json.encode(data));
+      return true;
     } catch (_) {
-      // Offline or file unavailable: keep the cached / default goal.
+      return false;
     }
   }
 

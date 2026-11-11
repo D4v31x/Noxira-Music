@@ -10,6 +10,7 @@ library;
 
 import 'dart:math' show max;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
@@ -130,23 +131,14 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
   // ── Formatting helpers ─────────────────────────────────────────────────────
 
-  static String _hourFull(int h) {
-    if (h == 0) return '12 midnight';
-    if (h == 12) return '12 noon';
-    if (h < 12) return '$h AM';
-    return '${h - 12} PM';
-  }
+  static String _hourFull(int h, String locale) =>
+      DateFormat.j(locale).format(DateTime(2000, 1, 1, h));
 
-  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  static const _weekdaysFull = [
-    'Mondays',
-    'Tuesdays',
-    'Wednesdays',
-    'Thursdays',
-    'Fridays',
-    'Saturdays',
-    'Sundays'
-  ];
+  // 1 Jan 2024 is a Monday, matching the Monday-first weekday index.
+  static String _weekdayName(int index, String locale, {bool short = false}) {
+    final day = DateTime(2024, 1, 1 + index);
+    return (short ? DateFormat.E(locale) : DateFormat.EEEE(locale)).format(day);
+  }
 
   static String _fmtMinutes(int m) {
     if (m < 60) return '${m}m';
@@ -173,9 +165,9 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
                 color: Colors.white),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text(
-            'Music Insights',
-            style: TextStyle(
+          title: Text(
+            AppLocalizations.of(context).musicInsightsTitle,
+            style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.bold,
               fontFamily: FontConstants.fontFamily,
@@ -211,7 +203,8 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
         // ── Activity by Hour ───────────────────────────────────────────────
         if (data.playsByHour.isNotEmpty) ...[
-          _sectionHeader('Activity by Time of Day'),
+          _sectionHeader(
+              AppLocalizations.of(context).insightsActivityByTimeOfDay),
           SliverToBoxAdapter(
             child: Padding(
               padding: hPad,
@@ -227,7 +220,7 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
         // ── Activity by Day ────────────────────────────────────────────────
         if (data.playsByWeekday.isNotEmpty) ...[
-          _sectionHeader('Activity by Day'),
+          _sectionHeader(AppLocalizations.of(context).insightsActivityByDay),
           SliverToBoxAdapter(
             child: Padding(
               padding: hPad,
@@ -243,7 +236,7 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
         // ── Top Tracks ─────────────────────────────────────────────────────
         if (data.topTracks.isNotEmpty) ...[
-          _sectionHeader('Top Tracks'),
+          _sectionHeader(AppLocalizations.of(context).recapTopTracksTitle),
           SliverToBoxAdapter(
             child: Padding(
               padding: hPad,
@@ -260,7 +253,7 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
         // ── Top Artists ────────────────────────────────────────────────────
         if (data.topArtists.isNotEmpty) ...[
-          _sectionHeader('Top Artists'),
+          _sectionHeader(AppLocalizations.of(context).recapTopArtistsTitle),
           SliverToBoxAdapter(
             child: Padding(
               padding: hPad,
@@ -276,7 +269,7 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
         // ── Genre Breakdown ────────────────────────────────────────────────
         if (data.topGenres.isNotEmpty) ...[
-          _sectionHeader('Genre Breakdown'),
+          _sectionHeader(AppLocalizations.of(context).insightsGenreBreakdown),
           SliverToBoxAdapter(
             child: Padding(
               padding: hPad,
@@ -291,28 +284,28 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
         // ── Empty state ────────────────────────────────────────────────────
         if (data.totalListens == 0)
-          const SliverToBoxAdapter(
+          SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  Icon(Icons.music_note_rounded,
+                  const Icon(Icons.music_note_rounded,
                       color: Colors.white54, size: 64),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
-                    'No listening data yet',
-                    style: TextStyle(
+                    AppLocalizations.of(context).insightsNoDataTitle,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       fontFamily: FontConstants.fontFamily,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'Play some music to start\nbuilding your insights.',
+                    AppLocalizations.of(context).insightsNoDataBody,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white38,
                       fontSize: 14,
                       fontFamily: FontConstants.fontFamily,
@@ -462,8 +455,10 @@ class _HourActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
     final subtitle = mostActiveHour != null
-        ? 'Most active around ${_ListeningInsightsScreenState._hourFull(mostActiveHour!)}'
+        ? AppLocalizations.of(context).insightsMostActiveAround(
+            _ListeningInsightsScreenState._hourFull(mostActiveHour!, locale))
         : null;
 
     return GlassmorphicContainer(
@@ -533,8 +528,11 @@ class _WeekdayActivityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).toString();
     final subtitle = mostActiveWeekday != null
-        ? 'Most active on ${_ListeningInsightsScreenState._weekdaysFull[mostActiveWeekday!]}'
+        ? AppLocalizations.of(context).insightsMostActiveOn(
+            _ListeningInsightsScreenState._weekdayName(
+                mostActiveWeekday!, locale))
         : null;
 
     return GlassmorphicContainer(
@@ -575,9 +573,12 @@ class _WeekdayActivityCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _ListeningInsightsScreenState._weekdays
-                .map((d) => _AxisLabel(d))
-                .toList(),
+            children: [
+              for (var i = 0; i < 7; i++)
+                _AxisLabel(_ListeningInsightsScreenState._weekdayName(
+                    i, Localizations.localeOf(context).toString(),
+                    short: true)),
+            ],
           ),
         ],
       ),

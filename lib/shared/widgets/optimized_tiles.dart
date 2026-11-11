@@ -168,7 +168,8 @@ class _OptimizedSongTileState extends State<OptimizedSongTile> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            splitArtists(widget.song.artist ?? 'Unknown Artist')
+                            splitArtists(widget.song.artist ??
+                                    AppLocalizations.of(context).unknownArtist)
                                 .join(', '),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.6),
