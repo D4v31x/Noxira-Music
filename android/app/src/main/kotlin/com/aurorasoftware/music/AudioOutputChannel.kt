@@ -40,6 +40,7 @@ class AudioOutputChannel(
 
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val channel = MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL)
 
     /** The output the user picked, or null for the system's choice. */
     private var preferredDeviceId: Int? = null
@@ -57,12 +58,19 @@ class AudioOutputChannel(
             if (addedDevices.any { it.isSink && kindOf(it) != null && kindOf(it) != "speaker" }) {
                 setPreferred(null)
             }
+            notifyOutputsChanged()
         }
 
         override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>) {
-            val id = preferredDeviceId ?: return
-            if (removedDevices.any { it.id == id }) setPreferred(null)
+            val id = preferredDeviceId
+            if (id != null && removedDevices.any { it.id == id }) setPreferred(null)
+            notifyOutputsChanged()
         }
+    }
+
+    /** Tells Dart to re-read the outputs so the UI never shows a stale route. */
+    private fun notifyOutputsChanged() {
+        channel.invokeMethod("outputsChanged", null)
     }
 
     private val reapplyTask = object : Runnable {
@@ -76,7 +84,7 @@ class AudioOutputChannel(
     init {
         audioManager.registerAudioDeviceCallback(deviceCallback, mainHandler)
 
-        MethodChannel(engine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
+        channel.setMethodCallHandler { call, result ->
             try {
                 when (call.method) {
                     "getOutputs" -> result.success(getOutputs())
@@ -95,6 +103,7 @@ class AudioOutputChannel(
     fun dispose() {
         mainHandler.removeCallbacks(reapplyTask)
         audioManager.unregisterAudioDeviceCallback(deviceCallback)
+        channel.setMethodCallHandler(null)
         systemRouter?.dispose()
         systemRouter = null
     }

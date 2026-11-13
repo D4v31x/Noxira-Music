@@ -1,33 +1,52 @@
 part of '../audio_player_service.dart';
 
-/// Extracted WAV covers by song id; MediaStore has no album art for WAV files.
-final Map<int, Uri> _wavArtUris = {};
+/// Exported embedded covers by song id. MediaStore's album-art URI is empty for
+/// WAV files and for many songs on Android 10+, so the notification is given a
+/// file made from the embedded cover instead.
+final Map<int, Uri> _exportedArtUris = {};
 
 extension AudioMediaArtworkExtension on AudioPlayerService {
   Uri? _mediaArtUri(SongModel song) {
-    final wavArt = _wavArtUris[song.id];
-    if (wavArt != null) return wavArt;
+    final exported = _exportedArtUris[song.id];
+    if (exported != null) return exported;
     return song.albumId != null
         ? Uri.parse('content://media/external/audio/albumart/${song.albumId}')
         : null;
   }
 
-  /// Saves a WAV song's embedded cover to a file so the notification can load it.
-  Future<void> _publishWavArtwork(SongModel song, Uint8List? artwork) async {
-    if (!song.data.toLowerCase().endsWith('.wav')) return;
+  /// Saves a song's cover to a file so the notification can load it. The file
+  /// name carries a content fingerprint, so edited artwork gets a new URI and
+  /// the system doesn't keep showing a cached bitmap.
+  Future<void> _publishArtwork(SongModel song, Uint8List? artwork) async {
     if (artwork == null || artwork.isEmpty) return;
-    if (_wavArtUris.containsKey(song.id)) return;
     try {
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/wav_art_${song.id}');
-      await file.writeAsBytes(artwork, flush: true);
-      _wavArtUris[song.id] = Uri.file(file.path);
+      final path = '${dir.path}/media_art_${song.id}_${_fingerprint(artwork)}';
+      final previous = _exportedArtUris[song.id];
+      if (previous != null && previous.toFilePath() == path) return;
+
+      await File(path).writeAsBytes(artwork, flush: true);
+      _exportedArtUris[song.id] = Uri.file(path);
+      if (previous != null) {
+        try {
+          await File(previous.toFilePath()).delete();
+        } catch (_) {}
+      }
       if (currentSong?.id == song.id) {
         audioHandler.updateNotificationMediaItem(_createMediaItemSync(song));
       }
     } catch (e) {
-      if (kDebugMode) debugPrint('WAV artwork export failed: $e');
+      if (kDebugMode) debugPrint('Artwork export failed: $e');
     }
+  }
+
+  static int _fingerprint(Uint8List bytes) {
+    final edge = bytes.length < 256 ? bytes.length : 128;
+    return Object.hash(
+      bytes.length,
+      Object.hashAll(bytes.sublist(0, edge)),
+      Object.hashAll(bytes.sublist(bytes.length - edge)),
+    );
   }
 
   /// Update background colors based on current song
@@ -142,7 +161,7 @@ extension AudioMediaArtworkExtension on AudioPlayerService {
         }
       }
       currentArtwork.value = artwork;
-      unawaited(_publishWavArtwork(song, artwork));
+      unawaited(_publishArtwork(song, artwork));
       // Push artwork directly to the background manager, bypassing all guards.
       // This is the primary mechanism for updating the background because this
       // function is confirmed to run on every song change.

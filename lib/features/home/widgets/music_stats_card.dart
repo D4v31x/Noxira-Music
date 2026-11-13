@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/services/audio_player_service.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../../../shared/models/models.dart';
-import '../../../shared/widgets/glassmorphic_container.dart';
+import '../../../shared/widgets/glass_panel.dart';
 import '../screens/listening_insights_screen.dart';
 
 /// Holds computed library statistics
@@ -63,8 +63,14 @@ class _LibraryStats {
   int get hashCode => totalSongs.hashCode ^ totalPlaylists.hashCode;
 }
 
-/// A minimalistic glassmorphic card showing music library statistics.
-/// Performance-aware: Respects device performance mode for blur effects.
+const _tabular = [FontFeature.tabularFigures()];
+
+/// Library overview on the home screen: the song count leads, with the total
+/// playing time next to it, and the artist, album and playlist counts in one
+/// divided row below. Opens the listening insights.
+///
+/// No backdrop blur: the app's blurred background already sits behind it and
+/// the card is always on screen.
 class MusicStatsCard extends StatefulWidget {
   const MusicStatsCard({super.key});
 
@@ -94,17 +100,15 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
     return _cachedStats!;
   }
 
-  String _formatNumber(int number) {
-    if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(1)}k';
-    }
+  static String _formatNumber(int number) {
+    if (number >= 10000) return '${(number / 1000).toStringAsFixed(0)}k';
+    if (number >= 1000) return '${(number / 1000).toStringAsFixed(1)}k';
     return number.toString();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context);
 
     // Selector only extracts the two integer counts — O(1) per notification.
     // shouldRebuild ensures the builder body only runs when counts change, at
@@ -118,6 +122,7 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
             Provider.of<AudioPlayerService>(context, listen: false);
         final stats = _getMemoizedStats(audioPlayerService.songs, counts.$2);
         return GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute<void>(
               builder: (_) => const ListeningInsightsScreen(),
@@ -127,84 +132,104 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
           onTapUp: (_) => setState(() => _pressed = false),
           onTapCancel: () => setState(() => _pressed = false),
           child: AnimatedScale(
-            scale: _pressed ? 0.97 : 1.0,
+            scale: _pressed ? 0.98 : 1.0,
             duration: const Duration(milliseconds: 80),
             curve: Curves.easeOut,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GlassmorphicContainer(
-                borderRadius: BorderRadius.circular(20),
-                blur: 15,
-                padding: const EdgeInsets.all(20),
+              child: GlassPanel(
+                radius: 22,
+                blur: false,
+                padding: const EdgeInsets.fromLTRB(20, 18, 14, 18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Minimal header
                     Row(
                       children: [
-                        Icon(
-                          Icons.library_music_outlined,
-                          color: isDark ? Colors.white70 : Colors.black54,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
+                        Expanded(
                           child: Text(
-                            AppLocalizations.of(context).yourLibrary,
+                            l10n.yourLibrary,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               fontFamily: FontConstants.fontFamily,
-                              color: isDark ? Colors.white70 : Colors.black54,
+                              color: Colors.white70,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        const Spacer(),
-                        Text(
-                          '${stats.totalHours}h ${stats.totalMinutes}m',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontFamily: FontConstants.fontFamily,
-                            color: isDark ? Colors.white38 : Colors.black38,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.insights_rounded,
-                          size: 16,
-                          color: isDark ? Colors.white38 : Colors.black38,
-                        ),
+                        const Icon(Icons.chevron_right_rounded,
+                            size: 22, color: Colors.white54),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    // Stats row - minimalistic
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _MinimalStat(
-                          value: _formatNumber(stats.totalSongs),
-                          label: AppLocalizations.of(context).songs,
-                          isDark: isDark,
+                    const SizedBox(height: 6),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            _formatNumber(stats.totalSongs),
+                            style: const TextStyle(
+                              fontSize: 36,
+                              height: 1.1,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: FontConstants.fontFamily,
+                              fontFeatures: _tabular,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.songs,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: FontConstants.fontFamily,
+                              color: Colors.white60,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${stats.totalHours}h ${stats.totalMinutes}m',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              fontFamily: FontConstants.fontFamily,
+                              fontFeatures: _tabular,
+                              color: Colors.white60,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          children: [
+                            _Figure(
+                              value: _formatNumber(stats.totalArtists),
+                              label: l10n.artists,
+                            ),
+                            const _Hairline(),
+                            _Figure(
+                              value: _formatNumber(stats.totalAlbums),
+                              label: l10n.albums,
+                              inset: true,
+                            ),
+                            const _Hairline(),
+                            _Figure(
+                              value: _formatNumber(stats.totalPlaylists),
+                              label: l10n.playlists,
+                              inset: true,
+                            ),
+                          ],
                         ),
-                        _MinimalStat(
-                          value: _formatNumber(stats.totalArtists),
-                          label: AppLocalizations.of(context).artists,
-                          isDark: isDark,
-                        ),
-                        _MinimalStat(
-                          value: _formatNumber(stats.totalAlbums),
-                          label: AppLocalizations.of(context).albums,
-                          isDark: isDark,
-                        ),
-                        _MinimalStat(
-                          value: _formatNumber(stats.totalPlaylists),
-                          label: AppLocalizations.of(context).playlists,
-                          isDark: isDark,
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -217,40 +242,58 @@ class _MusicStatsCardState extends State<MusicStatsCard> {
   }
 }
 
-class _MinimalStat extends StatelessWidget {
-  final String value;
-  final String label;
-  final bool isDark;
+class _Hairline extends StatelessWidget {
+  const _Hairline();
 
-  const _MinimalStat({
+  @override
+  Widget build(BuildContext context) =>
+      Container(width: 1, color: Colors.white.withValues(alpha: 0.12));
+}
+
+class _Figure extends StatelessWidget {
+  const _Figure({
     required this.value,
     required this.label,
-    required this.isDark,
+    this.inset = false,
   });
+
+  final String value;
+  final String label;
+
+  /// Figures after the first sit off the divider on their left.
+  final bool inset;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
+      child: Padding(
+        padding: EdgeInsets.only(left: inset ? 14 : 0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w600,
-                fontFamily: FontConstants.fontFamily,
-                color: isDark ? Colors.white : Colors.black87,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 22,
+                  height: 1.15,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: FontConstants.fontFamily,
+                  fontFeatures: _tabular,
+                  color: Colors.white,
+                ),
               ),
             ),
-            const SizedBox(height: 4),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 11,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 12,
                 fontFamily: FontConstants.fontFamily,
-                color: isDark ? Colors.white38 : Colors.black38,
+                color: Colors.white54,
               ),
             ),
           ],

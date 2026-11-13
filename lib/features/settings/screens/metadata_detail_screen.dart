@@ -18,6 +18,7 @@ import '../../../shared/widgets/glassmorphic_dialog.dart';
 import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/app_background.dart';
 import '../../../shared/widgets/expanding_player.dart';
+import '../../../shared/utils/audio_container.dart';
 import '../../../shared/utils/flac_repair.dart';
 import '../../../shared/utils/mp4_repair.dart';
 
@@ -112,7 +113,7 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
     } catch (_) {
       final tempDir = await getTemporaryDirectory();
       final copy = File(
-          '${tempDir.path}/aurora_read_${DateTime.now().millisecondsSinceEpoch}${_extension()}');
+          '${tempDir.path}/aurora_read_${DateTime.now().millisecondsSinceEpoch}${await _tempExtension(path)}');
       try {
         await File(path).copy(copy.path);
         if (!await Mp4Repair.trimTrailingGarbage(copy.path)) rethrow;
@@ -216,6 +217,17 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
       if (path.endsWith(ext)) return ext;
     }
     return '.audio';
+  }
+
+  /// Extension for a temporary copy of [path], derived from the file content
+  /// so mislabelled files and unusual extensions reach the right tag writer.
+  Future<String> _tempExtension(String path) async {
+    try {
+      final type = await AudioContainer.detect(path);
+      return AudioContainer.extensionFor(type) ?? _extension();
+    } catch (_) {
+      return _extension();
+    }
   }
 
   String _getFileFormat() {
@@ -532,15 +544,27 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
       final originalFile = File(widget.song.data);
       debugPrint('[META] Step 1 – source: ${widget.song.data}');
       debugPrint('[META] Step 1 – file exists: ${originalFile.existsSync()}');
+      final container = await AudioContainer.detect(widget.song.data);
+      if (AudioContainer.unsupported.contains(container)) {
+        throw UnsupportedError(
+            'Editing tags of ${container.name.toUpperCase()} files is not supported.');
+      }
       final tempDir = await getTemporaryDirectory();
       final tempFile = File(
-          '${tempDir.path}/aurora_meta_${widget.song.id}_${DateTime.now().millisecondsSinceEpoch}${_extension()}');
+          '${tempDir.path}/aurora_meta_${widget.song.id}_${DateTime.now().millisecondsSinceEpoch}${AudioContainer.extensionFor(container) ?? _extension()}');
       debugPrint('[META] Step 1 – temp target: ${tempFile.path}');
       await originalFile.copy(tempFile.path);
       debugPrint(
           '[META] Step 1 – copy OK, temp size: ${tempFile.lengthSync()} bytes');
       if (await Mp4Repair.trimTrailingGarbage(tempFile.path)) {
         debugPrint('[META] Step 1 – trimmed trailing non-MP4 data');
+      }
+      // The writer treats any file starting with ID3 as MP3, so drop the
+      // prefix from other containers (e.g. FLAC) to keep their own tags.
+      if (container != AudioContainerType.mpeg &&
+          container != AudioContainerType.aac &&
+          await AudioContainer.stripLeadingId3(tempFile.path)) {
+        debugPrint('[META] Step 1 – removed leading ID3 block');
       }
 
       // 2. Build the updated tag and write it to the temp copy.
@@ -611,7 +635,11 @@ class _MetadataDetailScreenState extends State<MetadataDetailScreen> {
       debugPrint('[META] Step 5 – scan OK');
 
       // 6. Re-read the updated tag from the file (source of truth).
-      _currentTag = await Haudiotagger.read(widget.song.data);
+      try {
+        _currentTag = await _readTag(widget.song.data);
+      } catch (e) {
+        debugPrint('[META] Re-reading saved tags failed: $e');
+      }
 
       // 7. Update the controllers so the screen shows the saved values.
       if (_currentTag != null) {

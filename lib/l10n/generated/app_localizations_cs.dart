@@ -2919,13 +2919,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get pkgPaletteGenerator => 'Získávání barev z obrázků';
 
   @override
-  String get pkgLottie => 'Animace Lottie pro Flutter';
-
-  @override
   String get pkgStaggeredAnimations => 'Postupné animace seznamů';
-
-  @override
-  String get pkgMesh => 'Pozadí se sítovými přechody';
 
   @override
   String get pkgHttp => 'HTTP požadavky pro volání API';
@@ -2952,9 +2946,6 @@ class AppLocalizationsCs extends AppLocalizations {
 
   @override
   String get pkgIntl => 'Internacionalizace a lokalizace';
-
-  @override
-  String get pkgVersion => 'Zpracování a porovnávání verzí';
 
   @override
   String get pkgPubSemver => 'Nástroje pro sémantické verzování';

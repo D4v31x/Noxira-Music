@@ -232,6 +232,12 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
   }
 
   // Playlist Management
+
+  /// The automatic playlists. They are rebuilt from the library on every
+  /// start, so they are never written to disk.
+  static bool _isAutoPlaylist(Playlist p) =>
+      p.id == kMostPlayedPlaylistId || p.id == kRecentlyAddedPlaylistId;
+
   Future<void> _loadPlaylists() async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/playlists.json');
@@ -239,7 +245,12 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
     if (await file.exists()) {
       try {
         final contents = await file.readAsString();
-        final json = jsonDecode(contents) as List;
+        // Playlists carry full song metadata, so the file can be several MB;
+        // decoding that on the UI isolate during start-up drops frames.
+        final decoded = contents.length > 64 * 1024
+            ? await compute(jsonDecode, contents)
+            : jsonDecode(contents);
+        final json = decoded as List;
         _playlists = json
             .map((playlistJson) => Playlist(
                   id: playlistJson['id'],
@@ -249,6 +260,14 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
                       .toList(),
                 ))
             .toList();
+
+        // Older versions saved the automatic playlists too (Recently Added is
+        // the whole library). Drop them and rewrite the file once, small.
+        if (_playlists.any(_isAutoPlaylist)) {
+          _playlists.removeWhere(_isAutoPlaylist);
+          _playlistsDirty = true;
+          _scheduleSavePlayCounts();
+        }
       } catch (e) {
         debugPrint('Error loading playlists.json (corrupt?): $e');
       }
@@ -260,6 +279,7 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
     final file = File('${directory.path}/playlists.json');
 
     final json = _playlists
+        .where((playlist) => !_isAutoPlaylist(playlist))
         .map((playlist) => {
               'id': playlist.id,
               'name': playlist.name,
@@ -622,65 +642,36 @@ extension AudioLibraryManagerExtension on AudioPlayerService {
   void _updateAutoPlaylists() {
     // Auto playlists are always enabled
 
-    // Create "Most Played" playlist
+    // "Most Played"
     unawaited(getMostPlayedTracks().then((tracks) {
-      final existingIndex =
-          _playlists.indexWhere((p) => p.id == kMostPlayedPlaylistId);
-
-      if (existingIndex != -1) {
-        // Update existing playlist
-        _playlists[existingIndex] = Playlist(
-          id: kMostPlayedPlaylistId,
-          name: 'Most Played',
-          songs: tracks,
-        );
-      } else {
-        // Create new playlist
-        _playlists.add(Playlist(
-          id: kMostPlayedPlaylistId,
-          name: 'Most Played',
-          songs: tracks,
-        ));
-      }
-
-      _playlistsDirty = true;
-      _scheduleSavePlayCounts();
-      _scheduleNotify();
+      _putAutoPlaylist(kMostPlayedPlaylistId, 'Most Played', tracks,
+          position: 0);
     }));
 
-    // Create "Recently Added" playlist
-    unawaited(_audioQuery
-        .querySongs(
-      sortType: SongSortType.DATE_ADDED,
-      orderType: OrderType.DESC_OR_GREATER,
-    )
-        .then((rawTracks) {
-      final tracks = FolderFilterService().filterSongs(rawTracks);
-      unawaited(_filterExistingFiles(tracks).then((existingTracks) {
-        final existingIndex =
-            _playlists.indexWhere((p) => p.id == kRecentlyAddedPlaylistId);
+    // "Recently Added", newest first. Built from the library that is already
+    // loaded (and already filtered and checked for missing files): asking
+    // MediaStore for the whole library a second time cost a full query, and
+    // the same songs again, on every start.
+    final recent = List<SongModel>.of(_songs)
+      ..sort((a, b) => (b.dateAdded ?? 0).compareTo(a.dateAdded ?? 0));
+    _putAutoPlaylist(kRecentlyAddedPlaylistId, 'Recently Added', recent,
+        position: 1);
+  }
 
-        if (existingIndex != -1) {
-          // Update existing playlist
-          _playlists[existingIndex] = Playlist(
-            id: kRecentlyAddedPlaylistId,
-            name: 'Recently Added',
-            songs: existingTracks,
-          );
-        } else {
-          // Create new playlist
-          _playlists.add(Playlist(
-            id: kRecentlyAddedPlaylistId,
-            name: 'Recently Added',
-            songs: existingTracks,
-          ));
-        }
-
-        _playlistsDirty = true;
-        _scheduleSavePlayCounts();
-        _scheduleNotify();
-      }));
-    }));
+  /// Replaces the automatic playlist [id], or adds it at [position] (Most
+  /// Played first, then Recently Added, ahead of the user's own playlists).
+  /// They are not saved, so the screens are told directly.
+  void _putAutoPlaylist(String id, String name, List<SongModel> songs,
+      {required int position}) {
+    final playlist = Playlist(id: id, name: name, songs: songs);
+    final index = _playlists.indexWhere((p) => p.id == id);
+    if (index != -1) {
+      _playlists[index] = playlist;
+    } else {
+      _playlists.insert(position.clamp(0, _playlists.length), playlist);
+    }
+    playlistsNotifier.value = List.from(_playlists);
+    _scheduleNotify();
   }
 
   // Ensure that _folderAccessCounts is correctly populated

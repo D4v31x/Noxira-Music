@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:iconoir_flutter/iconoir_flutter.dart' as iconoir;
 import 'package:permission_handler/permission_handler.dart';
 
@@ -94,27 +95,43 @@ class _PermissionsPageState extends State<PermissionsPage>
       _storageGranted = storage?.isGranted ?? true;
       _notificationGranted = notification.isGranted;
       _bluetoothGranted = bluetooth.isGranted;
-      _busy = false;
+      // Coming back from a system permission dialog also lands here while
+      // the next request is still to come, so this must not end "busy".
+      _busy = _requesting;
     });
   }
 
-  Future<void> _request(Permission permission) async {
-    if (_busy) return;
+  /// True while a request sequence is running. The plugin allows one request
+  /// at a time, and a second one throws, so every request goes through
+  /// [_runRequests].
+  bool _requesting = false;
+
+  Future<void> _runRequests(Future<void> Function() requests) async {
+    if (_requesting) return;
+    _requesting = true;
     setState(() => _busy = true);
-    await permission.request();
+    try {
+      await requests();
+    } on PlatformException catch (e) {
+      // Whatever was refused is picked up by the check below.
+      debugPrint('Permission request failed: ${e.message}');
+    } finally {
+      _requesting = false;
+    }
     if (!mounted) return;
     await _check();
   }
 
-  Future<void> _requestAll() async {
-    setState(() => _busy = true);
-    if (_showAudio) await Permission.audio.request();
-    if (_showStorage) await Permission.storage.request();
-    if (_showBluetooth) await Permission.bluetoothConnect.request();
-    await Permission.notification.request();
-    if (!mounted) return;
-    await _check();
-  }
+  Future<void> _request(Permission permission) => _runRequests(() async {
+        await permission.request();
+      });
+
+  Future<void> _requestAll() => _runRequests(() async {
+        if (_showAudio) await Permission.audio.request();
+        if (_showStorage) await Permission.storage.request();
+        if (_showBluetooth) await Permission.bluetoothConnect.request();
+        await Permission.notification.request();
+      });
 
   @override
   Widget build(BuildContext context) {

@@ -536,6 +536,25 @@ class ArtworkCacheService {
 }
 
 /// Stateful widget for displaying album artwork by album ID
+/// [provider] decoded at about the size it is drawn at, not at its full size.
+///
+/// The cached thumbnails are up to 600 px and a list tile shows 40-60 dp of
+/// one, so decoding the whole picture for every tile used around ten times
+/// the memory and decode time needed, and filled the image cache with far
+/// fewer pictures than it could hold. The 1.5x margin keeps a cover that is
+/// not square sharp once it is cropped to the tile, and the image is never
+/// enlarged beyond its real size.
+ImageProvider<Object> _decodedAt(
+  BuildContext context,
+  ImageProvider<Object> provider,
+  double logicalSize,
+) {
+  if (!logicalSize.isFinite || logicalSize <= 0) return provider;
+  final pixels =
+      (logicalSize * MediaQuery.devicePixelRatioOf(context) * 1.5).ceil();
+  return ResizeImage(provider, width: pixels);
+}
+
 class _AlbumArtworkWidget extends StatefulWidget {
   final int albumId;
   final double size;
@@ -607,7 +626,7 @@ class _AlbumArtworkWidgetState extends State<_AlbumArtworkWidget> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           image: DecorationImage(
-            image: _imageProvider!,
+            image: _decodedAt(context, _imageProvider!, widget.size),
             fit: BoxFit.cover,
           ),
         ),
@@ -721,7 +740,7 @@ class _ArtworkWidgetState extends State<_ArtworkWidget> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           image: DecorationImage(
-            image: _imageProvider!,
+            image: _decodedAt(context, _imageProvider!, widget.size),
             fit: BoxFit.cover,
           ),
         ),
@@ -816,7 +835,7 @@ class _ArtistArtworkWidgetState extends State<_ArtistArtworkWidget> {
         decoration: BoxDecoration(
           borderRadius: borderRadius,
           image: DecorationImage(
-            image: _imageProvider!,
+            image: _decodedAt(context, _imageProvider!, widget.size),
             fit: BoxFit.cover,
           ),
         ),
@@ -961,7 +980,7 @@ class _ArtistNameImageWidgetState extends State<_ArtistNameImageWidget> {
         decoration: BoxDecoration(
           borderRadius: borderRadius,
           image: DecorationImage(
-            image: _imageProvider!,
+            image: _decodedAt(context, _imageProvider!, widget.size),
             fit: BoxFit.cover,
           ),
         ),

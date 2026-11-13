@@ -683,6 +683,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         : audioOutputAccent;
   }
 
+  /// Shown for Bluetooth and for any other external output (wired, USB), so
+  /// the app never claims the phone speaker while headphones are playing.
+  bool get _showOutputIsland {
+    final current = AudioOutputService.instance.current;
+    return _bluetoothService.isBluetoothConnected ||
+        (current != null && current.kind != AudioOutputKind.speaker);
+  }
+
   Widget _buildOutputIslandContent(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final current = AudioOutputService.instance.current;
@@ -692,34 +700,41 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ? audioOutputLabel(l10n, current)
         : _bluetoothService.connectedDeviceName;
     final iconSize = MediaQuery.textScalerOf(context).scale(16);
-    final color = _islandColor;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        audioOutputIcon(kind, color: color, size: iconSize),
-        const SizedBox(width: 6),
-        Flexible(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            child: Text(
-              label,
-              key: ValueKey(label),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontFamily: FontConstants.fontFamily,
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w600,
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(end: _islandColor),
+      duration: const Duration(milliseconds: 300),
+      builder: (context, animated, _) {
+        final color = animated ?? _islandColor;
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            audioOutputIcon(kind, color: color, size: iconSize),
+            const SizedBox(width: 6),
+            Flexible(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder:
+                    (Widget child, Animation<double> animation) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: Text(
+                  label,
+                  key: ValueKey(label),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: FontConstants.fontFamily,
+                    fontSize: 12,
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
@@ -729,7 +744,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       listenable:
           Listenable.merge([_bluetoothService, AudioOutputService.instance]),
       builder: (context, child) {
-        final isConnected = _bluetoothService.isBluetoothConnected;
+        final isConnected = _showOutputIsland;
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -788,7 +803,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       child: Hero(
                           tag: audioOutputIslandHeroTag,
                           flightShuttleBuilder: audioOutputHeroShuttle,
-                          child: Container(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
                             constraints: BoxConstraints(
                               minHeight: 30,
                               maxWidth: MediaQuery.sizeOf(context).width - 48,

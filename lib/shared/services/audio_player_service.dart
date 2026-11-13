@@ -104,11 +104,14 @@ class AudioPlayerService extends ChangeNotifier {
   Set<String> _librarySet = {};
 
   // ── Real listen-time tracking ──────────────────────────────────────────────
-  // Tracks how far into the *current* song the user has actually listened, so
-  // that when the song is switched/stopped we record the real listened time
-  // (e.g. stopped at 1:25 → 85000ms) rather than the song's full length.
+  // Adds up the time the *current* song has actually been listened to: the
+  // steps of continuous playback, so a seek or a pause adds nothing. It is
+  // committed as the song plays (see _commitListenProgress), when it is paused
+  // and when it ends, so it survives the app being closed mid-song.
   String? _currentListenTrackId;
-  int _currentListenMaxPositionMs = 0;
+  int _currentListenedMs = 0;
+  int _lastListenPositionMs = 0;
+  int _lastCommittedListenedMs = 0;
 
   // Debounce timer for batching notifications
   Timer? _notifyDebounceTimer;
@@ -116,6 +119,7 @@ class AudioPlayerService extends ChangeNotifier {
 
   // Batch save timer to reduce disk I/O
   Timer? _saveDebounceTimer;
+  Timer? _saveQueueTimer;
   bool _playcountsDirty = false;
   bool _playlistsDirty = false;
 
@@ -341,21 +345,24 @@ class AudioPlayerService extends ChangeNotifier {
     // is meant to persist — critical for keeping the foreground service
     // alive through the full playback session.
     final session = await AudioSession.instance;
-    await session.configure(const AudioSessionConfiguration(
-      avAudioSessionCategory: AVAudioSessionCategory.playback,
-      avAudioSessionCategoryOptions:
-          AVAudioSessionCategoryOptions.allowBluetooth,
-      avAudioSessionMode: AVAudioSessionMode.defaultMode,
-      androidAudioAttributes: AndroidAudioAttributes(
-        contentType: AndroidAudioContentType.music,
-        usage: AndroidAudioUsage.media,
-      ),
-      androidWillPauseWhenDucked: true,
-    ));
-
-    await _loadPlayCounts();
-    await _loadPlaylists();
-    await _loadSettings();
+    // The three file reads are independent of each other and of the session
+    // set-up, so they run together instead of one after another.
+    await Future.wait<void>([
+      session.configure(const AudioSessionConfiguration(
+        avAudioSessionCategory: AVAudioSessionCategory.playback,
+        avAudioSessionCategoryOptions:
+            AVAudioSessionCategoryOptions.allowBluetooth,
+        avAudioSessionMode: AVAudioSessionMode.defaultMode,
+        androidAudioAttributes: AndroidAudioAttributes(
+          contentType: AndroidAudioContentType.music,
+          usage: AndroidAudioUsage.media,
+        ),
+        androidWillPauseWhenDucked: true,
+      )),
+      _loadPlayCounts(),
+      _loadPlaylists(),
+      _loadSettings(),
+    ]);
     if (_disposed) return;
 
     // Initialize home screen widget
@@ -445,14 +452,20 @@ class AudioPlayerService extends ChangeNotifier {
       _scheduleNotify();
     });
 
-    // Track the furthest position reached in the current song so that the real
-    // listened time can be recorded when the song is switched/stopped. Using
-    // the max position keeps the outgoing song's value intact even after the
-    // position stream resets to ~0 for the next track.
+    // Add up the time actually listened to the current song. A step between
+    // two position updates counts only when it is small and forward, which is
+    // continuous playback: a seek is a big jump, a new track or a loop is a
+    // step back, and a pause emits nothing. (The furthest position reached
+    // would count a seek to the end as the whole song.)
     _maxPositionSub = _audioPlayer.positionStream.listen((position) {
       final ms = position.inMilliseconds;
-      if (ms > _currentListenMaxPositionMs) {
-        _currentListenMaxPositionMs = ms;
+      final step = ms - _lastListenPositionMs;
+      _lastListenPositionMs = ms;
+      if (step > 0 && step <= 10000) {
+        _currentListenedMs += step;
+        if (_currentListenedMs - _lastCommittedListenedMs >= 15000) {
+          _commitListenProgress();
+        }
       }
     });
 
@@ -463,6 +476,12 @@ class AudioPlayerService extends ChangeNotifier {
         _isPlaying = playing;
         isPlayingNotifier.value = playing;
         _scheduleNotify();
+      }
+      // Pausing is the usual last moment before the app is closed, so write
+      // the listened time out now rather than after the save delay.
+      if (!playing) {
+        _commitListenProgress();
+        unawaited(_smartSuggestions.flush());
       }
     });
 
@@ -574,13 +593,20 @@ class AudioPlayerService extends ChangeNotifier {
   /// stops. Pass [nextTrackId] when a new song is starting (use null when
   /// playback is just stopping) so the next song is counted separately.
   void _finalizeListenTime({String? nextTrackId}) {
-    final outgoingId = _currentListenTrackId;
-    if (outgoingId != null) {
-      _smartSuggestions.recordListenDuration(
-          outgoingId, _currentListenMaxPositionMs);
-    }
+    _commitListenProgress();
     _currentListenTrackId = nextTrackId;
-    _currentListenMaxPositionMs = 0;
+    _currentListenedMs = 0;
+    _lastCommittedListenedMs = 0;
+    _lastListenPositionMs = 0;
+  }
+
+  /// Hand the listened time so far to the insights data. Safe to repeat: the
+  /// service only applies an increase.
+  void _commitListenProgress() {
+    final id = _currentListenTrackId;
+    if (id == null || _currentListenedMs <= _lastCommittedListenedMs) return;
+    _lastCommittedListenedMs = _currentListenedMs;
+    unawaited(_smartSuggestions.recordListenDuration(id, _currentListenedMs));
   }
 
   void _onSongChangedForWidget() {
@@ -780,6 +806,8 @@ class AudioPlayerService extends ChangeNotifier {
 
     // Save any pending data before the audio player is disposed — saveQueueState
     // reads _audioPlayer.position, so it must run before _audioPlayer.dispose().
+    _commitListenProgress();
+    unawaited(_smartSuggestions.flush());
     if (_playcountsDirty) {
       _savePlayCounts();
     }
@@ -789,7 +817,8 @@ class AudioPlayerService extends ChangeNotifier {
 
     // Best-effort: persist the final playback position before the player dies.
     // (The current-song index was already saved on every auto-advance / manual play.)
-    saveQueueState();
+    _saveQueueTimer?.cancel();
+    unawaited(_writeQueueState());
 
     _crossfadeWatchSub?.cancel();
     _crossfadeRampTimer?.cancel();

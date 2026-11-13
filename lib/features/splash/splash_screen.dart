@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../shared/services/audio_player_service.dart';
 import '../../shared/services/artist_aggregator_service.dart';
 import '../../shared/services/artwork_cache_service.dart';
+import '../../shared/services/smart_suggestions_service.dart';
 import '../../shared/services/user_preferences.dart';
 import '../../shared/services/rebrand_notice_service.dart';
 import '../../shared/services/logging_service.dart';
@@ -19,6 +22,9 @@ import '../../shared/providers/performance_mode_provider.dart';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../shared/widgets/expanding_player.dart';
+
+/// Where the splash hands over to.
+enum _SplashDestination { onboarding, rebrand, home }
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -44,7 +50,6 @@ class _SplashScreenState extends State<SplashScreen>
   final List<String> _completedTasks = [];
   double _progress = 0.0;
   final List<String> _warnings = [];
-  static const Duration _minimumSplashDuration = Duration.zero;
 
   @override
   void initState() {
@@ -61,18 +66,38 @@ class _SplashScreenState extends State<SplashScreen>
     if (!_didInitialize) {
       _didInitialize = true;
 
-      // Let the logo animation get its first frames before heavy loading
-      // competes for the UI thread.
+      // Decide where the app goes next right away: it is a couple of reads,
+      // and the answer is needed the moment the logo has finished.
+      _destination = _resolveDestination();
+
+      // Start loading once the logo has had its first frame, so the whole
+      // load runs under the animation (not after it) without competing with
+      // its opening frames.
       WidgetsBinding.instance.addPostFrameCallback((_) async {
-        await Future<void>.delayed(const Duration(milliseconds: 300));
-        if (mounted) _initializeApp();
+        await WidgetsBinding.instance.endOfFrame;
+        if (mounted) unawaited(_initializeApp());
       });
     }
   }
 
+  /// Where the splash hands over to, worked out while the logo plays.
+  late final Future<_SplashDestination> _destination;
+
+  Future<_SplashDestination> _resolveDestination() async {
+    final isFirstTime = await UserPreferences.isFirstTimeUser();
+    if (isFirstTime) return _SplashDestination.onboarding;
+    final handled = await RebrandNoticeService.hasBeenHandled();
+    return handled ? _SplashDestination.home : _SplashDestination.rebrand;
+  }
+
+  /// Loads everything the home screen needs while the logo animation plays.
+  ///
+  /// The steps that depend on nothing start together; the two that need the
+  /// library (the home suggestions and the artwork pre-cache) start the
+  /// moment it is ready and run side by side. The wait is the longest chain,
+  /// not the sum of the steps, and most of it hides behind the animation.
   Future<void> _initializeApp() async {
     try {
-      final startedAt = DateTime.now();
       final tasks = <(
         String,
         String Function(AppLocalizations),
@@ -100,52 +125,62 @@ class _SplashScreenState extends State<SplashScreen>
           _finalizeInitialization
         ),
       ];
+      final done = List<bool>.filled(tasks.length, false);
 
-      for (int i = 0; i < tasks.length; i++) {
+      void showProgress() {
         if (!mounted) return;
-
-        final task = tasks[i];
-        // Batch update: progress, current task, and completed tasks together
+        final next = done.indexOf(false);
         setState(() {
-          _currentTask = task.$2;
-          _progress = i / tasks.length;
+          _currentTask = next == -1 ? null : tasks[next].$2;
+          _progress = done.where((d) => d).length / tasks.length;
         });
+      }
 
+      Future<void> run(int i, {Future<void>? after}) async {
+        final task = tasks[i];
         try {
+          // `after` is another run(), which never throws.
+          if (after != null) await after;
+          if (!mounted) return;
           await task.$3();
-          if (mounted) {
-            // Batch completed task update
-            setState(() {
-              _completedTasks.add(task.$1);
-            });
-          }
+          if (mounted) _completedTasks.add(task.$1);
         } catch (e) {
           LoggingService.error('Task failed: ${task.$1}', 'SplashScreen', e);
-          // Only show warnings for critical errors
-          if (task.$1 != 'Setting up Analytics') {
-            if (mounted) {
-              // Batch update: warnings and connectivity issues together
-              setState(() {
-                _warnings.add('Issue with ${task.$1.toLowerCase()}');
-              });
-            }
+          if (mounted) {
+            setState(() {
+              _warnings.add('Issue with ${task.$1.toLowerCase()}');
+            });
           }
-          continue;
+        } finally {
+          done[i] = true;
+          showProgress();
         }
       }
 
-      await _waitForMinimumSplashDuration(startedAt);
+      setState(() {
+        _currentTask = tasks.first.$2;
+        _progress = 0;
+      });
 
-      if (mounted) {
-        // Batch final state update
-        setState(() {
-          _currentTask = null;
-          _progress = 1.0;
-          _isDataLoaded = true;
-        });
-        // Check if animation is also complete, then transition
-        _checkAndTransition();
-      }
+      // Read the listening history alongside the library query instead of
+      // when the home suggestions first ask for it.
+      unawaited(SmartSuggestionsService().initialize());
+
+      final services = run(0);
+      final library = run(1);
+      final finalPreparations = run(4);
+      final home = run(2, after: library);
+      final artwork = run(3, after: library);
+      await Future.wait([services, library, finalPreparations, home, artwork]);
+
+      if (!mounted) return;
+      setState(() {
+        _currentTask = null;
+        _progress = 1.0;
+        _isDataLoaded = true;
+      });
+      // Check if animation is also complete, then transition
+      _checkAndTransition();
     } catch (e) {
       LoggingService.error('Initialization error', 'SplashScreen', e);
       if (!_warnings.contains('Some features may be limited')) {
@@ -281,33 +316,26 @@ class _SplashScreenState extends State<SplashScreen>
     await _preWarmHomeScreen();
   }
 
-  Future<void> _waitForMinimumSplashDuration(DateTime startedAt) async {
-    final elapsed = DateTime.now().difference(startedAt);
-    final remaining = _minimumSplashDuration - elapsed;
-    if (remaining > Duration.zero) {
-      await Future.delayed(remaining);
-    }
-  }
-
   /// Pre-warm home screen components to prevent transition lag
   Future<void> _preWarmHomeScreen() async {
     if (!mounted) return;
 
     try {
-      // Pre-cache essential images
-      final homeImages = [
+      // Pre-cache the images the home and library screens draw straight away,
+      // all at once.
+      const homeImages = [
         'assets/images/UI/liked.png',
+        'assets/images/UI/mostplayed.png',
+        'assets/images/UI/recentlyadded.png',
+        'assets/images/UI/unknown.png',
         'assets/images/logo/default_art.png',
       ];
 
-      for (final image in homeImages) {
-        if (!mounted) return;
-        try {
-          await precacheImage(AssetImage(image), context);
-        } catch (e) {
-          // Continue if individual image fails
-        }
-      }
+      await Future.wait([
+        for (final image in homeImages)
+          if (mounted)
+            precacheImage(AssetImage(image), context).catchError((_) {}),
+      ]);
 
       // Pre-initialize providers that home screen will need
       if (mounted) {
@@ -401,19 +429,18 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _performActualTransition() async {
-    final bool isFirstTime = await UserPreferences.isFirstTimeUser();
-    final bool showRebrand =
-        !isFirstTime && !await RebrandNoticeService.hasBeenHandled();
+    final destination = await _destination;
     // Marked now: fresh installs never see the page, updaters see it once.
     await RebrandNoticeService.markHandled();
 
     if (mounted) {
-      if (isFirstTime) {
-        _navigateToScreenWithHero(const OnboardingScreen());
-      } else if (showRebrand) {
-        _navigateToScreenWithHero(const RebrandWelcomeScreen());
-      } else {
-        _navigateToScreenWithHero(const HomeScreen());
+      switch (destination) {
+        case _SplashDestination.onboarding:
+          _navigateToScreenWithHero(const OnboardingScreen());
+        case _SplashDestination.rebrand:
+          _navigateToScreenWithHero(const RebrandWelcomeScreen());
+        case _SplashDestination.home:
+          _navigateToScreenWithHero(const HomeScreen());
       }
     }
   }
@@ -492,6 +519,10 @@ class _SplashScreenState extends State<SplashScreen>
                   child: OnboardingBackground(child: SizedBox.expand()),
                 ),
 
+                // Not shown: lays the app's font weights out once so they are
+                // already loaded when the home screen first draws its text.
+                const Offstage(child: _FontWarmUp()),
+
                 // ── Logo (centre) ─────────────────────────────────────────
                 Center(
                   child: Transform.scale(
@@ -554,6 +585,39 @@ class _SplashScreenState extends State<SplashScreen>
           );
         },
       ),
+    );
+  }
+}
+
+// ── Font warm-up ──────────────────────────────────────────────────────────────
+/// The font files are loaded the first time text uses them. The splash only
+/// uses the regular weight, so the others (the home screen's titles and
+/// numbers) would load while its first frame is being built. Laying them out
+/// here, off screen, moves that to the time the logo is playing.
+class _FontWarmUp extends StatelessWidget {
+  const _FontWarmUp();
+
+  @override
+  Widget build(BuildContext context) {
+    TextStyle style(FontWeight weight, {bool italic = false}) => TextStyle(
+          fontFamily: FontConstants.fontFamily,
+          fontWeight: weight,
+          fontStyle: italic ? FontStyle.italic : FontStyle.normal,
+        );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final weight in const [
+          FontWeight.w400,
+          FontWeight.w500,
+          FontWeight.w600,
+          FontWeight.w700,
+        ]) ...[
+          Text('Aa 0123', style: style(weight)),
+          Text('Aa 0123', style: style(weight, italic: true)),
+        ],
+      ],
     );
   }
 }

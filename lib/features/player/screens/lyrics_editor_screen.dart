@@ -239,8 +239,8 @@ class _LyricsEditorScreenState extends State<LyricsEditorScreen> {
 
   Future<void> _importLrcFile() async {
     try {
-      final result = await FilePicker.pickFiles();
-      final path = result?.files.single.path;
+      final result = await FilePicker.pickFile();
+      final path = result?.path;
       if (path == null) return;
       if (!path.toLowerCase().endsWith('.lrc')) {
         if (!mounted) return;

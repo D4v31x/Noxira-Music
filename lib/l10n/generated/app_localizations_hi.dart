@@ -2908,13 +2908,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get pkgPaletteGenerator => 'छवियों से रंग निकालें';
 
   @override
-  String get pkgLottie => 'Flutter के लिए Lottie एनिमेशन';
-
-  @override
   String get pkgStaggeredAnimations => 'सूचियों के क्रमिक एनिमेशन';
-
-  @override
-  String get pkgMesh => 'मेश ग्रेडिएंट पृष्ठभूमि';
 
   @override
   String get pkgHttp => 'API कॉल के लिए HTTP अनुरोध';
@@ -2939,9 +2933,6 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get pkgIntl => 'अंतर्राष्ट्रीयकरण और स्थानीयकरण';
-
-  @override
-  String get pkgVersion => 'संस्करण पार्स करना और तुलना';
 
   @override
   String get pkgPubSemver => 'सिमेंटिक वर्शनिंग उपयोगिताएँ';

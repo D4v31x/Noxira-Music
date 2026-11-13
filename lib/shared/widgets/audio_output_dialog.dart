@@ -11,6 +11,7 @@ import '../services/audio_output_service.dart';
 import '../services/bluetooth_service.dart';
 import '../services/device_performance_service.dart';
 import '../services/notification_manager.dart';
+import 'glass_fill.dart';
 import 'glass_panel.dart';
 
 const Color _kAccent = Color(0xFF10B981);
@@ -128,62 +129,94 @@ Widget audioOutputHeroShuttle(
   final panelSize = (panelContext.findRenderObject() as RenderBox?)?.size;
   final content = panelChild is _AudioOutputPanel ? panelChild.content : null;
 
+  // The island's own outline (white on the phone, green on another device),
+  // so the flight starts from what is actually on screen.
+  var islandBorder = BorderSide(
+    color: Colors.white.withValues(alpha: 0.22),
+    width: 1.3,
+  );
+  final islandDecoration =
+      islandChild is AnimatedContainer ? islandChild.decoration : null;
+  if (islandDecoration is BoxDecoration &&
+      islandDecoration.border is Border &&
+      (islandDecoration.border as Border).top.style == BorderStyle.solid) {
+    islandBorder = (islandDecoration.border as Border).top;
+  }
+
   return AnimatedBuilder(
     animation: animation,
     builder: (context, _) {
       final t = Curves.easeInOut.transform(animation.value);
-      final radius = BorderRadius.circular(ui.lerpDouble(20, 28, t)!);
+      final radiusValue = ui.lerpDouble(20, 28, t)!;
+      final radius = BorderRadius.circular(radiusValue);
       final panelOpacity =
           const Interval(0.35, 1, curve: Curves.easeOut).transform(t);
       final islandOpacity =
           1 - const Interval(0, 0.35, curve: Curves.easeIn).transform(t);
+      final outlineOpacity =
+          1 - const Interval(0, 0.6, curve: Curves.easeOut).transform(t);
 
       // Material gives the island's text a text style (no underline).
       return Material(
         type: MaterialType.transparency,
         child: ClipRRect(
           borderRadius: radius,
-          // The backdrop blur grows with the flight instead of switching on
-          // when the panel lands.
+          // Same glass as the finished panel (blur, sheen and light edge) from
+          // the first frame, so nothing changes when the flight lands.
           child: BackdropFilter(
-            filter: ui.ImageFilter.blur(sigmaX: 22 * t, sigmaY: 22 * t),
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: Color.lerp(
-                  Colors.transparent,
-                  Colors.white.withValues(alpha: 0.14),
-                  t,
+            filter: ui.ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+            child: CustomPaint(
+              foregroundPainter:
+                  GlassEdgePainter(radius: radiusValue, alpha: 1),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: radius,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withValues(alpha: 0.17),
+                      Colors.white.withValues(alpha: 0.05),
+                    ],
+                  ),
                 ),
-                borderRadius: radius,
-                border: Border.all(
-                  color: Color.lerp(
-                      _kAccent, Colors.white.withValues(alpha: 0.28), t)!,
-                  width: 1.5,
-                ),
-              ),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (islandOpacity > 0)
-                    Opacity(
-                      opacity: islandOpacity,
-                      child: Center(child: islandChild),
-                    ),
-                  if (content != null && panelSize != null && panelOpacity > 0)
-                    Opacity(
-                      opacity: panelOpacity,
-                      // Laid out at its final size and clipped by the growing
-                      // surface.
-                      child: OverflowBox(
-                        alignment: Alignment.topCenter,
-                        minWidth: panelSize.width,
-                        maxWidth: panelSize.width,
-                        minHeight: panelSize.height,
-                        maxHeight: panelSize.height,
-                        child: content,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (outlineOpacity > 0)
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: radius,
+                          border: Border.all(
+                            color: islandBorder.color.withValues(
+                                alpha: islandBorder.color.a * outlineOpacity),
+                            width: islandBorder.width,
+                          ),
+                        ),
                       ),
-                    ),
-                ],
+                    if (islandOpacity > 0)
+                      Opacity(
+                        opacity: islandOpacity,
+                        child: Center(child: islandChild),
+                      ),
+                    if (content != null &&
+                        panelSize != null &&
+                        panelOpacity > 0)
+                      Opacity(
+                        opacity: panelOpacity,
+                        // Laid out at its final size and clipped by the growing
+                        // surface.
+                        child: OverflowBox(
+                          alignment: Alignment.topCenter,
+                          minWidth: panelSize.width,
+                          maxWidth: panelSize.width,
+                          minHeight: panelSize.height,
+                          maxHeight: panelSize.height,
+                          child: content,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -571,7 +604,9 @@ class AudioOutputIsland extends StatelessWidget {
           child: Hero(
             tag: audioOutputPlayerIslandHeroTag,
             flightShuttleBuilder: audioOutputHeroShuttle,
-            child: Container(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
               constraints: BoxConstraints(maxWidth: maxWidth, minHeight: 38),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
@@ -584,29 +619,36 @@ class AudioOutputIsland extends StatelessWidget {
                   width: 1.3,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  audioOutputIcon(kind, color: color, size: 18),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      child: Text(
-                        label,
-                        key: ValueKey(label),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: FontConstants.fontFamily,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: color,
+              child: TweenAnimationBuilder<Color?>(
+                tween: ColorTween(end: color),
+                duration: const Duration(milliseconds: 300),
+                builder: (context, animated, _) {
+                  final shade = animated ?? color;
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      audioOutputIcon(kind, color: shade, size: 18),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          child: Text(
+                            label,
+                            key: ValueKey(label),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: FontConstants.fontFamily,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: shade,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
+                    ],
+                  );
+                },
               ),
             ),
           ),

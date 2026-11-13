@@ -1,11 +1,52 @@
 part of '../audio_player_service.dart';
 
+/// What the background isolate hands back when the saved queue is read.
+class _DecodedQueueState {
+  const _DecodedQueueState(this.json, this.queueExists, this.originalExists);
+
+  final Map<String, dynamic> json;
+  final List<bool> queueExists;
+  final List<bool> originalExists;
+}
+
+/// Runs in a background isolate: decodes the saved queue and checks which of
+/// its files are still there. For a big queue that is thousands of file
+/// checks and a multi-MB document, which on the UI isolate delays start-up.
+_DecodedQueueState _decodeQueueState(String contents) {
+  final json = jsonDecode(contents) as Map<String, dynamic>;
+  List<bool> exist(Object? maps) => [
+        for (final m in (maps as List? ?? const [])) _songFileExists(m),
+      ];
+  return _DecodedQueueState(
+      json, exist(json['queue']), exist(json['originalQueue']));
+}
+
+bool _songFileExists(Object? songMap) {
+  try {
+    return File((songMap as Map)['_data'] as String).existsSync();
+  } catch (_) {
+    return false;
+  }
+}
+
 extension AudioQueuePersistenceExtension on AudioPlayerService {
   // MARK: - Queue State Persistence
 
   /// Persists the current queue (songs, index, position, shuffle/repeat state)
   /// to disk so it can be restored on the next app launch.
+  ///
+  /// Called on every track change and queue edit. Writing means encoding the
+  /// whole queue (twice, with the original order), which is real work on the
+  /// UI isolate and would run at each skip, so changes that follow each other
+  /// share one write a moment later.
   Future<void> saveQueueState() async {
+    _saveQueueTimer?.cancel();
+    _saveQueueTimer = Timer(const Duration(milliseconds: 1500), () {
+      unawaited(_writeQueueState());
+    });
+  }
+
+  Future<void> _writeQueueState() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/$kQueueStateFileName');
@@ -38,7 +79,12 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
       if (!await file.exists()) return;
 
       final contents = await file.readAsString();
-      final json = jsonDecode(contents) as Map<String, dynamic>;
+      // A small queue is quicker to decode in place than to hand to an
+      // isolate; a big one (thousands of songs) is what the isolate is for.
+      final decodedState = contents.length > 64 * 1024
+          ? await compute(_decodeQueueState, contents)
+          : _decodeQueueState(contents);
+      final json = decodedState.json;
       if (_disposed || !identical(_playlist, initialPlaylist)) {
         LoggingService.debug(
             'Queue restore superseded by playback', 'QueueRestore');
@@ -48,24 +94,22 @@ extension AudioQueuePersistenceExtension on AudioPlayerService {
       final queueMaps = json['queue'] as List? ?? [];
       if (queueMaps.isEmpty) return;
 
-      // Reconstruct songs and filter out any that no longer exist on disk.
-      List<SongModel> buildQueueFromMaps(List maps) {
-        return maps
-            .map((m) => SongModel(Map<String, dynamic>.from(m as Map)))
-            .where((song) {
-          try {
-            return File(song.data).existsSync();
-          } catch (_) {
-            return false;
-          }
-        }).toList();
+      // Reconstruct songs, leaving out any whose file no longer exists (the
+      // isolate already checked which).
+      List<SongModel> buildQueueFromMaps(List maps, List<bool> exists) {
+        return [
+          for (var i = 0; i < maps.length; i++)
+            if (i < exists.length && exists[i])
+              SongModel(Map<String, dynamic>.from(maps[i] as Map)),
+        ];
       }
 
-      final queue = buildQueueFromMaps(queueMaps);
+      final queue = buildQueueFromMaps(queueMaps, decodedState.queueExists);
       if (queue.isEmpty) return;
 
       final originalQueueMaps = json['originalQueue'] as List? ?? [];
-      final originalQueue = buildQueueFromMaps(originalQueueMaps);
+      final originalQueue =
+          buildQueueFromMaps(originalQueueMaps, decodedState.originalExists);
 
       final savedIndex =
           (json['currentIndex'] as int? ?? 0).clamp(0, queue.length - 1);

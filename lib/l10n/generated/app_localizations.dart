@@ -5296,23 +5296,11 @@ abstract class AppLocalizations {
   /// **'Extract colors from images'**
   String get pkgPaletteGenerator;
 
-  /// No description provided for @pkgLottie.
-  ///
-  /// In en, this message translates to:
-  /// **'Lottie animations for Flutter'**
-  String get pkgLottie;
-
   /// No description provided for @pkgStaggeredAnimations.
   ///
   /// In en, this message translates to:
   /// **'Staggered list animations'**
   String get pkgStaggeredAnimations;
-
-  /// No description provided for @pkgMesh.
-  ///
-  /// In en, this message translates to:
-  /// **'Mesh gradient backgrounds'**
-  String get pkgMesh;
 
   /// No description provided for @pkgHttp.
   ///
@@ -5361,12 +5349,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Internationalization and localization'**
   String get pkgIntl;
-
-  /// No description provided for @pkgVersion.
-  ///
-  /// In en, this message translates to:
-  /// **'Version parsing and comparison'**
-  String get pkgVersion;
 
   /// No description provided for @pkgPubSemver.
   ///

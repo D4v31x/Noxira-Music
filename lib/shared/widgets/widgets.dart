@@ -11,17 +11,14 @@
 library;
 
 // Core widgets
-export 'common_screen_scaffold.dart';
 export 'glassmorphic_container.dart';
 export 'glassmorphic_card.dart';
-export 'pill_button.dart';
 export 'optimized_tiles.dart';
 export 'shimmer_loading.dart';
 export 'outline_indicator.dart';
 export 'auto_scroll_text.dart';
 export 'artist_card.dart';
 export 'music_metadata_widget.dart';
-export 'responsive_scaffold.dart';
 export 'expanding_player.dart';
 export 'toast_notification.dart';
 export 'song_picker_sheet.dart';
@@ -42,8 +39,4 @@ export 'packages_dialog.dart';
 // Backgrounds and visual effects
 export 'app_background.dart';
 export 'animated_artwork_background.dart';
-export 'grainy_gradient_background.dart';
 export 'animated_progress_line.dart';
-
-// Debug and performance
-export 'optimized_widgets.dart';

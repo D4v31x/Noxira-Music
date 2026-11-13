@@ -893,8 +893,8 @@ class _PlaylistsScreenListState extends State<PlaylistsScreenList> {
       BuildContext context, AudioPlayerService audioService) async {
     final loc = AppLocalizations.of(context);
     try {
-      final result = await FilePicker.pickFiles();
-      final path = result?.files.single.path;
+      final result = await FilePicker.pickFile();
+      final path = result?.path;
       if (path == null) return;
       final lower = path.toLowerCase();
       if (!lower.endsWith('.m3u') && !lower.endsWith('.m3u8')) {

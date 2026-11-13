@@ -20,12 +20,23 @@ class SmartSuggestionsService {
   static final SmartSuggestionsService _instance =
       SmartSuggestionsService._internal();
   factory SmartSuggestionsService() => _instance;
-  SmartSuggestionsService._internal();
+  SmartSuggestionsService._internal()
+      : _directoryProvider = getApplicationDocumentsDirectory;
+
+  /// A service that keeps its data in a directory of the caller's choosing.
+  @visibleForTesting
+  SmartSuggestionsService.forTesting(this._directoryProvider);
+
+  final Future<Directory> Function() _directoryProvider;
 
   final OnAudioQuery _audioQuery = OnAudioQuery();
 
   // Listening history with timestamps
   List<ListeningEvent> _listeningHistory = [];
+
+  // Real time spent listening over the whole life of the data, in ms. The
+  // history is capped, so summing it would shrink as old events drop off.
+  int _totalListenMs = 0;
 
   // Play counts by time of day (0-23 hours)
   Map<int, Map<String, int>> _hourlyTrackCounts = {};
@@ -49,6 +60,7 @@ class SmartSuggestionsService {
   List<String> _recentlyPlayedArtists = [];
 
   bool _isLoaded = false;
+  Future<void>? _initFuture;
 
   // Performance optimizations
   final Memoizer<Future<List<SongModel>>> _suggestionsMemoizer =
@@ -59,16 +71,26 @@ class SmartSuggestionsService {
   // Cache suggestion results for 5 minutes
   static const _suggestionCacheDuration = Duration(minutes: 5);
 
-  /// Initialize and load saved data
-  Future<void> initialize() async {
-    if (_isLoaded) return;
-    await _loadData();
-    _isLoaded = true;
+  /// Load the saved data. Safe to call from anywhere, any number of times:
+  /// everyone shares one load, and recording waits for it, so a play that
+  /// happens before the history has loaded is not lost or saved over it.
+  Future<void> initialize() => _initFuture ??= _loadData().whenComplete(() {
+        _isLoaded = true;
+      });
+
+  /// Write any pending changes now instead of after the save delay. Call when
+  /// playback pauses or the app is going away.
+  Future<void> flush() async {
+    if (_initFuture == null) return;
+    await _initFuture;
+    _saveDebouncer.dispose();
+    await _saveData();
   }
 
   /// Record a listening event
   Future<void> recordPlay(SongModel song,
       {bool wasSkipped = false, int listenDurationMs = 0}) async {
+    await initialize();
     final now = DateTime.now();
     final hour = now.hour;
     final weekday = now.weekday - 1; // Convert to 0-indexed
@@ -150,22 +172,27 @@ class SmartSuggestionsService {
   }
 
   /// Record the real listened duration (in ms) for the most recent play of
-  /// [trackId]. This is the actual time the user spent listening to the song
-  /// (e.g. they stopped/skipped at 1:25), NOT the song's full length. Updates
-  /// the most recent matching event so recap/insight minutes reflect real
-  /// listening time.
-  void recordListenDuration(String trackId, int listenDurationMs) {
-    if (listenDurationMs <= 0 || _listeningHistory.isEmpty) return;
-    // Find the most recent non-skipped event for this track and set its
-    // actual listened duration.
+  /// [trackId]. This is the time actually spent listening (e.g. they stopped
+  /// at 1:25), NOT the song's full length. Safe to call repeatedly as the
+  /// listened time grows: only an increase is applied, and the lifetime total
+  /// moves by the difference.
+  Future<void> recordListenDuration(
+      String trackId, int listenDurationMs) async {
+    if (listenDurationMs <= 0) return;
+    await initialize();
+    if (_listeningHistory.isEmpty) return;
+    // Find the most recent non-skipped event for this track.
     for (var i = _listeningHistory.length - 1; i >= 0; i--) {
       final e = _listeningHistory[i];
       if (e.trackId == trackId && !e.wasSkipped) {
-        e.listenDurationMs = listenDurationMs;
+        if (listenDurationMs > e.listenDurationMs) {
+          _totalListenMs += listenDurationMs - e.listenDurationMs;
+          e.listenDurationMs = listenDurationMs;
+          _saveDebouncer.call(() => _saveData());
+        }
         break;
       }
     }
-    _saveDebouncer.call(() => _saveData());
   }
 
   /// Discard the cached suggestions so the next call recomputes with the
@@ -457,13 +484,9 @@ class SmartSuggestionsService {
   /// Total non-skipped listens across all tracks.
   int get totalListens => _trackPlayCounts.values.fold(0, (a, b) => a + b);
 
-  /// Estimated total listening time in minutes (from recorded listen events).
-  int get estimatedListeningMinutes {
-    final totalMs = _listeningHistory
-        .where((e) => !e.wasSkipped)
-        .fold<int>(0, (sum, e) => sum + e.listenDurationMs);
-    return (totalMs / 60000).floor();
-  }
+  /// Estimated total listening time in minutes, over the whole life of the
+  /// data (not only the capped history).
+  int get estimatedListeningMinutes => (_totalListenMs / 60000).floor();
 
   /// The hour (0–23) with the most plays, or null if no data.
   int? get mostActiveHour {
@@ -560,12 +583,16 @@ class SmartSuggestionsService {
 
   /// Save data to disk
   Future<void> _saveData() async {
+    // Never write before the saved data has been read: that would replace the
+    // history with whatever little has been recorded so far.
+    if (!_isLoaded) return;
     try {
-      final directory = await getApplicationDocumentsDirectory();
+      final directory = await _directoryProvider();
       final file = File('${directory.path}/smart_suggestions.json');
 
       final data = {
         'listeningHistory': _listeningHistory.map((e) => e.toJson()).toList(),
+        'totalListenMs': _totalListenMs,
         'hourlyTrackCounts':
             _hourlyTrackCounts.map((k, v) => MapEntry(k.toString(), v)),
         'hourlyArtistCounts':
@@ -592,19 +619,25 @@ class SmartSuggestionsService {
 
   /// Load data from disk
   Future<void> _loadData() async {
+    File? file;
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/smart_suggestions.json');
+      final directory = await _directoryProvider();
+      file = File('${directory.path}/smart_suggestions.json');
 
       if (await file.exists()) {
         final contents = await file.readAsString();
         final data = jsonDecode(contents) as Map<String, dynamic>;
 
-        _listeningHistory = (data['listeningHistory'] as List?)
-                ?.map((e) => ListeningEvent.fromJson(e))
-                .toList() ??
-            [];
+        // One unreadable event must not throw the whole history away.
+        _listeningHistory = [
+          for (final raw in (data['listeningHistory'] as List? ?? const []))
+            ..._tryParseEvent(raw),
+        ];
 
+        _totalListenMs = (data['totalListenMs'] as num?)?.toInt() ??
+            _listeningHistory
+                .where((e) => !e.wasSkipped)
+                .fold<int>(0, (sum, e) => sum + e.listenDurationMs);
         _hourlyTrackCounts =
             (data['hourlyTrackCounts'] as Map<String, dynamic>?)?.map((k, v) =>
                     MapEntry(int.parse(k), Map<String, int>.from(v))) ??
@@ -643,6 +676,19 @@ class SmartSuggestionsService {
       }
     } catch (e) {
       debugPrint('Error loading smart suggestions data: $e');
+      // The next save would overwrite the file with a mostly empty state, so
+      // keep a copy of what could not be read.
+      try {
+        await file?.copy('${file.path}.corrupt');
+      } catch (_) {}
+    }
+  }
+
+  static Iterable<ListeningEvent> _tryParseEvent(dynamic raw) {
+    try {
+      return [ListeningEvent.fromJson(raw as Map<String, dynamic>)];
+    } catch (_) {
+      return const [];
     }
   }
 }

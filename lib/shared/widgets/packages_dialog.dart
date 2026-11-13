@@ -95,22 +95,10 @@ class PackagesDialog extends StatelessWidget {
       url: 'https://pub.dev/packages/palette_generator',
     ),
     PackageInfo(
-      name: 'lottie',
-      version: '^3.2.0',
-      description: (l) => l.pkgLottie,
-      url: 'https://pub.dev/packages/lottie',
-    ),
-    PackageInfo(
       name: 'flutter_staggered_animations',
       version: '^1.1.1',
       description: (l) => l.pkgStaggeredAnimations,
       url: 'https://pub.dev/packages/flutter_staggered_animations',
-    ),
-    PackageInfo(
-      name: 'mesh',
-      version: '^0.5.0',
-      description: (l) => l.pkgMesh,
-      url: 'https://pub.dev/packages/mesh',
     ),
     PackageInfo(
       name: 'http',
@@ -159,12 +147,6 @@ class PackagesDialog extends StatelessWidget {
       version: 'any',
       description: (l) => l.pkgIntl,
       url: 'https://pub.dev/packages/intl',
-    ),
-    PackageInfo(
-      name: 'version',
-      version: '^3.0.2',
-      description: (l) => l.pkgVersion,
-      url: 'https://pub.dev/packages/version',
     ),
     PackageInfo(
       name: 'pub_semver',

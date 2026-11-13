@@ -2948,13 +2948,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get pkgPaletteGenerator => 'Извлечение цветов из изображений';
 
   @override
-  String get pkgLottie => 'Анимации Lottie для Flutter';
-
-  @override
   String get pkgStaggeredAnimations => 'Каскадные анимации списков';
-
-  @override
-  String get pkgMesh => 'Фоны с сетчатыми градиентами';
 
   @override
   String get pkgHttp => 'HTTP-запросы для вызовов API';
@@ -2980,9 +2974,6 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get pkgIntl => 'Интернационализация и локализация';
-
-  @override
-  String get pkgVersion => 'Разбор и сравнение версий';
 
   @override
   String get pkgPubSemver => 'Инструменты семантического версионирования';

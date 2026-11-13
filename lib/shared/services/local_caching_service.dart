@@ -331,7 +331,8 @@ class LocalCachingArtistService {
     }
   }
 
-  Future<String?> _getArtistImageFromSpotify(String artistName) async {
+  Future<String?> _getArtistImageFromSpotify(String artistName,
+      {bool retried = false}) async {
     if (!_spotifyEnabled || !OnlineSources.isEnabled('spotify')) {
       return null;
     }
@@ -366,9 +367,11 @@ class LocalCachingArtistService {
             return images[0]['url'];
           }
         }
-      } else if (response.statusCode == 401) {
+      } else if (response.statusCode == 401 && !retried) {
+        // One retry with a fresh token. Without the limit, a token that keeps
+        // being refused would loop here forever, one request after another.
         await _getSpotifyAccessToken();
-        return _getArtistImageFromSpotify(artistName);
+        return await _getArtistImageFromSpotify(artistName, retried: true);
       }
     } catch (_) {}
     return null;

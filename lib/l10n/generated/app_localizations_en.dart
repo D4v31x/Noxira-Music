@@ -2899,13 +2899,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pkgPaletteGenerator => 'Extract colors from images';
 
   @override
-  String get pkgLottie => 'Lottie animations for Flutter';
-
-  @override
   String get pkgStaggeredAnimations => 'Staggered list animations';
-
-  @override
-  String get pkgMesh => 'Mesh gradient backgrounds';
 
   @override
   String get pkgHttp => 'HTTP requests for API calls';
@@ -2930,9 +2924,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pkgIntl => 'Internationalization and localization';
-
-  @override
-  String get pkgVersion => 'Version parsing and comparison';
 
   @override
   String get pkgPubSemver => 'Semantic versioning utilities';

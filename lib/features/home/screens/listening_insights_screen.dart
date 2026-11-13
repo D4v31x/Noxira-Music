@@ -1,16 +1,24 @@
-/// Listening Insights screen — a Spotify-Wrapped-style view that surfaces
-/// the rich listening-pattern data Noxira Music already collects but never
-/// previously showed to the user.
+/// Listening insights: what you have been listening to and what stands out.
+///
+/// Laid out like a poster rather than a dashboard. The #1 track's cover opens
+/// the screen full-bleed with the listening time right under it; the day is a
+/// record you can drag across; the week is a row of columns in the same flat
+/// style; tracks 2 to 5 are a row of covers; the top artists are a festival
+/// bill. Sections sit on the page itself, separated by space.
 ///
 /// Data sources:
 ///   • SmartSuggestionsService  — play counts, hourly/weekday patterns, genres
 ///   • AudioPlayerService.songs — song metadata for resolving track IDs
-///   • ArtworkCacheService      — artwork thumbnails for Top Tracks
+///   • ArtworkCacheService      — cover art for the top tracks
 library;
 
-import 'dart:math' show max;
+import 'dart:async';
+import 'dart:math' as math;
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import '../../../l10n/generated/app_localizations.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/font_constants.dart';
@@ -18,8 +26,20 @@ import '../../../shared/services/audio_player_service.dart';
 import '../../../shared/services/artwork_cache_service.dart';
 import '../../../shared/services/smart_suggestions_service.dart';
 import '../../../shared/widgets/app_background.dart';
-import '../../../shared/widgets/glassmorphic_container.dart';
 import '../../../shared/widgets/expanding_player.dart';
+
+const _tabular = [FontFeature.tabularFigures()];
+const _gutter = 20.0;
+
+/// The localized labels carry a line break for an older stacked layout.
+String _oneLine(String s) => s.replaceAll('\n', ' ');
+
+/// Whether a stored artist or genre name is really "no name": empty, "Unknown"
+/// or the `<unknown>` Android reports for untagged files.
+bool _isUnknownName(String name) {
+  final n = name.replaceAll(RegExp(r'[<>]'), '').trim().toLowerCase();
+  return n.isEmpty || n == 'unknown';
+}
 
 // ── Data model ────────────────────────────────────────────────────────────────
 
@@ -32,11 +52,12 @@ class _InsightsData {
   final List<MapEntry<String, int>> topTracks; // trackId → count
   final List<MapEntry<String, int>> topArtists; // artist → count
   final List<MapEntry<String, int>> topGenres; // genre → count
+  final int genreTotal; // plays across every genre, not only the top ones
   final Map<int, int> playsByHour; // 0–23
   final Map<int, int> playsByWeekday; // 0–6
 
   // Resolved track display names from AudioPlayerService
-  final Map<String, String> trackTitles; // trackId → "Title – Artist"
+  final Map<String, String> trackTitles; // trackId → "Title\nArtist"
 
   const _InsightsData({
     required this.totalListens,
@@ -47,6 +68,7 @@ class _InsightsData {
     required this.topTracks,
     required this.topArtists,
     required this.topGenres,
+    required this.genreTotal,
     required this.playsByHour,
     required this.playsByWeekday,
     required this.trackTitles,
@@ -98,15 +120,17 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
       }
     }
 
-    // Sort top items
-    final sortedTracks = suggestions.trackPlayCounts.entries.toList()
+    // Only tracks still in the library can be shown with a title and cover.
+    final sortedTracks = suggestions.trackPlayCounts.entries
+        .where((e) => trackTitles.containsKey(e.key))
+        .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final sortedArtists = suggestions.artistPlayCounts.entries
-        .where((e) => e.key.toLowerCase() != 'unknown' && e.key.isNotEmpty)
+        .where((e) => !_isUnknownName(e.key))
         .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final sortedGenres = suggestions.genrePlayCounts.entries
-        .where((e) => e.key.toLowerCase() != 'unknown' && e.key.isNotEmpty)
+        .where((e) => !_isUnknownName(e.key))
         .toList()
       ..sort((a, b) => b.value.compareTo(a.value));
 
@@ -120,7 +144,8 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
         mostActiveWeekday: suggestions.mostActiveWeekday,
         topTracks: sortedTracks.take(5).toList(),
         topArtists: sortedArtists.take(5).toList(),
-        topGenres: sortedGenres.take(6).toList(),
+        topGenres: sortedGenres.take(5).toList(),
+        genreTotal: sortedGenres.fold<int>(0, (sum, e) => sum + e.value),
         playsByHour: suggestions.playsByHour,
         playsByWeekday: suggestions.playsByWeekday,
         trackTitles: trackTitles,
@@ -151,8 +176,6 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return AppBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -160,840 +183,1359 @@ class _ListeningInsightsScreenState extends State<ListeningInsightsScreen> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
+          scrolledUnderElevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white),
+                color: Colors.white, size: 20),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text(
             AppLocalizations.of(context).musicInsightsTitle,
             style: const TextStyle(
               color: Colors.white,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
               fontFamily: FontConstants.fontFamily,
               fontSize: 20,
             ),
           ),
-          centerTitle: true,
+          centerTitle: false,
         ),
         body: _loading
             ? const Center(child: CircularProgressIndicator())
-            : _buildBody(theme),
+            : _buildBody(),
       ),
     );
   }
 
-  Widget _buildBody(ThemeData theme) {
+  Widget _buildBody() {
     final data = _data!;
-    const hPad = EdgeInsets.symmetric(horizontal: 16);
+    final accent = Theme.of(context).colorScheme.primary;
+    final loc = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final topInset = MediaQuery.paddingOf(context).top + kToolbarHeight;
 
-    return CustomScrollView(
-      slivers: [
-        // Top spacer for app-bar
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+    final hourSubtitle = data.mostActiveHour == null
+        ? null
+        : loc.insightsMostActiveAround(_hourFull(data.mostActiveHour!, locale));
+    final daySubtitle = data.mostActiveWeekday == null
+        ? null
+        : loc.insightsMostActiveOn(
+            _weekdayName(data.mostActiveWeekday!, locale));
+    final hasHero = data.topTracks.isNotEmpty;
+    final totals = _Totals(
+      data: data,
+      findings: [
+        if (hourSubtitle != null) hourSubtitle,
+        if (daySubtitle != null) daySubtitle,
+      ],
+    );
 
-        // ── Quick Stats ────────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: hPad,
-            child: _QuickStatsRow(data: data),
+    final Widget opening;
+    final bands = <Widget>[];
+
+    if (data.totalListens == 0) {
+      opening = Padding(
+        padding: EdgeInsets.fromLTRB(_gutter, topInset + 24, _gutter, 0),
+        child: _Heading(
+          title: loc.insightsNoDataTitle,
+          subtitle: loc.insightsNoDataBody,
+        ),
+      );
+    } else {
+      opening = hasHero
+          ? _Opening(
+              id: data.topTracks.first.key,
+              hero: _Hero(
+                id: data.topTracks.first.key,
+                label: data.trackTitles[data.topTracks.first.key]!,
+                plays: data.topTracks.first.value,
+                accent: accent,
+                topInset: topInset,
+              ),
+              totals: Padding(
+                padding: const EdgeInsets.fromLTRB(_gutter, 22, _gutter, 0),
+                child: totals,
+              ),
+            )
+          : Padding(
+              padding: EdgeInsets.fromLTRB(_gutter, topInset + 16, _gutter, 0),
+              child: totals,
+            );
+
+      // Each section below is its own band, and the bands alternate between
+      // a darker tone and the plain page, so where one ends and the next
+      // begins is clear without lines or boxes.
+      if (data.playsByHour.isNotEmpty) {
+        bands.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _gutter),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Heading(
+                title: loc.insightsActivityByTimeOfDay,
+                subtitle: hourSubtitle,
+              ),
+              const SizedBox(height: 8),
+              _DayDial(
+                counts: List.generate(24, (i) => data.playsByHour[i] ?? 0),
+                peak: data.mostActiveHour,
+                accent: accent,
+                hourLabel: (h) => _hourFull(h, locale),
+              ),
+            ],
+          ),
+        ));
+      }
+      if (data.playsByWeekday.isNotEmpty) {
+        bands.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _gutter),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Heading(
+                title: loc.insightsActivityByDay,
+                subtitle: daySubtitle,
+              ),
+              const SizedBox(height: 20),
+              _WeekRow(
+                counts: List.generate(7, (i) => data.playsByWeekday[i] ?? 0),
+                peak: data.mostActiveWeekday,
+                accent: accent,
+                labels: [
+                  for (var i = 0; i < 7; i++)
+                    _weekdayName(i, locale, short: true),
+                ],
+              ),
+            ],
+          ),
+        ));
+      }
+      if (data.topTracks.length > 1) {
+        bands.add(_TrackCovers(
+          items: data.topTracks.sublist(1),
+          labels: data.trackTitles,
+        ));
+      }
+      if (data.topArtists.isNotEmpty) {
+        bands.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _gutter),
+          child: _Lineup(items: data.topArtists, accent: accent),
+        ));
+      }
+      if (data.topGenres.isNotEmpty && data.genreTotal > 0) {
+        bands.add(Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _gutter),
+          child: _GenreShare(
+            genres: data.topGenres,
+            total: data.genreTotal,
+            accent: accent,
+          ),
+        ));
+      }
+    }
+
+    return ListView(
+      padding: EdgeInsets.only(
+        bottom: ExpandingPlayer.getMiniPlayerPaddingHeight(context) + 24,
+      ),
+      children: [
+        _Reveal(index: 0, child: opening),
+        for (var i = 0; i < bands.length; i++)
+          _Reveal(
+            index: i + 1,
+            child: _Band(shaded: i.isEven, child: bands[i]),
+          ),
+      ],
+    );
+  }
+}
+
+/// One section of the screen: full width, with even space above and below,
+/// and either a darker flat tone or the plain page behind it. Alternating the
+/// two is what separates the sections.
+class _Band extends StatelessWidget {
+  final bool shaded;
+  final Widget child;
+
+  const _Band({required this.shaded, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: shaded ? Colors.black.withValues(alpha: 0.26) : Colors.transparent,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 36),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ── Entrance ──────────────────────────────────────────────────────────────────
+
+/// Fades a block in and lifts it a little, one after another. Content is
+/// shown at once when the system asks for reduced motion.
+class _Reveal extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _Reveal({required this.index, required this.child});
+
+  @override
+  State<_Reveal> createState() => _RevealState();
+}
+
+class _RevealState extends State<_Reveal> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+  Timer? _delay;
+
+  @override
+  void initState() {
+    super.initState();
+    _delay = Timer(Duration(milliseconds: 70 * math.min(widget.index, 5)), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _delay?.cancel();
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.disableAnimationsOf(context)) return widget.child;
+    final curved = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
+    return FadeTransition(
+      opacity: curved,
+      child: AnimatedBuilder(
+        animation: curved,
+        builder: (_, child) => Transform.translate(
+          offset: Offset(0, 18 * (1 - curved.value)),
+          child: child,
+        ),
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ── Shared pieces ─────────────────────────────────────────────────────────────
+
+class _Heading extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+
+  const _Heading({required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 24,
+            height: 1.15,
+            fontWeight: FontWeight.w800,
+            fontFamily: FontConstants.fontFamily,
           ),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 20)),
+        if (subtitle != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            subtitle!,
+            style: const TextStyle(
+              color: Colors.white60,
+              fontSize: 14,
+              height: 1.35,
+              fontFamily: FontConstants.fontFamily,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
 
-        // ── Activity by Hour ───────────────────────────────────────────────
-        if (data.playsByHour.isNotEmpty) ...[
-          _sectionHeader(
-              AppLocalizations.of(context).insightsActivityByTimeOfDay),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: hPad,
-              child: _HourActivityCard(
-                playsByHour: data.playsByHour,
-                mostActiveHour: data.mostActiveHour,
-                accentColor: theme.colorScheme.primary,
+/// Cover art that fills its parent, with a flat placeholder while loading.
+/// [cacheWidth] decodes it at the size it is shown instead of its full size.
+class _CoverImage extends StatefulWidget {
+  final String id;
+  final bool highQuality;
+  final int? cacheWidth;
+
+  const _CoverImage({
+    required this.id,
+    this.highQuality = false,
+    this.cacheWidth,
+  });
+
+  @override
+  State<_CoverImage> createState() => _CoverImageState();
+}
+
+class _CoverImageState extends State<_CoverImage> {
+  static final _artworkService = ArtworkCacheService();
+  ImageProvider? _image;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final id = int.tryParse(widget.id);
+    if (id == null) return;
+    final provider = await _artworkService.getCachedImageProvider(id,
+        highQuality: widget.highQuality);
+    if (mounted) setState(() => _image = provider);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _image != null
+          ? SizedBox.expand(
+              key: const ValueKey('art'),
+              child: Image(
+                image: widget.cacheWidth == null
+                    ? _image!
+                    : ResizeImage(_image!, width: widget.cacheWidth),
+                fit: BoxFit.cover,
+              ),
+            )
+          : const ColoredBox(
+              key: ValueKey('empty'),
+              color: Colors.white10,
+              child: SizedBox.expand(),
+            ),
+    );
+  }
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+/// Opaque down to [start] (0..1 of the height), then fading to nothing along
+/// a smootherstep curve. A straight two-stop ramp has a kink where it begins
+/// that the eye reads as an edge; this one has none at either end.
+LinearGradient _softFade(double start) {
+  const steps = 14;
+  final colors = <Color>[Colors.black];
+  final stops = <double>[0];
+  for (var i = 0; i <= steps; i++) {
+    final t = i / steps;
+    final eased = t * t * t * (t * (t * 6 - 15) + 10);
+    colors.add(Colors.black.withValues(alpha: 1 - eased));
+    stops.add(start + (1 - start) * t);
+  }
+  return LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: colors,
+    stops: stops,
+  );
+}
+
+/// The opening block: the hero and the totals under it, with a blurred copy
+/// of the cover bleeding out from beneath the artwork and fading away down
+/// the totals. Past that the page is the plain app background.
+class _Opening extends StatelessWidget {
+  final String id;
+  final Widget hero;
+  final Widget totals;
+
+  const _Opening({required this.id, required this.hero, required this.totals});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(child: _CoverBleed(id: id)),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [hero, totals, const SizedBox(height: 56)],
+        ),
+      ],
+    );
+  }
+}
+
+/// The blurred, faded copy of the cover, made once instead of on every frame.
+///
+/// A blurred picture is just a soft, low-detail one, so the cover is decoded
+/// at 64 px, softened, darkened a little and faded out into a small bitmap
+/// when it loads, then drawn stretched to the block. Scrolling then costs one
+/// texture draw; a live blur filter over the full image (and a mask on top)
+/// re-ran every frame and made the page stutter. Being a bitmap it also has
+/// no spill outside its box.
+class _CoverBleed extends StatefulWidget {
+  final String id;
+
+  const _CoverBleed({required this.id});
+
+  @override
+  State<_CoverBleed> createState() => _CoverBleedState();
+}
+
+class _CoverBleedState extends State<_CoverBleed> {
+  static final _artworkService = ArtworkCacheService();
+  static const _bakedWidth = 64;
+  static const _bakedHeight = 96;
+
+  ui.Image? _baked;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final id = int.tryParse(widget.id);
+    if (id == null) return;
+    final provider = await _artworkService.getCachedImageProvider(id);
+    if (!mounted) return;
+
+    final stream = ResizeImage(provider, width: _bakedWidth)
+        .resolve(ImageConfiguration.empty);
+    late final ImageStreamListener listener;
+    listener = ImageStreamListener(
+      (info, _) async {
+        stream.removeListener(listener);
+        final baked = await _bake(info.image);
+        if (!mounted) {
+          baked.dispose();
+          return;
+        }
+        setState(() => _baked = baked);
+      },
+      onError: (_, __) => stream.removeListener(listener),
+    );
+    stream.addListener(listener);
+  }
+
+  static Future<ui.Image> _bake(ui.Image source) {
+    const rect = Rect.fromLTWH(0, 0, 64, 96);
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder, rect);
+
+    canvas.saveLayer(rect, Paint());
+    canvas.drawImageRect(
+      source,
+      Rect.fromLTWH(0, 0, source.width.toDouble(), source.height.toDouble()),
+      rect,
+      Paint()
+        ..filterQuality = FilterQuality.medium
+        ..imageFilter = ui.ImageFilter.blur(
+            sigmaX: 2.5, sigmaY: 2.5, tileMode: TileMode.mirror),
+    );
+    // Keeps the type over the bleed readable.
+    canvas.drawRect(
+        rect, Paint()..color = Colors.black.withValues(alpha: 0.18));
+    // The fade, applied to the pixels themselves.
+    canvas.drawRect(
+      rect,
+      Paint()
+        ..shader = _softFade(0.5).createShader(rect)
+        ..blendMode = BlendMode.dstIn,
+    );
+    canvas.restore();
+
+    return recorder.endRecording().toImage(_bakedWidth, _bakedHeight);
+  }
+
+  @override
+  void dispose() {
+    _baked?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baked = _baked;
+    return IgnorePointer(
+      child: AnimatedOpacity(
+        opacity: baked == null ? 0 : 1,
+        duration: const Duration(milliseconds: 400),
+        child: baked == null
+            ? const SizedBox.expand()
+            : RawImage(
+                image: baked,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.high,
+              ),
+      ),
+    );
+  }
+}
+
+/// The #1 track: its cover runs edge to edge behind the app bar and fades
+/// into the page, with the title and the play count over the fade.
+class _Hero extends StatelessWidget {
+  final String id;
+  final String label; // "Title\nArtist"
+  final int plays;
+  final Color accent;
+  final double topInset;
+
+  const _Hero({
+    required this.id,
+    required this.label,
+    required this.plays,
+    required this.accent,
+    required this.topInset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final parts = label.split('\n');
+    final title = parts.first;
+    final artist = parts.length > 1 ? parts[1] : null;
+    final height = MediaQuery.sizeOf(context).width * 1.08;
+
+    return SizedBox(
+      height: height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          RepaintBoundary(
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => _softFade(0.42).createShader(rect),
+              child: _CoverImage(
+                id: id,
+                highQuality: true,
+                cacheWidth: (MediaQuery.sizeOf(context).width *
+                        MediaQuery.devicePixelRatioOf(context))
+                    .round(),
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        ],
-
-        // ── Activity by Day ────────────────────────────────────────────────
-        if (data.playsByWeekday.isNotEmpty) ...[
-          _sectionHeader(AppLocalizations.of(context).insightsActivityByDay),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: hPad,
-              child: _WeekdayActivityCard(
-                playsByWeekday: data.playsByWeekday,
-                mostActiveWeekday: data.mostActiveWeekday,
-                accentColor: theme.colorScheme.secondary,
+          // Keeps the app bar readable over a bright cover.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: topInset + 28,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.5),
+                    Colors.transparent,
+                  ],
+                ),
               ),
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        ],
-
-        // ── Top Tracks ─────────────────────────────────────────────────────
-        if (data.topTracks.isNotEmpty) ...[
-          _sectionHeader(AppLocalizations.of(context).recapTopTracksTitle),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: hPad,
-              child: _TopItemsCard(
-                items: data.topTracks,
-                labels: data.trackTitles,
-                accentColor: theme.colorScheme.primary,
-                showArtwork: true,
-              ),
+          Positioned(
+            left: _gutter,
+            right: _gutter,
+            bottom: 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  loc.recapTopTrackEyebrow,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    fontFamily: FontConstants.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 34,
+                    height: 1.08,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: FontConstants.fontFamily,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (artist != null)
+                      Flexible(
+                        child: Text(
+                          artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 16,
+                            fontFamily: FontConstants.fontFamily,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(width: 14),
+                    Icon(Icons.play_arrow_rounded, size: 22, color: accent),
+                    Text(
+                      '$plays',
+                      style: TextStyle(
+                        color: accent,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        fontFamily: FontConstants.fontFamily,
+                        fontFeatures: _tabular,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
         ],
+      ),
+    );
+  }
+}
 
-        // ── Top Artists ────────────────────────────────────────────────────
-        if (data.topArtists.isNotEmpty) ...[
-          _sectionHeader(AppLocalizations.of(context).recapTopArtistsTitle),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: hPad,
-              child: _TopItemsCard(
-                items: data.topArtists,
-                accentColor: theme.colorScheme.tertiary,
-                showArtwork: false,
+// ── Totals ────────────────────────────────────────────────────────────────────
+
+/// Listening time as the lead figure, plays and distinct tracks beside it,
+/// and the finding in words underneath. Bare type on the page, no box.
+class _Totals extends StatelessWidget {
+  final _InsightsData data;
+  final List<String> findings;
+
+  const _Totals({required this.data, required this.findings});
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final number = NumberFormat.decimalPattern(locale);
+    final mins = data.estimatedMinutes;
+
+    Widget figure(String label, String value, double size) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white60,
+                fontSize: 13,
+                fontFamily: FontConstants.fontFamily,
               ),
             ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        ],
-
-        // ── Genre Breakdown ────────────────────────────────────────────────
-        if (data.topGenres.isNotEmpty) ...[
-          _sectionHeader(AppLocalizations.of(context).insightsGenreBreakdown),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: hPad,
-              child: _GenreCard(
-                genres: data.topGenres,
-                accentColor: theme.colorScheme.primary,
+            const SizedBox(height: 2),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: size,
+                  height: 1.1,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: FontConstants.fontFamily,
+                  fontFeatures: _tabular,
+                ),
               ),
             ),
-          ),
-          const SliverToBoxAdapter(child: SizedBox(height: 20)),
-        ],
+          ],
+        );
 
-        // ── Empty state ────────────────────────────────────────────────────
-        if (data.totalListens == 0)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              flex: 5,
+              child: figure(
+                _oneLine(loc.insightsEstListening),
+                mins > 0
+                    ? _ListeningInsightsScreenState._fmtMinutes(mins)
+                    : '\u2014',
+                44,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 3,
+              child: figure(
+                _oneLine(loc.insightsTotalPlays),
+                number.format(data.totalListens),
+                26,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              flex: 3,
+              child: figure(
+                _oneLine(loc.insightsTracksHeard),
+                number.format(data.uniqueTracksHeard),
+                26,
+              ),
+            ),
+          ],
+        ),
+        if (findings.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Text(
+            findings.join(' \u00b7 '),
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 15,
+              height: 1.35,
+              fontFamily: FontConstants.fontFamily,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── The day as a record ───────────────────────────────────────────────────────
+
+/// Plays per hour as spokes around a record, midnight at the top and the day
+/// running clockwise. The peak hour is in the accent and named in the middle;
+/// drag a finger around the record to read any other hour.
+class _DayDial extends StatefulWidget {
+  final List<int> counts; // 24
+  final int? peak;
+  final Color accent;
+  final String Function(int hour) hourLabel;
+
+  const _DayDial({
+    required this.counts,
+    required this.peak,
+    required this.accent,
+    required this.hourLabel,
+  });
+
+  @override
+  State<_DayDial> createState() => _DayDialState();
+}
+
+class _DayDialState extends State<_DayDial> {
+  int? _selected;
+  Timer? _reset;
+
+  @override
+  void dispose() {
+    _reset?.cancel();
+    super.dispose();
+  }
+
+  void _pick(Offset local, double side) {
+    final d = local - Offset(side / 2, side / 2);
+    if (d.distance < side * 0.12) return;
+    var angle = math.atan2(d.dx, -d.dy);
+    if (angle < 0) angle += 2 * math.pi;
+    // Hour h is centred on h * 15 degrees.
+    final hour = ((angle + math.pi / 24) / (2 * math.pi) * 24).floor() % 24;
+    _reset?.cancel();
+    if (hour != _selected) {
+      HapticFeedback.selectionClick();
+      setState(() => _selected = hour);
+    }
+  }
+
+  void _release() {
+    _reset?.cancel();
+    _reset = Timer(const Duration(milliseconds: 2000), () {
+      if (mounted) setState(() => _selected = null);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = _selected ?? widget.peak;
+    final count = shown == null ? 0 : widget.counts[shown];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final side = math.min(constraints.maxWidth, 360.0);
+        return Center(
+          child: SizedBox(
+            width: side,
+            height: side,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTapDown: (d) => _pick(d.localPosition, side),
+              onTapUp: (_) => _release(),
+              onPanStart: (d) => _pick(d.localPosition, side),
+              onPanUpdate: (d) => _pick(d.localPosition, side),
+              onPanEnd: (_) => _release(),
+              onPanCancel: _release,
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  const Icon(Icons.music_note_rounded,
-                      color: Colors.white54, size: 64),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context).insightsNoDataTitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: FontConstants.fontFamily,
+                  CustomPaint(
+                    size: Size.square(side),
+                    painter: _DialPainter(
+                      counts: widget.counts,
+                      active: shown,
+                      accent: widget.accent,
+                      labels: {
+                        for (final h in const [0, 6, 12, 18])
+                          h: widget.hourLabel(h),
+                      },
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    AppLocalizations.of(context).insightsNoDataBody,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white38,
-                      fontSize: 14,
-                      fontFamily: FontConstants.fontFamily,
-                    ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        shown == null ? '\u2014' : widget.hourLabel(shown),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 26,
+                          height: 1.1,
+                          fontWeight: FontWeight.w800,
+                          fontFamily: FontConstants.fontFamily,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.play_arrow_rounded,
+                              size: 17, color: Colors.white54),
+                          Text(
+                            '$count',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: FontConstants.fontFamily,
+                              fontFeatures: _tabular,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+}
 
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: ExpandingPlayer.getMiniPlayerPaddingHeight(context) + 16,
+class _DialPainter extends CustomPainter {
+  final List<int> counts;
+  final int? active;
+  final Color accent;
+  final Map<int, String> labels;
+
+  const _DialPainter({
+    required this.counts,
+    required this.active,
+    required this.accent,
+    required this.labels,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final maxCount = counts.reduce(math.max);
+
+    // Measure the hour labels first: the disc leaves room for the widest.
+    final tps = {
+      for (final e in labels.entries)
+        e.key: TextPainter(
+          text: TextSpan(
+            text: e.value,
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 11,
+              fontFamily: FontConstants.fontFamily,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout(),
+    };
+    final labelWidth =
+        tps.values.fold<double>(0, (m, t) => math.max(m, t.width));
+    const gap = 10.0;
+    // The record is drawn straight on the panel's glass; a disc of its own
+    // would be glass on glass.
+    final disc = size.width / 2 - gap - labelWidth - 4;
+    final outer = disc - 6;
+    final inner = outer * 0.44;
+
+    canvas.drawCircle(
+      c,
+      outer + 3,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = Colors.white.withValues(alpha: 0.10),
+    );
+    canvas.drawCircle(
+      c,
+      inner - 6,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = Colors.white.withValues(alpha: 0.16),
+    );
+
+    final barWidth = 2 * math.pi * inner / 24 * 0.6;
+    final room = outer - inner;
+    for (var i = 0; i < 24; i++) {
+      final a = i * 2 * math.pi / 24 - math.pi / 2;
+      final dir = Offset(math.cos(a), math.sin(a));
+      final frac = maxCount == 0 ? 0.0 : counts[i] / maxCount;
+      final len = counts[i] == 0 ? 2.0 : math.max(3.0, room * frac);
+      final paint = Paint()
+        ..strokeWidth = barWidth
+        ..strokeCap = StrokeCap.butt
+        ..color = i == active
+            ? accent
+            : Colors.white.withValues(alpha: counts[i] == 0 ? 0.14 : 0.34);
+      canvas.drawLine(c + dir * inner, c + dir * (inner + len), paint);
+    }
+
+    // Hours at the four quarters, each placed by its nearest edge so the
+    // side labels clear the disc instead of sitting on it.
+    tps.forEach((h, tp) {
+      final a = h * 2 * math.pi / 24 - math.pi / 2;
+      final dir = Offset(math.cos(a), math.sin(a));
+      final centre = c +
+          dir * (disc + gap) +
+          Offset(dir.dx * tp.width / 2, dir.dy * tp.height / 2);
+      tp.paint(canvas, centre - Offset(tp.width / 2, tp.height / 2));
+    });
+  }
+
+  @override
+  bool shouldRepaint(covariant _DialPainter old) =>
+      old.counts != counts || old.active != active || old.accent != accent;
+}
+
+// ── The week ──────────────────────────────────────────────────────────────────
+
+/// Plays per weekday in the same flat style as the record: neutral columns,
+/// the peak day in the accent with its count above it.
+class _WeekRow extends StatelessWidget {
+  final List<int> counts; // 7, Monday first
+  final int? peak;
+  final Color accent;
+  final List<String> labels;
+
+  const _WeekRow({
+    required this.counts,
+    required this.peak,
+    required this.accent,
+    required this.labels,
+  });
+
+  static const _maxBar = 104.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final maxCount = counts.reduce(math.max);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        for (var i = 0; i < counts.length; i++)
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                SizedBox(
+                  height: 20,
+                  child: i == peak
+                      ? Text(
+                          '${counts[i]}',
+                          style: TextStyle(
+                            color: accent,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            fontFamily: FontConstants.fontFamily,
+                            fontFeatures: _tabular,
+                          ),
+                        )
+                      : null,
+                ),
+                TweenAnimationBuilder<double>(
+                  tween: Tween(
+                    begin: 0,
+                    end: maxCount == 0 || counts[i] == 0
+                        ? 0.0
+                        : math.max(4.0, _maxBar * counts[i] / maxCount),
+                  ),
+                  duration: const Duration(milliseconds: 650),
+                  curve: Curves.easeOutCubic,
+                  builder: (_, h, __) => Container(
+                    width: 22,
+                    height: math.max(h, 2),
+                    decoration: BoxDecoration(
+                      color: i == peak
+                          ? accent
+                          : Colors.white
+                              .withValues(alpha: counts[i] == 0 ? 0.14 : 0.34),
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(3)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  labels[i],
+                  style: TextStyle(
+                    color: i == peak ? Colors.white : Colors.white54,
+                    fontSize: 12,
+                    fontWeight: i == peak ? FontWeight.w700 : FontWeight.w400,
+                    fontFamily: FontConstants.fontFamily,
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── Tracks 2 to 5 ─────────────────────────────────────────────────────────────
+
+/// A row of covers for the tracks after the #1, scrolling sideways.
+class _TrackCovers extends StatelessWidget {
+  final List<MapEntry<String, int>> items; // ranks 2..
+  final Map<String, String> labels;
+
+  const _TrackCovers({required this.items, required this.labels});
+
+  static const _cardWidth = 144.0;
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: _gutter),
+          child: _Heading(title: loc.recapTopTracksTitle),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: _cardWidth + 76,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: _gutter),
+            itemCount: items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (context, i) {
+              final entry = items[i];
+              final parts = (labels[entry.key] ?? entry.key).split('\n');
+              return SizedBox(
+                width: _cardWidth,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: SizedBox(
+                        width: _cardWidth,
+                        height: _cardWidth,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _CoverImage(
+                              id: entry.key,
+                              cacheWidth: (_cardWidth *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                            ),
+                            // Neutral scrim so the rank reads on any cover.
+                            Positioned(
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              height: 70,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.black.withValues(alpha: 0.6),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              left: 12,
+                              bottom: 6,
+                              child: Text(
+                                '${i + 2}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 32,
+                                  height: 1.1,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: FontConstants.fontFamily,
+                                  fontFeatures: _tabular,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      parts.first,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: FontConstants.fontFamily,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            parts.length > 1 ? parts[1] : '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                              fontFamily: FontConstants.fontFamily,
+                            ),
+                          ),
+                        ),
+                        const Icon(Icons.play_arrow_rounded,
+                            size: 14, color: Colors.white54),
+                        Text(
+                          '${entry.value}',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            fontFamily: FontConstants.fontFamily,
+                            fontFeatures: _tabular,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
     );
   }
-
-  Widget _sectionHeader(String title) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
-        child: Text(
-          title.toUpperCase(),
-          style: const TextStyle(
-            color: Colors.white54,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.3,
-            fontFamily: FontConstants.fontFamily,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-// ── Quick Stats Row ───────────────────────────────────────────────────────────
+// ── Artist lineup ─────────────────────────────────────────────────────────────
 
-class _QuickStatsRow extends StatelessWidget {
-  final _InsightsData data;
-  const _QuickStatsRow({required this.data});
+/// Top artists set like a festival bill: the headliner large, the names
+/// getting smaller down the list, plays on the right.
+class _Lineup extends StatelessWidget {
+  final List<MapEntry<String, int>> items;
+  final Color accent;
+
+  const _Lineup({required this.items, required this.accent});
+
+  static const _sizes = [46.0, 34.0, 26.0, 21.0, 18.0];
+  static const _alphas = [1.0, 0.88, 0.74, 0.62, 0.52];
 
   @override
   Widget build(BuildContext context) {
-    final mins = data.estimatedMinutes;
-    final timeLabel = _ListeningInsightsScreenState._fmtMinutes(mins);
     final loc = AppLocalizations.of(context);
 
-    return GlassmorphicContainer(
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      child: Row(
-        children: [
-          _QuickStat(
-            value: _fmt(data.totalListens),
-            label: loc.insightsTotalPlays,
-            icon: Icons.play_circle_outline_rounded,
-          ),
-          _Divider(),
-          _QuickStat(
-            value: _fmt(data.uniqueTracksHeard),
-            label: loc.insightsTracksHeard,
-            icon: Icons.music_note_rounded,
-          ),
-          _Divider(),
-          _QuickStat(
-            value: mins > 0 ? timeLabel : '\u2014',
-            label: loc.insightsEstListening,
-            icon: Icons.access_time_rounded,
-          ),
-        ],
-      ),
-    );
-  }
-
-  static String _fmt(int n) {
-    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k';
-    return n.toString();
-  }
-}
-
-class _QuickStat extends StatelessWidget {
-  final String value;
-  final String label;
-  final IconData icon;
-  const _QuickStat(
-      {required this.value, required this.label, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Column(
-        children: [
-          Icon(icon, color: Colors.white54, size: 18),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              fontFamily: FontConstants.fontFamily,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 11,
-              height: 1.3,
-              fontFamily: FontConstants.fontFamily,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 48,
-      color: Colors.white12,
-    );
-  }
-}
-
-// ── 24-Hour Activity Card ─────────────────────────────────────────────────────
-
-class _HourActivityCard extends StatelessWidget {
-  final Map<int, int> playsByHour;
-  final int? mostActiveHour;
-  final Color accentColor;
-
-  const _HourActivityCard({
-    required this.playsByHour,
-    required this.mostActiveHour,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).toString();
-    final subtitle = mostActiveHour != null
-        ? AppLocalizations.of(context).insightsMostActiveAround(
-            _ListeningInsightsScreenState._hourFull(mostActiveHour!, locale))
-        : null;
-
-    return GlassmorphicContainer(
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (subtitle != null) ...[
-            Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Heading(title: loc.recapTopArtistsTitle),
+        const SizedBox(height: 14),
+        for (var i = 0; i < items.length; i++)
+          Padding(
+            padding: EdgeInsets.only(top: i == 0 ? 0 : 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                Icon(Icons.nightlight_round,
-                    color: accentColor.withValues(alpha: 0.8), size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontFamily: FontConstants.fontFamily,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
-          SizedBox(
-            height: 80,
-            child: CustomPaint(
-              painter: _BarChartPainter(
-                counts: List.generate(24, (i) => playsByHour[i] ?? 0),
-                highlightIndex: mostActiveHour,
-                accentColor: accentColor,
-              ),
-              child: const SizedBox.expand(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _AxisLabel('12a'),
-              _AxisLabel('6a'),
-              _AxisLabel('12p'),
-              _AxisLabel('6p'),
-              _AxisLabel('12a'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Weekday Activity Card ─────────────────────────────────────────────────────
-
-class _WeekdayActivityCard extends StatelessWidget {
-  final Map<int, int> playsByWeekday;
-  final int? mostActiveWeekday;
-  final Color accentColor;
-
-  const _WeekdayActivityCard({
-    required this.playsByWeekday,
-    required this.mostActiveWeekday,
-    required this.accentColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).toString();
-    final subtitle = mostActiveWeekday != null
-        ? AppLocalizations.of(context).insightsMostActiveOn(
-            _ListeningInsightsScreenState._weekdayName(
-                mostActiveWeekday!, locale))
-        : null;
-
-    return GlassmorphicContainer(
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (subtitle != null) ...[
-            Row(
-              children: [
-                Icon(Icons.calendar_today_rounded,
-                    color: accentColor.withValues(alpha: 0.8), size: 16),
-                const SizedBox(width: 6),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                    fontFamily: FontConstants.fontFamily,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-          ],
-          SizedBox(
-            height: 72,
-            child: CustomPaint(
-              painter: _BarChartPainter(
-                counts: List.generate(7, (i) => playsByWeekday[i] ?? 0),
-                highlightIndex: mostActiveWeekday,
-                accentColor: accentColor,
-              ),
-              child: const SizedBox.expand(),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              for (var i = 0; i < 7; i++)
-                _AxisLabel(_ListeningInsightsScreenState._weekdayName(
-                    i, Localizations.localeOf(context).toString(),
-                    short: true)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _AxisLabel extends StatelessWidget {
-  final String text;
-  const _AxisLabel(this.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: const TextStyle(
-        color: Colors.white38,
-        fontSize: 10,
-        fontFamily: FontConstants.fontFamily,
-      ),
-    );
-  }
-}
-
-// ── Bar Chart Painter ─────────────────────────────────────────────────────────
-
-class _BarChartPainter extends CustomPainter {
-  final List<int> counts;
-  final int? highlightIndex;
-  final Color accentColor;
-
-  const _BarChartPainter({
-    required this.counts,
-    required this.highlightIndex,
-    required this.accentColor,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (counts.isEmpty) return;
-
-    final maxVal = counts.reduce(max).toDouble();
-    if (maxVal == 0) return;
-
-    final barCount = counts.length;
-    final totalGapWidth = size.width * 0.3;
-    final barWidth = (size.width - totalGapWidth) / barCount;
-    final gapWidth = totalGapWidth / max(barCount - 1, 1);
-    const minBarHeight = 4.0;
-
-    final normalPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.25)
-      ..style = PaintingStyle.fill;
-    final accentPaint = Paint()
-      ..color = accentColor.withValues(alpha: 0.85)
-      ..style = PaintingStyle.fill;
-
-    for (int i = 0; i < barCount; i++) {
-      final x = i * (barWidth + gapWidth);
-      final frac = counts[i] / maxVal;
-      final barH = max(minBarHeight, frac * size.height);
-      final top = size.height - barH;
-
-      final rect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(x, top, barWidth, barH),
-        const Radius.circular(4),
-      );
-
-      canvas.drawRRect(rect, i == highlightIndex ? accentPaint : normalPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _BarChartPainter old) =>
-      old.counts != counts || old.highlightIndex != highlightIndex;
-}
-
-// ── Top Items Card ────────────────────────────────────────────────────────────
-
-class _TopItemsCard extends StatelessWidget {
-  final List<MapEntry<String, int>> items;
-  final Map<String, String>? labels; // id → display label (for tracks)
-  final Color accentColor;
-  final bool showArtwork;
-
-  const _TopItemsCard({
-    required this.items,
-    this.labels,
-    required this.accentColor,
-    required this.showArtwork,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final maxCount = items.isEmpty ? 1.0 : items.first.value.toDouble();
-
-    return GlassmorphicContainer(
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        children: [
-          for (int i = 0; i < items.length; i++) ...[
-            _TopItemRow(
-              rank: i + 1,
-              id: items[i].key,
-              count: items[i].value,
-              maxCount: maxCount,
-              label: labels?[items[i].key] ?? items[i].key,
-              accentColor: accentColor,
-              showArtwork: showArtwork,
-            ),
-            if (i < items.length - 1)
-              Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _TopItemRow extends StatefulWidget {
-  final int rank;
-  final String id;
-  final int count;
-  final double maxCount;
-  final String label;
-  final Color accentColor;
-  final bool showArtwork;
-
-  const _TopItemRow({
-    required this.rank,
-    required this.id,
-    required this.count,
-    required this.maxCount,
-    required this.label,
-    required this.accentColor,
-    required this.showArtwork,
-  });
-
-  @override
-  State<_TopItemRow> createState() => _TopItemRowState();
-}
-
-class _TopItemRowState extends State<_TopItemRow>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  static final _artworkService = ArtworkCacheService();
-  ImageProvider? _artwork;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ctrl.forward());
-
-    if (widget.showArtwork) _loadArtwork();
-  }
-
-  Future<void> _loadArtwork() async {
-    final id = int.tryParse(widget.id);
-    if (id == null) return;
-    final provider = await _artworkService.getCachedImageProvider(id);
-    if (mounted) setState(() => _artwork = provider);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final parts = widget.label.split('\n');
-    final title = parts.isNotEmpty ? parts[0] : widget.label;
-    final subtitle = parts.length > 1 ? parts[1] : null;
-    final frac = widget.count / widget.maxCount;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        children: [
-          // Rank
-          SizedBox(
-            width: 28,
-            child: Text(
-              '${widget.rank}',
-              style: TextStyle(
-                color: widget.accentColor.withValues(alpha: 0.7),
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                fontFamily: FontConstants.fontFamily,
-              ),
-            ),
-          ),
-          // Artwork thumbnail (tracks only)
-          if (widget.showArtwork) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: Container(
-                width: 40,
-                height: 40,
-                color: Colors.white12,
-                child: _artwork != null
-                    ? Image(image: _artwork!, fit: BoxFit.cover)
-                    : const Icon(Icons.music_note_rounded,
-                        color: Colors.white38, size: 20),
-              ),
-            ),
-            const SizedBox(width: 12),
-          ],
-          // Label + bar
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: FontConstants.fontFamily,
-                  ),
-                ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white54,
-                      fontSize: 11,
-                      fontFamily: FontConstants.fontFamily,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 6),
-                AnimatedBuilder(
-                  animation: _anim,
-                  builder: (_, __) => ClipRRect(
-                    borderRadius: BorderRadius.circular(3),
-                    child: SizedBox(
-                      height: 4,
-                      child: LinearProgressIndicator(
-                        value: frac * _anim.value,
-                        backgroundColor: Colors.white12,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          widget.accentColor.withValues(alpha: 0.7),
-                        ),
+                Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      items[i].key,
+                      maxLines: 1,
+                      style: TextStyle(
+                        color: Colors.white
+                            .withValues(alpha: _alphas[i % _alphas.length]),
+                        fontSize: _sizes[i % _sizes.length],
+                        height: 1.12,
+                        fontWeight: i == 0 ? FontWeight.w800 : FontWeight.w700,
+                        fontFamily: FontConstants.fontFamily,
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 12),
+                Text(
+                  '${items[i].value}',
+                  style: TextStyle(
+                    color: i == 0 ? accent : Colors.white54,
+                    fontSize: i == 0 ? 20 : 15,
+                    fontWeight: i == 0 ? FontWeight.w800 : FontWeight.w600,
+                    fontFamily: FontConstants.fontFamily,
+                    fontFeatures: _tabular,
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          // Count badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: widget.accentColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '${widget.count}',
-              style: TextStyle(
-                color: widget.accentColor.withValues(alpha: 0.9),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                fontFamily: FontConstants.fontFamily,
-              ),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-// ── Genre Card ────────────────────────────────────────────────────────────────
+// ── Genre share ───────────────────────────────────────────────────────────────
 
-class _GenreCard extends StatelessWidget {
+/// Share of plays by genre: one 100% bar with 2px seams and a legend that
+/// carries the numbers. The bar runs in one hue, darker to lighter; plays in
+/// genres outside the top five stay as the unfilled remainder.
+class _GenreShare extends StatelessWidget {
   final List<MapEntry<String, int>> genres;
-  final Color accentColor;
+  final int total;
+  final Color accent;
 
-  const _GenreCard({required this.genres, required this.accentColor});
-
-  // Assign a distinct hue to each genre for visual variety
-  static const _hues = [220.0, 280.0, 160.0, 40.0, 0.0, 340.0];
-
-  @override
-  Widget build(BuildContext context) {
-    final maxCount = genres.isEmpty ? 1 : genres.first.value.toDouble();
-
-    return GlassmorphicContainer(
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Column(
-        children: [
-          for (int i = 0; i < genres.length; i++) ...[
-            _GenreRow(
-              name: genres[i].key,
-              count: genres[i].value,
-              fraction: genres[i].value / maxCount,
-              color: HSLColor.fromAHSL(1, _hues[i % _hues.length], 0.7, 0.55)
-                  .toColor(),
-            ),
-            if (i < genres.length - 1) const SizedBox(height: 10),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _GenreRow extends StatefulWidget {
-  final String name;
-  final int count;
-  final double fraction;
-  final Color color;
-
-  const _GenreRow({
-    required this.name,
-    required this.count,
-    required this.fraction,
-    required this.color,
+  const _GenreShare({
+    required this.genres,
+    required this.total,
+    required this.accent,
   });
 
-  @override
-  State<_GenreRow> createState() => _GenreRowState();
-}
+  static const _alphas = [1.0, 0.75, 0.55, 0.40, 0.28];
 
-class _GenreRowState extends State<_GenreRow>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _ctrl;
-  late final Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _ctrl.forward());
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
+  static String _percent(int count, int total) {
+    final p = count / total * 100;
+    return p < 1 ? '<1%' : '${p.round()}%';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final loc = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final number = NumberFormat.decimalPattern(locale);
+    final shown = genres.fold<int>(0, (s, e) => s + e.value);
+    final rest = total - shown;
+
+    Color shade(int i) => accent.withValues(alpha: _alphas[i % _alphas.length]);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            widget.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 13,
-              fontFamily: FontConstants.fontFamily,
+        _Heading(title: loc.insightsGenreBreakdown),
+        const SizedBox(height: 18),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(3),
+          child: SizedBox(
+            height: 14,
+            child: Row(
+              children: [
+                for (var i = 0; i < genres.length; i++) ...[
+                  if (i > 0) const SizedBox(width: 2),
+                  Expanded(
+                    flex: genres[i].value,
+                    child: ColoredBox(color: shade(i)),
+                  ),
+                ],
+                if (rest > 0) ...[
+                  const SizedBox(width: 2),
+                  Expanded(
+                    flex: rest,
+                    child:
+                        ColoredBox(color: Colors.white.withValues(alpha: 0.08)),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: AnimatedBuilder(
-            animation: _anim,
-            builder: (_, __) => ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: SizedBox(
-                height: 8,
-                child: LinearProgressIndicator(
-                  value: widget.fraction * _anim.value,
-                  backgroundColor: Colors.white10,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    widget.color.withValues(alpha: 0.75),
+        const SizedBox(height: 12),
+        for (var i = 0; i < genres.length; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              children: [
+                Container(width: 8, height: 8, color: shade(i)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    genres[i].key,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontFamily: FontConstants.fontFamily,
+                    ),
                   ),
                 ),
-              ),
+                Text(
+                  number.format(genres[i].value),
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 13,
+                    fontFamily: FontConstants.fontFamily,
+                    fontFeatures: _tabular,
+                  ),
+                ),
+                SizedBox(
+                  width: 52,
+                  child: Text(
+                    _percent(genres[i].value, total),
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      fontFamily: FontConstants.fontFamily,
+                      fontFeatures: _tabular,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 36,
-          child: Text(
-            '${widget.count}',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              color: widget.color.withValues(alpha: 0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              fontFamily: FontConstants.fontFamily,
-            ),
-          ),
-        ),
       ],
     );
   }

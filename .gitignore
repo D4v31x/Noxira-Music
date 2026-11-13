@@ -79,3 +79,4 @@ skills-lock.json
 remoteconfig.template.json
 release/
 *.aab
+android/app/.cxx/
